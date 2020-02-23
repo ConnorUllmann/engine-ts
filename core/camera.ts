@@ -11,7 +11,7 @@ export class Camera extends Rectangle {
     }
 
     public rectangleIsVisible(rectangle: Rectangle): boolean { return this.collidesRectangle(rectangle); }
-    public pointIsVisible(point: Point): boolean { return this.collidesPoint(point.x, point.y); }
+    public pointIsVisible(point: Point): boolean { return this.collidesPoint(point); }
 
     public get canvasScale(): Point {
         return new Point(

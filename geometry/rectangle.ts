@@ -50,7 +50,7 @@ export class Rectangle extends Point {
 
     public cloneRectangle(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
     public offset(other: Point): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
-    public collidesPoint(x: number, y: number): boolean { return x >= this.x && y >= this.y && x < this.x + this.w && y < this.y + this.h; }
+    public collidesPoint(point: Point): boolean { return point.x >= this.x && point.y >= this.y && point.x < this.x + this.w && point.y < this.y + this.h; }
     public collidesRectangle(other:Rectangle): boolean { return Rectangle.collide(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h); }
     public collidesCircle(circle: Circle, rectangleAngleRadians: number=0, rectangleIsCentered: boolean=false) {
         // The rectangle's (x, y) position is its top-left corner if it were not rotated,

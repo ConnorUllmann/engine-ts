@@ -1,6 +1,7 @@
 import { Rectangle } from './rectangle';
 import { Circle } from './circle';
 import { distanceSq, distance, random, clamp } from '../core/utils';
+import { Triangle } from './triangle';
 
 export class Point {
     private static _zero: ConstPoint;
@@ -126,8 +127,9 @@ export class Point {
         return ret;
     }
 
-    public collidesRectangle(rectangle: Rectangle): boolean { return rectangle.collidesPoint(this.x, this.y); }
-    public collidesCircle(circle: Circle): boolean { return distanceSq(this.x, this.y, circle.x, circle.y) <= circle.radius * circle.radius; }
+    public collidesRectangle(rectangle: Rectangle): boolean { return rectangle.collidesPoint(this); }
+    public collidesCircle(circle: Circle): boolean { return circle.collidesPoint(this); }
+    public collidesTriangle(triangle: Triangle): boolean { return triangle.collidesPoint(this); }
 
     // Returns how much this point (as a vector) faces in the direction of the given point (as a vector)
     // -1 = this point faces opposite the direction of argument "point"
