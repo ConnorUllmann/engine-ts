@@ -15,6 +15,18 @@ export function distance(x0: number, y0: number, x1: number, y1: number): number
     return Math.sqrt(distanceSq(x0, y0, x1, y1));
 }
 
+
+// calculates "value % modulo" but wraps negative numbers so the result is always in the range [0, module)
+//
+// -270 % 360 = -270
+// moduloSafe(-270, 360) = 90
+// 
+// -540 % 360 = -180
+// moduloSafe(-540, 360) = 180
+export function moduloSafe(value: number, modulo: number) { return ((value % modulo) + modulo) % modulo; }
+
+export function angleDifference(from: number, to: number) { return moduloSafe(to - from - Math.PI, tau) - Math.PI; };
+
 export const randomSeed = Math.random(); //0.8960552343494206;//Math.random()// 0.5857513213147061; //Math.random(); // 0.8848090285063617 // 0.01445618278625016 // 0.7747721362588182
 console.log(`Random seed: ${randomSeed}`);
 export function getRandomNumberGenerator(seed: number): () => number {

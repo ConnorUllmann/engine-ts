@@ -105,7 +105,10 @@ export class Point {
     }
     public distanceSqTo(b: Point): number { return distanceSq(this.x, this.y, b.x, b.y); }
     public distanceTo(b: Point): number { return distance(this.x, this.y, b.x, b.y); }
-    public angle(): number { return Math.atan2(this.y, this.x); };
+
+    // radians!
+    public get angle(): number { return Math.atan2(this.y, this.x); };
+    
     public reflect(normal: Point, origin: Point | null=null): Point {
         if(origin == null)
         {

@@ -7,6 +7,7 @@ export class Circle extends Point {
         super(x, y);
     }
 
+    public get diameter(): number { return this.radius * 2; }
     public collidesPoint(point: Point): boolean { return distanceSq(point.x, point.y, this.x, this.y) <= this.radius * this.radius; }
     public collidesRectangle(rectangle: Rectangle): boolean { return rectangle.collidesCircle(this); }
 
