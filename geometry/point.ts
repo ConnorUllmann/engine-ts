@@ -3,7 +3,11 @@ import { Circle } from './circle';
 import { distanceSq, distance, random, clamp } from '../core/utils';
 import { Triangle } from './triangle';
 
-export class Point {
+export interface IPoint {
+    x: number;
+    y: number;
+}
+export class Point implements IPoint {
     private static _zero: ConstPoint;
     public static get zero(): ConstPoint { return Point._zero; }
     private static _one: ConstPoint;
@@ -73,12 +77,12 @@ export class Point {
     public clonePoint(): Point { return new Point(this.x, this.y); }
     public toString(): string { return JSON.stringify({ x: this.x.toFixed(1), y: this.y.toFixed(1) }); }
 
-    public set(b: Point): Point { this.x = b.x; this.y = b.y; return this; }
+    public set(b: IPoint): Point { this.x = b.x; this.y = b.y; return this; }
     public lengthSq(): number { return this.x * this.x + this.y * this.y; }
-    public dot(b: Point): number { return this.x * b.x + this.y * b.y; }
-    public cross(b: Point): number { return this.x * b.y - b.x * this.y; }
-    public add(b: Point): Point { return new Point(this.x + b.x, this.y + b.y); }
-    public subtract(b: Point): Point { return new Point(this.x - b.x, this.y - b.y); }
+    public dot(b: IPoint): number { return this.x * b.x + this.y * b.y; }
+    public cross(b: IPoint): number { return this.x * b.y - b.x * this.y; }
+    public add(b: IPoint): Point { return new Point(this.x + b.x, this.y + b.y); }
+    public subtract(b: IPoint): Point { return new Point(this.x - b.x, this.y - b.y); }
     public proj(b: Point): Point { return b.scale(this.dot(b) / Math.max(b.lengthSq(), 0.000001)); }
     public normalized(length: number=1): Point {
         if((this.x === 0 && this.y === 0) || length === 0)
@@ -103,12 +107,12 @@ export class Point {
         points.forEach(point => { sum.x += point.x; sum.y += point.y; });
         return sum.scale(1/points.length);
     }
-    public distanceSqTo(b: Point): number { return distanceSq(this.x, this.y, b.x, b.y); }
-    public distanceTo(b: Point): number { return distance(this.x, this.y, b.x, b.y); }
+    public distanceSqTo(b: IPoint): number { return distanceSq(this.x, this.y, b.x, b.y); }
+    public distanceTo(b: IPoint): number { return distance(this.x, this.y, b.x, b.y); }
 
     // radians!
     public get angle(): number { return Math.atan2(this.y, this.x); };
-    
+
     public reflect(normal: Point, origin: Point | null=null): Point {
         if(origin == null)
         {
@@ -143,9 +147,9 @@ export class Point {
     // t = 0 = this point
     // t = 0.5 = midpoint between this point and the argument "point:
     // t = 1 = the argument "point"
-    public lerp(point: Point, t: number): Point { return new Point((point.x - this.x) * t + this.x, (point.y - this.y) * t + this.y); };
+    public lerp(point: IPoint, t: number): Point { return new Point((point.x - this.x) * t + this.x, (point.y - this.y) * t + this.y); };
 
-    public static linesIntersection(firstLineA: Point, firstLineB: Point, secondLineA: Point, secondLineB: Point, isFirstSegment: boolean = true, isSecondSegment: boolean = true): Point | null {
+    public static linesIntersection(firstLineA: IPoint, firstLineB: IPoint, secondLineA: IPoint, secondLineB: IPoint, isFirstSegment: boolean = true, isSecondSegment: boolean = true): Point | null {
         const yFirstLineDiff = firstLineB.y - firstLineA.y;
         const xFirstLineDiff = firstLineA.x - firstLineB.x;
         const cFirst = firstLineB.x * firstLineA.y - firstLineA.x * firstLineB.y;
@@ -172,10 +176,10 @@ export class Point {
             : intersectionPoint;
     };
 
-    public closest(points: Point[]): Point { return points.minOf(o => this.distanceSqTo(o)); }
-    public leftOfLine(a: Point, b: Point): boolean { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)) > 0; }
+    public closest(points: IPoint[]): IPoint { return points.minOf(o => this.distanceSqTo(o)); }
+    public leftOfLine(a: IPoint, b: IPoint): boolean { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)) > 0; }
 
-    public rotate(angleRadians: number, center: Point | null=null): Point {
+    public rotated(angleRadians: number, center: Point | null=null): Point {
         const x = this.x - (center ? center.x : 0);
         const y = this.y - (center ? center.y : 0);
         return new Point(
@@ -185,20 +189,20 @@ export class Point {
     }
 
     // rotates the point randomly in the range given (about the origin)
-    public wiggle(angleRangeMax: number): Point { return this.rotate(angleRangeMax * (random() - 0.5)); }
+    public wiggle(angleRangeMax: number): Point { return this.rotated(angleRangeMax * (random() - 0.5)); }
 
     // same as rotating a vector 180 degrees
     public negative(): Point { return new Point(-this.x, -this.y); }
 
     // returns a version of this point which is flipped over (rotated 180 degrees around) the given point
     // (or the origin if none is provided). Provided because it is faster than using rotate/reflect.
-    public flip(center:Point | null=null): Point { return center == null ? this.negative() : new Point(2 * center.x - this.x, 2 * center.y - this.y); }
+    public flip(center: IPoint | null=null): Point { return center == null ? this.negative() : new Point(2 * center.x - this.x, 2 * center.y - this.y); }
 
     public clampedInRectangle(rectangle: Rectangle): Point { return new Point(clamp(this.x, rectangle.xLeft, rectangle.xRight), clamp(this.y, rectangle.yTop, rectangle.yBottom)); }
     
     private static _tolerance: number = 0.00000001;
     private static _toleranceDigits: number = Math.floor(1/Point._tolerance).toString().length;
-    public isEqualTo(b: Point): boolean { return this.distanceSqTo(b) < Point._tolerance; }
+    public isEqualTo(b: IPoint): boolean { return this.distanceSqTo(b) < Point._tolerance; }
     public get hash(): string { return `${this.x.toFixed(Point._toleranceDigits)},${this.y.toFixed(Point._toleranceDigits)}`; }
 }
 

@@ -1,12 +1,11 @@
 import { Point } from './point';
 import { Triangle } from './triangle';
-import { World } from '../core/world';
 import { tau, moduloSafe } from '@engine-ts/core/utils';
 import { Circle } from './circle';
 
 export type VoronoiCell = { point: Point, vertices: Point[] };
 
-export function Voronoi(points: Point[], world: World): VoronoiCell[] {
+export function Voronoi(points: Point[]): VoronoiCell[] {
     const cells: VoronoiCell[] = [];
     const triangles: Triangle[] = Triangle.triangulation(points);
     points.forEach(point => {

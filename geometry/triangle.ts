@@ -3,7 +3,12 @@ import { Segment } from './segment';
 import { Circle } from './circle';
 import { tau } from '../core/utils';
 
-export class Triangle {
+export interface ITriangle {
+    a: Point;
+    b: Point;
+    c: Point;
+}
+export class Triangle implements ITriangle {
     constructor(public a: Point, public b: Point, public c: Point) {}
 
     public get segments(): Segment[] {
@@ -19,10 +24,10 @@ export class Triangle {
 
     public get circumcircle(): Circle {
         const midpointAB = this.a.midpoint(this.b);
-        const perpendicularAB = this.a.subtract(this.b).rotate(tau/4);
+        const perpendicularAB = this.a.subtract(this.b).rotated(tau/4);
 
         const midpointBC = this.b.midpoint(this.c);
-        const perpendicularBC = this.b.subtract(this.c).rotate(tau/4);
+        const perpendicularBC = this.b.subtract(this.c).rotated(tau/4);
 
         const intersection = Point.linesIntersection(midpointAB, midpointAB.add(perpendicularAB), midpointBC, midpointBC.add(perpendicularBC), false, false);
         if(!intersection)
@@ -47,11 +52,11 @@ export class Triangle {
         const diameter = circumcircle.radius * 2;
         return new Triangle(
             circumcircle.add(Point.up.scale(diameter)),
-            circumcircle.add(Point.up.rotate(tau/3).scale(diameter)),
-            circumcircle.add(Point.up.rotate(tau*2/3).scale(diameter))
+            circumcircle.add(Point.up.rotated(tau/3).scale(diameter)),
+            circumcircle.add(Point.up.rotated(tau*2/3).scale(diameter))
         );
     }
-    
+
     public static triangulation(points: Point[]): Triangle[] {
         // add supertriangle to points and triangles lists
         const supertriangle: Triangle = Triangle.supertriangle(points);

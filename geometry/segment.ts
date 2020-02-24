@@ -1,6 +1,10 @@
 import { Point } from './point';
 
-export class Segment {
+export interface ISegment {
+    a: Point;
+    b: Point;
+}
+export class Segment implements ISegment {
     constructor(public a: Point, public b: Point) {}
 
     public get vertices(): Point[] { return [this.a, this.b]; }

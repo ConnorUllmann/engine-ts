@@ -1,8 +1,11 @@
-import { Point } from './point';
+import { Point, IPoint } from './point';
 import { distanceSq } from '@engine-ts/core/utils';
 import { Rectangle } from './rectangle';
 
-export class Circle extends Point { 
+export interface ICircle extends IPoint {
+    radius: number
+}
+export class Circle extends Point implements ICircle { 
     constructor(public x: number, public y: number, public radius: number) {
         super(x, y);
     }

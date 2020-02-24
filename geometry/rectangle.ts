@@ -1,8 +1,12 @@
-import { Point } from './point';
+import { Point, IPoint } from './point';
 import { Circle } from './circle';
 import { random } from '../core/utils';
 
-export class Rectangle extends Point {
+export interface IRectangle extends IPoint {
+    w: number;
+    h: number;
+}
+export class Rectangle extends Point implements IRectangle {
     public get xLeft(): number { return this.x; }
     public set xLeft(x: number) { this.x = x; }
     public get xRight(): number { return this.x + this.w; }
@@ -58,7 +62,7 @@ export class Rectangle extends Point {
         //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
         const circlePosition = rectangleAngleRadians === 0
             ? new Point(circle.x, circle.y)
-            : new Point(circle.x, circle.y).rotate(-rectangleAngleRadians, rectangleIsCentered ? this : this.center);
+            : new Point(circle.x, circle.y).rotated(-rectangleAngleRadians, rectangleIsCentered ? this : this.center);
 
         const xCircleDistance = Math.abs(circlePosition.x - (rectangleIsCentered ? this.x : this.x + this.w/2));
         const yCircleDistance = Math.abs(circlePosition.y - (rectangleIsCentered ? this.y : this.y + this.h/2));
