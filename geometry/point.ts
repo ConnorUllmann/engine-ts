@@ -2,7 +2,7 @@ import { Rectangle } from './rectangle';
 import { Circle } from './circle';
 import { distanceSq, distance, random, clamp } from '../core/utils';
 import { Triangle } from './triangle';
-import { IPointPair } from './line';
+import { IPointPair } from './point-pair';
 
 export interface IPoint {
     readonly x: number;

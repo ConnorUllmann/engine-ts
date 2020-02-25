@@ -12,13 +12,14 @@ export class Triangle implements ITriangle {
     constructor(public a: Point, public b: Point, public c: Point) {}
 
     public get vertices(): Point[] { return [this.a, this.b, this.c]; }
-    public get segments(): Segment[] {
+    public static segments(triangle: ITriangle): Segment[] { 
         return [
-            new Segment(this.a, this.b),
-            new Segment(this.b, this.c),
-            new Segment(this.c, this.a)
+            new Segment(triangle.a, triangle.b),
+            new Segment(triangle.b, triangle.c),
+            new Segment(triangle.c, triangle.a)
         ];
     }
+    public get segments(): Segment[] { return Triangle.segments(this); }
     public static hash(triangle: ITriangle): string { return [triangle.a, triangle.b, triangle.c].sorted(o => o.x).sorted(o => o.y).map(o => o.hash).join('|'); }
     public get hash(): string { return Triangle.hash(this); }
     public isEqualTo(triangle: ITriangle): boolean { return Triangle.hash(triangle) === this.hash; }

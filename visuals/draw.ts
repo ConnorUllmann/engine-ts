@@ -6,10 +6,11 @@ import { World } from '../core/world';
 import { tau } from '../core/utils';
 import { ICircle } from '@engine-ts/geometry/circle';
 import { ITriangle } from '@engine-ts/geometry/triangle';
-import { Rectangle, IRectangle } from '@engine-ts/geometry/rectangle';
-import { Segment, ISegment } from '@engine-ts/geometry/segment';
-import { ILine, Line, IPointPair } from '@engine-ts/geometry/line';
+import { IRectangle } from '@engine-ts/geometry/rectangle';
+import { ISegment } from '@engine-ts/geometry/segment';
+import { Line, ILine } from '@engine-ts/geometry/line';
 import { IRay, Ray } from '@engine-ts/geometry/ray';
+import { PointPair, PointPairType } from '@engine-ts/geometry/point-pair';
 
 export type FillStyle = Color | string | null;
 export type StrokeStyle = FillStyle;
@@ -230,26 +231,18 @@ export class Draw {
         context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
     };
 
-    public static segment(world: World, segment: ISegment, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(lineWidth < 0)
-            return;
-        const context = world.context;
-        context.beginPath();
-        context.moveTo(segment.a.x - world.camera.x, segment.a.y - world.camera.y);
-        context.lineTo(segment.b.x - world.camera.x, segment.b.y - world.camera.y);
-        if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
-        context.lineWidth = lineWidth;
-        context.stroke();
-    };
-
     public static line(world: World, line: ILine, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(lineWidth < 0)
+        if(lineWidth <= 0)
             return;
+
+        const points = PointPair.rectangleIntersection(line, PointPairType.LINE, world.camera);
+        if(points.length < 2)
+            return;
+
         const context = world.context;
         context.beginPath();
-        context.moveTo(world.camera.xLeft - world.camera.x, Line.yAtX(line, world.camera.xLeft) - world.camera.y);
-        context.lineTo(world.camera.xRight - world.camera.x, Line.yAtX(line, world.camera.xRight) - world.camera.y);
+        context.moveTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
+        context.lineTo(points[1].x - world.camera.x, points[1].y - world.camera.y);
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
         context.lineWidth = lineWidth;
@@ -257,24 +250,41 @@ export class Draw {
     };
 
     public static ray(world: World, ray: IRay, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(lineWidth < 0)
+        if(lineWidth <= 0)
+            return;
+
+        const context = world.context;
+        const points = PointPair.rectangleIntersection(ray, PointPairType.RAY, world.camera);
+        if(points.length === 1) {
+            context.beginPath();
+            context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
+            context.lineTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
+            if(strokeStyle)
+                context.strokeStyle = strokeStyle.toString();
+            context.lineWidth = lineWidth;
+            context.stroke();
+            return;
+        }  
+
+        if(points.length !== 2)
+            return;
+
+        context.beginPath();
+        context.moveTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
+        context.lineTo(points[1].x - world.camera.x, points[1].y - world.camera.y);
+        if(strokeStyle)
+            context.strokeStyle = strokeStyle.toString();
+        context.lineWidth = lineWidth;
+        context.stroke();
+    };
+
+    public static segment(world: World, segment: ISegment, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(lineWidth <= 0)
             return;
         const context = world.context;
         context.beginPath();
-
-        const sign = Math.sign(ray.b.x - ray.a.x);
-        if(sign > 0) {
-            context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
-            context.lineTo(world.camera.xRight - world.camera.x, Ray.yAtX(ray, world.camera.xRight) - world.camera.y);
-        }
-        else if (sign < 0) {
-            context.moveTo(world.camera.xLeft - world.camera.x, Ray.yAtX(ray, world.camera.xLeft) - world.camera.y);
-            context.lineTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);            
-        }
-        else {
-            context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
-            context.lineTo(ray.a.x - world.camera.x, ray.b.y > ray.a.y ? world.camera.yBottom : world.camera.yTop);
-        }
+        context.moveTo(segment.a.x - world.camera.x, segment.a.y - world.camera.y);
+        context.lineTo(segment.b.x - world.camera.x, segment.b.y - world.camera.y);
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
         context.lineWidth = lineWidth;

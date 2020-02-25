@@ -29,8 +29,13 @@ export class Rectangle extends Point implements IRectangle {
     public get bottomRight(): Point { return new Point(this.xRight, this.yBottom); }
     public get corners(): Point[] { return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]; }
     public get vertices(): Point[] { return this.corners; }
-    public get segments(): { a: Point, b:Point }[] { 
-        const corners = this.corners;
+    public static segments(rectangle: IRectangle): Segment[] {
+        const corners = [
+            new Point(rectangle.x, rectangle.y),
+            new Point(rectangle.x + rectangle.w, rectangle.y),
+            new Point(rectangle.x + rectangle.w, rectangle.y + rectangle.h),
+            new Point(rectangle.x, rectangle.y + rectangle.h)
+        ];
         return [
             new Segment(corners[0], corners[1]),
             new Segment(corners[1], corners[2]),
@@ -38,6 +43,7 @@ export class Rectangle extends Point implements IRectangle {
             new Segment(corners[3], corners[0])
         ];
     }
+    public get segments(): Segment[] { return Rectangle.segments(this); }
 
     private _w: number;
     private _h: number;

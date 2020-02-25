@@ -1,5 +1,9 @@
 import { Point } from './point';
-import { IPointPair, Line } from './line';
+import { Line, ILine } from './line';
+import { IPointPair, PointPairType, PointPair } from './point-pair';
+import { IRay } from './ray';
+import { IRectangle } from './rectangle';
+import { ITriangle } from './triangle';
 
 export interface ISegment extends IPointPair {}
 export class Segment implements ISegment {
@@ -29,4 +33,10 @@ export class Segment implements ISegment {
     }
     public yAtX(x: number): number { return Segment.yAtX(this, x); }
     public xAtY(y: number): number { return Segment.xAtY(this, y); }
+    
+    public lineIntersection(line: ILine): Point | null { return PointPair.intersection(this, PointPairType.SEGMENT, line, PointPairType.LINE); }
+    public rayIntersection(ray: IRay): Point | null { return PointPair.intersection(this, PointPairType.SEGMENT, ray, PointPairType.RAY); }
+    public segmentIntersection(segment: ISegment): Point | null { return PointPair.intersection(this, PointPairType.SEGMENT, segment, PointPairType.SEGMENT); }
+    public rectangleIntersection(rectangle: IRectangle): Point[] { return PointPair.rectangleIntersection(this, PointPairType.SEGMENT, rectangle); }
+    public triangleIntersection(triangle: ITriangle): Point[] { return PointPair.triangleIntersection(this, PointPairType.SEGMENT, triangle); }
 }

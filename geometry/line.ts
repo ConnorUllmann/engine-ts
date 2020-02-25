@@ -1,17 +1,10 @@
 import { Point } from './point';
 import { IRay } from './ray';
 import { ISegment } from './segment';
+import { IRectangle, Rectangle } from './rectangle';
+import { IPointPair, PointPairType, PointPair } from './point-pair';
+import { ITriangle } from './triangle';
 
-export enum PointPairType {
-    LINE = "LINE",
-    SEGMENT = "SEGMENT",
-    RAY = "RAY"
-}
-
-export interface IPointPair {
-    readonly a: Point,
-    readonly b: Point
-}
 export interface ILine extends IPointPair {}
 export class Line implements ILine {
     public static hash(line: ILine): string { return `${Line.slope(line).toFixed(6)}${Line.yAtX(line, 0).toFixed(6)}`; }
@@ -50,48 +43,9 @@ export class Line implements ILine {
     public yAtX(x: number): number { return Line.yAtX(this, x); }
     public xAtY(y: number): number { return Line.xAtY(this, y); }
 
-    public static lineIntersection(a: ILine, b: ILine) { return Line.intersection(a, PointPairType.LINE, b, PointPairType.LINE); }
-    public static rayIntersection(a: ILine, b: IRay) { return Line.intersection(a, PointPairType.LINE, b, PointPairType.RAY); }
-    public static segmentIntersection(a: ILine, b: ISegment) { return Line.intersection(a, PointPairType.LINE, b, PointPairType.SEGMENT); }
-    public static intersection(
-        first: IPointPair, firstType: PointPairType, 
-        second: IPointPair, secondType: PointPairType
-    ): Point | null {
-        const yFirstLineDiff = first.b.y - first.a.y;
-        const xFirstLineDiff = first.a.x - first.b.x;
-        const cFirst = first.b.x * first.a.y - first.a.x * first.b.y;
-        const ySecondLineDiff = second.b.y - second.a.y;
-        const xSecondLineDiff = second.a.x - second.b.x;
-        const cSecond = second.b.x * second.a.y - second.a.x * second.b.y;
-
-        const denominator = yFirstLineDiff * xSecondLineDiff - ySecondLineDiff * xFirstLineDiff;
-        if (denominator === 0)
-            return null;
-        const intersectionPoint = new Point(
-            (xFirstLineDiff * cSecond - xSecondLineDiff * cFirst) / denominator,
-            (ySecondLineDiff * cFirst - yFirstLineDiff * cSecond) / denominator);
-
-        const beyondFirstA = first.a.x === first.b.x
-            ? Math.sign(intersectionPoint.y - first.a.y) !== Math.sign(first.b.y - first.a.y)
-            : Math.sign(intersectionPoint.x - first.a.x) !== Math.sign(first.b.x - first.a.x);
-        const beyondFirstB = first.a.x === first.b.x
-            ? Math.sign(intersectionPoint.y - first.b.y) !== Math.sign(first.a.y - first.b.y)
-            : Math.sign(intersectionPoint.x - first.b.x) !== Math.sign(first.a.x - first.b.x);
-        const beyondFirst = beyondFirstA || beyondFirstB;
-
-        const beyondSecondA = second.a.x === second.b.x
-            ? Math.sign(intersectionPoint.y - second.a.y) !== Math.sign(second.b.y - second.a.y)
-            : Math.sign(intersectionPoint.x - second.a.x) !== Math.sign(second.b.x - second.a.x);
-        const beyondSecondB = second.a.x === second.b.x
-            ? Math.sign(intersectionPoint.y - second.b.y) !== Math.sign(second.a.y - second.b.y)
-            : Math.sign(intersectionPoint.x - second.b.x) !== Math.sign(second.a.x - second.b.x);
-        const beyondSecond = beyondSecondA || beyondSecondB;
-
-        return firstType === PointPairType.SEGMENT && beyondFirst
-            || firstType === PointPairType.RAY && beyondFirstA
-            || secondType === PointPairType.SEGMENT && beyondSecond
-            || secondType === PointPairType.RAY && beyondSecondA
-                ? null
-                : intersectionPoint;
-    };
+    public lineIntersection(line: ILine): Point | null { return PointPair.intersection(this, PointPairType.LINE, line, PointPairType.LINE); }
+    public rayIntersection(ray: IRay): Point | null { return PointPair.intersection(this, PointPairType.LINE, ray, PointPairType.RAY); }
+    public segmentIntersection(segment: ISegment): Point | null { return PointPair.intersection(this, PointPairType.LINE, segment, PointPairType.SEGMENT); }
+    public rectangleIntersection(rectangle: IRectangle): Point[] { return PointPair.rectangleIntersection(this, PointPairType.LINE, rectangle); }
+    public triangleIntersection(triangle: ITriangle): Point[] { return PointPair.triangleIntersection(this, PointPairType.LINE, triangle); }
 }
