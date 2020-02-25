@@ -1,10 +1,11 @@
 import { Point, IPoint } from './point';
-import { Circle } from './circle';
+import { ICircle } from './circle';
 import { random } from '../core/utils';
+import { Segment } from './segment';
 
 export interface IRectangle extends IPoint {
-    w: number;
-    h: number;
+    readonly w: number;
+    readonly h: number;
 }
 export class Rectangle extends Point implements IRectangle {
     public get xLeft(): number { return this.x; }
@@ -27,13 +28,14 @@ export class Rectangle extends Point implements IRectangle {
     public get bottomLeft(): Point { return new Point(this.xLeft, this.yBottom); }
     public get bottomRight(): Point { return new Point(this.xRight, this.yBottom); }
     public get corners(): Point[] { return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]; }
+    public get vertices(): Point[] { return this.corners; }
     public get segments(): { a: Point, b:Point }[] { 
         const corners = this.corners;
         return [
-            { a: corners[0], b: corners[1] },
-            { a: corners[1], b: corners[2] },
-            { a: corners[2], b: corners[3] },
-            { a: corners[3], b: corners[0] }
+            new Segment(corners[0], corners[1]),
+            new Segment(corners[1], corners[2]),
+            new Segment(corners[2], corners[3]),
+            new Segment(corners[3], corners[0])
         ];
     }
 
@@ -53,29 +55,30 @@ export class Rectangle extends Point implements IRectangle {
     }
 
     public cloneRectangle(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
-    public offset(other: Point): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
-    public collidesPoint(point: Point): boolean { return point.x >= this.x && point.y >= this.y && point.x < this.x + this.w && point.y < this.y + this.h; }
-    public collidesRectangle(other:Rectangle): boolean { return Rectangle.collide(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h); }
-    public collidesCircle(circle: Circle, rectangleAngleRadians: number=0, rectangleIsCentered: boolean=false) {
+    public offset(other: IPoint): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
+    public collidesPoint(point: IPoint): boolean { return point.x >= this.x && point.y >= this.y && point.x < this.x + this.w && point.y < this.y + this.h; }
+    public collidesRectangle(other: IRectangle): boolean { return Rectangle.collide(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h); }
+    public collidesCircle(circle: ICircle, rectangleAngle: number=0, rectangleIsCentered: boolean=false) { return Rectangle.collidesCircle(this, circle, rectangleAngle, rectangleIsCentered); }
+    public static collidesCircle(rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0, rectangleIsCentered: boolean=false) {
         // The rectangle's (x, y) position is its top-left corner if it were not rotated,
-        // however the rectangle still rotates about its center (by "rectangleAngleRadians" radians)
+        // however the rectangle still rotates about its center (by "rectangleAngle" radians)
         //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
-        const circlePosition = rectangleAngleRadians === 0
+        const circlePosition = rectangleAngle === 0
             ? new Point(circle.x, circle.y)
-            : new Point(circle.x, circle.y).rotated(-rectangleAngleRadians, rectangleIsCentered ? this : this.center);
+            : new Point(circle.x, circle.y).rotated(-rectangleAngle, rectangleIsCentered ? new Point(rectangle.x, rectangle.y) : new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2));
 
-        const xCircleDistance = Math.abs(circlePosition.x - (rectangleIsCentered ? this.x : this.x + this.w/2));
-        const yCircleDistance = Math.abs(circlePosition.y - (rectangleIsCentered ? this.y : this.y + this.h/2));
+        const xCircleDistance = Math.abs(circlePosition.x - (rectangleIsCentered ? rectangle.x : rectangle.x + rectangle.w/2));
+        const yCircleDistance = Math.abs(circlePosition.y - (rectangleIsCentered ? rectangle.y : rectangle.y + rectangle.h/2));
 
-        if (xCircleDistance > (this.w/2 + circle.radius)) { return false; }
-        if (yCircleDistance > (this.h/2 + circle.radius)) { return false; }
+        if (xCircleDistance > (rectangle.w/2 + circle.radius)) { return false; }
+        if (yCircleDistance > (rectangle.h/2 + circle.radius)) { return false; }
 
-        if (xCircleDistance <= (this.w/2)) { return true; }
-        if (yCircleDistance <= (this.h/2)) { return true; }
+        if (xCircleDistance <= (rectangle.w/2)) { return true; }
+        if (yCircleDistance <= (rectangle.h/2)) { return true; }
 
         const cornerDistanceSq =
-            (xCircleDistance - this.w/2) * (xCircleDistance - this.w/2) +
-            (yCircleDistance - this.h/2) * (yCircleDistance - this.h/2);
+            (xCircleDistance - rectangle.w/2) * (xCircleDistance - rectangle.w/2) +
+            (yCircleDistance - rectangle.h/2) * (yCircleDistance - rectangle.h/2);
 
         return cornerDistanceSq <= (circle.radius * circle.radius);
     };

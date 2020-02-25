@@ -1,16 +1,17 @@
-import { Point } from './point';
+import { Point, IPoint } from './point';
 import { Segment } from './segment';
 import { Circle } from './circle';
 import { tau } from '../core/utils';
 
 export interface ITriangle {
-    a: Point;
-    b: Point;
-    c: Point;
+    readonly a: Point;
+    readonly b: Point;
+    readonly c: Point;
 }
 export class Triangle implements ITriangle {
     constructor(public a: Point, public b: Point, public c: Point) {}
 
+    public get vertices(): Point[] { return [this.a, this.b, this.c]; }
     public get segments(): Segment[] {
         return [
             new Segment(this.a, this.b),
@@ -18,9 +19,9 @@ export class Triangle implements ITriangle {
             new Segment(this.c, this.a)
         ];
     }
-    public get vertices(): Point[] { return [this.a, this.b, this.c]; }
-    public get hash(): string { return this.vertices.sorted().map(o => o.hash).join('|'); }
-    public isEqualTo(triangle: Triangle): boolean { return triangle.hash === this.hash; }
+    public static hash(triangle: ITriangle): string { return [triangle.a, triangle.b, triangle.c].sorted(o => o.x).sorted(o => o.y).map(o => o.hash).join('|'); }
+    public get hash(): string { return Triangle.hash(this); }
+    public isEqualTo(triangle: ITriangle): boolean { return Triangle.hash(triangle) === this.hash; }
 
     public get circumcircle(): Circle {
         const midpointAB = this.a.midpoint(this.b);
@@ -36,18 +37,26 @@ export class Triangle implements ITriangle {
         return new Circle(intersection.x, intersection.y, this.a.distanceTo(intersection));
     }
 
-    public get areaSigned(): number { return 0.5 * (-this.b.y * this.c.x + this.a.y * (-this.b.x + this.c.x) + this.a.x * (this.b.y - this.c.y) + this.b.x * this.c.y); }
+    public static areaSigned(triangle: ITriangle): number { 
+        return 0.5 * (-triangle.b.y * triangle.c.x 
+            + triangle.a.y * (-triangle.b.x + triangle.c.x) 
+            + triangle.a.x * (triangle.b.y - triangle.c.y) 
+            + triangle.b.x * triangle.c.y
+        );
+    }
+    public get areaSigned(): number { return Triangle.areaSigned(this); }
     public get area(): number { return Math.abs(this.areaSigned); }
 
-    public collidesPoint(point: Point): boolean { 
+    public collidesPoint(point: IPoint): boolean { return Triangle.collidesPoint(this, point); }
+    public static collidesPoint(triangle: ITriangle, point: IPoint): boolean { 
         // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
-        const areaSigned = this.areaSigned;
-        const s = 1/(2*areaSigned)*(this.a.y*this.c.x - this.a.x*this.c.y + (this.c.y - this.a.y)*point.x + (this.a.x - this.c.x)*point.y);
-        const t = 1/(2*areaSigned)*(this.a.x*this.b.y - this.a.y*this.b.x + (this.a.y - this.b.y)*point.x + (this.b.x - this.a.x)*point.y);
+        const areaSigned = Triangle.areaSigned(triangle);
+        const s = 1/(2*areaSigned)*(triangle.a.y*triangle.c.x - triangle.a.x*triangle.c.y + (triangle.c.y - triangle.a.y)*point.x + (triangle.a.x - triangle.c.x)*point.y);
+        const t = 1/(2*areaSigned)*(triangle.a.x*triangle.b.y - triangle.a.y*triangle.b.x + (triangle.a.y - triangle.b.y)*point.x + (triangle.b.x - triangle.a.x)*point.y);
         return s > 0 && t > 0 && 1 - s - t > 0;
     }
 
-    public static supertriangle(points: Point[]): Triangle {
+    public static supertriangle(points: IPoint[]): Triangle {
         const circumcircle = Circle.circumcircleOfPoints(points);
         const diameter = circumcircle.radius * 2;
         return new Triangle(
@@ -57,20 +66,22 @@ export class Triangle implements ITriangle {
         );
     }
 
-    public static triangulation(points: Point[]): Triangle[] {
+    public static triangulation(points: IPoint[]): Triangle[] {
         // add supertriangle to points and triangles lists
         const supertriangle: Triangle = Triangle.supertriangle(points);
         const supertriangleVertices = [supertriangle.a, supertriangle.b, supertriangle.c]
         const triangles: Triangle[] = [supertriangle];
         points.push(...supertriangleVertices);
-        points.forEach(point => {
+
+        // create new points because they'll be added to the later triangles anyway
+        points.map(point => new Point(point.x, point.y)).forEach(point => {
 
             // find all triangles whose circumcircle collides with the given point, remove them, and aggregate their segments into a list
             const segments: Segment[] = [];
             const trianglesToRemove: number[] = [];
             triangles.forEach((triangle, triangleIndex) => {
                 const circumcircle = triangle.circumcircle;
-                const collides = point.collidesCircle(circumcircle);
+                const collides = circumcircle.collidesPoint(point);
                 if(collides) {
                     segments.push(...triangle.segments);
                     trianglesToRemove.push(triangleIndex);

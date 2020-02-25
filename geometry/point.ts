@@ -2,10 +2,11 @@ import { Rectangle } from './rectangle';
 import { Circle } from './circle';
 import { distanceSq, distance, random, clamp } from '../core/utils';
 import { Triangle } from './triangle';
+import { IPointPair } from './line';
 
 export interface IPoint {
-    x: number;
-    y: number;
+    readonly x: number;
+    readonly y: number;
 }
 export class Point implements IPoint {
     private static _zero: ConstPoint;
@@ -72,12 +73,12 @@ export class Point implements IPoint {
         this._y = y;
     }
 
-    public static create(length: number, angleRadians: number): Point { return new Point(Math.cos(angleRadians) * length, Math.sin(angleRadians) * length); }
+    public static create(length: number, angle: number): Point { return new Point(Math.cos(angle) * length, Math.sin(angle) * length); }
 
     public clonePoint(): Point { return new Point(this.x, this.y); }
     public toString(): string { return JSON.stringify({ x: this.x.toFixed(1), y: this.y.toFixed(1) }); }
 
-    public set(b: IPoint): Point { this.x = b.x; this.y = b.y; return this; }
+    public setTo(b: IPoint): Point { this.x = b.x; this.y = b.y; return this; }
     public lengthSq(): number { return this.x * this.x + this.y * this.y; }
     public dot(b: IPoint): number { return this.x * b.x + this.y * b.y; }
     public cross(b: IPoint): number { return this.x * b.y - b.x * this.y; }
@@ -99,8 +100,8 @@ export class Point implements IPoint {
             : new Point(this.x * scalar, this.y * scalar)
     }
 
-    public midpoint(...points: Point[]): Point { return Point.midpoint([ this, ...points ])!; }
-    public static midpoint(points: Point[]): Point | null {
+    public midpoint(...points: IPoint[]): Point { return Point.midpoint([ this, ...points ])!; }
+    public static midpoint(points: IPoint[]): Point | null {
         if(points == null || points.length <= 0)
             return null;
         const sum = new Point();
@@ -149,6 +150,7 @@ export class Point implements IPoint {
     // t = 1 = the argument "point"
     public lerp(point: IPoint, t: number): Point { return new Point((point.x - this.x) * t + this.x, (point.y - this.y) * t + this.y); };
 
+
     public static linesIntersection(firstLineA: IPoint, firstLineB: IPoint, secondLineA: IPoint, secondLineB: IPoint, isFirstSegment: boolean = true, isSecondSegment: boolean = true): Point | null {
         const yFirstLineDiff = firstLineB.y - firstLineA.y;
         const xFirstLineDiff = firstLineA.x - firstLineB.x;
@@ -179,12 +181,12 @@ export class Point implements IPoint {
     public closest(points: IPoint[]): IPoint { return points.minOf(o => this.distanceSqTo(o)); }
     public leftOfLine(a: IPoint, b: IPoint): boolean { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)) > 0; }
 
-    public rotated(angleRadians: number, center: Point | null=null): Point {
+    public rotated(angle: number, center: Point | null=null): Point {
         const x = this.x - (center ? center.x : 0);
         const y = this.y - (center ? center.y : 0);
         return new Point(
-            (center ? center.x : 0) + x * Math.cos(angleRadians) - y * Math.sin(angleRadians),
-            (center ? center.y : 0) + y * Math.cos(angleRadians) + x * Math.sin(angleRadians)
+            (center ? center.x : 0) + x * Math.cos(angle) - y * Math.sin(angle),
+            (center ? center.y : 0) + y * Math.cos(angle) + x * Math.sin(angle)
         );
     }
 
@@ -201,9 +203,8 @@ export class Point implements IPoint {
     public clampedInRectangle(rectangle: Rectangle): Point { return new Point(clamp(this.x, rectangle.xLeft, rectangle.xRight), clamp(this.y, rectangle.yTop, rectangle.yBottom)); }
     
     private static _tolerance: number = 0.00000001;
-    private static _toleranceDigits: number = Math.floor(1/Point._tolerance).toString().length;
     public isEqualTo(b: IPoint): boolean { return this.distanceSqTo(b) < Point._tolerance; }
-    public get hash(): string { return `${this.x.toFixed(Point._toleranceDigits)},${this.y.toFixed(Point._toleranceDigits)}`; }
+    public get hash(): string { return `${this.x.toFixed(6)},${this.y.toFixed(6)}`; }
 }
 
 class ConstPoint extends Point {

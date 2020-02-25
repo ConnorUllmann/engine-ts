@@ -8,6 +8,8 @@ import { ICircle } from '@engine-ts/geometry/circle';
 import { ITriangle } from '@engine-ts/geometry/triangle';
 import { Rectangle, IRectangle } from '@engine-ts/geometry/rectangle';
 import { Segment, ISegment } from '@engine-ts/geometry/segment';
+import { ILine, Line, IPointPair } from '@engine-ts/geometry/line';
+import { IRay, Ray } from '@engine-ts/geometry/ray';
 
 export type FillStyle = Color | string | null;
 export type StrokeStyle = FillStyle;
@@ -47,23 +49,23 @@ export class Draw {
         Draw.circleOutline(world, { x: position.x, y: position.y, radius }, strokeStyle, lineWidth);
     };
 
-    public static oval(world: World, position: IPoint, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angleRadians: number=0) {
+    public static oval(world: World, position: IPoint, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angleRadians, 0, tau);
+        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, 0, tau);
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
     };
 
-    public static ovalOutline(world: World, position: IPoint, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angleRadians: number=0, lineWidth: number=1) {
+    public static ovalOutline(world: World, position: IPoint, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angleRadians, 0, tau);
+        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, 0, tau);
         context.lineWidth = lineWidth;
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
@@ -123,9 +125,9 @@ export class Draw {
         context.stroke();
     };
 
-    public static regularPolygon(world: World, position: IPoint, radius: number, sides: number, fillStyle: FillStyle=null, angleRadians: number=0) {
+    public static regularPolygon(world: World, position: IPoint, radius: number, sides: number, fillStyle: FillStyle=null, angle: number=0) {
         const context = world.context;
-        const points = Draw._getRegularPolygonPoints(position, radius, sides, angleRadians);
+        const points = Draw._getRegularPolygonPoints(position, radius, sides, angle);
         if(points.length <= 0)
             return;
         context.beginPath();
@@ -142,9 +144,9 @@ export class Draw {
         context.fill();
     };
 
-    public static regularPolygonOutline(world: World, position: IPoint, radius: number, sides: number, strokeStyle: StrokeStyle=null, angleRadians: number=0, lineWidth: number=1) {
+    public static regularPolygonOutline(world: World, position: IPoint, radius: number, sides: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
         const context = world.context;
-        const points = Draw._getRegularPolygonPoints(position, radius, sides, angleRadians);
+        const points = Draw._getRegularPolygonPoints(position, radius, sides, angle);
         if(points.length <= 0)
             return;
         points.push(points.first());
@@ -163,25 +165,25 @@ export class Draw {
         context.stroke();
     };
 
-    private static _getRegularPolygonPoints(position: IPoint, radius: number, sides: number, angleRadians: number) {
+    private static _getRegularPolygonPoints(position: IPoint, radius: number, sides: number, angle: number) {
         if(sides <= 0)
             throw `Cannot create a regular polygon with ${sides} sides`;
         const points = [];
         for(let i = 0; i < sides; i++)
         {
-            const angleRadiansToCorner = tau * i / sides + angleRadians;
-            const point = Point.create(radius, angleRadiansToCorner).add(position);
+            const angleToCorner = tau * i / sides + angle;
+            const point = Point.create(radius, angleToCorner).add(position);
             points.push(point);
         }
         return points;
     };
 
-    public static rectangle(world: World, rectangle: IRectangle, fillStyle: FillStyle=null, angleRadians: number=0) {
+    public static rectangle(world: World, rectangle: IRectangle, fillStyle: FillStyle=null, angle: number=0) {
         const context = world.context;
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
 
-        if(angleRadians === 0)
+        if(angle === 0)
         {
             context.fillRect(rectangle.x - world.camera.x, rectangle.y - world.camera.y, rectangle.w, rectangle.h);
             return;
@@ -190,22 +192,22 @@ export class Draw {
         const xCenter = rectangle.x + rectangle.w/2 - world.camera.x;
         const yCenter = rectangle.y + rectangle.h/2 - world.camera.y;
         context.translate(xCenter, yCenter);
-        context.rotate(angleRadians);
+        context.rotate(angle);
         context.fillRect(-rectangle.w/2, -rectangle.h/2, rectangle.w, rectangle.h);
-        context.rotate(-angleRadians);
+        context.rotate(-angle);
         context.translate(-xCenter, -yCenter);
     };
     
-    public static rectangleOutline(world: World, rectangle: IRectangle, strokeStyle: StrokeStyle=null, lineWidth: number=1, angleRadians: number = 0) {
+    public static rectangleOutline(world: World, rectangle: IRectangle, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {
         let points: Point[] = [
             new Point(rectangle.x, rectangle.y),
             new Point(rectangle.x + rectangle.w, rectangle.y),
             new Point(rectangle.x + rectangle.w, rectangle.y + rectangle.h),
             new Point(rectangle.x, rectangle.y + rectangle.h)
         ];
-        if(angleRadians !== 0) {
+        if(angle !== 0) {
             const center = new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2);
-            points = points.map(point => point.rotated(angleRadians, center));
+            points = points.map(point => point.rotated(angle, center));
         }
         Draw.path(world, points, strokeStyle, lineWidth, true);
     };
@@ -235,6 +237,44 @@ export class Draw {
         context.beginPath();
         context.moveTo(segment.a.x - world.camera.x, segment.a.y - world.camera.y);
         context.lineTo(segment.b.x - world.camera.x, segment.b.y - world.camera.y);
+        if(strokeStyle)
+            context.strokeStyle = strokeStyle.toString();
+        context.lineWidth = lineWidth;
+        context.stroke();
+    };
+
+    public static line(world: World, line: ILine, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(lineWidth < 0)
+            return;
+        const context = world.context;
+        context.beginPath();
+        context.moveTo(world.camera.xLeft - world.camera.x, Line.yAtX(line, world.camera.xLeft) - world.camera.y);
+        context.lineTo(world.camera.xRight - world.camera.x, Line.yAtX(line, world.camera.xRight) - world.camera.y);
+        if(strokeStyle)
+            context.strokeStyle = strokeStyle.toString();
+        context.lineWidth = lineWidth;
+        context.stroke();
+    };
+
+    public static ray(world: World, ray: IRay, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(lineWidth < 0)
+            return;
+        const context = world.context;
+        context.beginPath();
+
+        const sign = Math.sign(ray.b.x - ray.a.x);
+        if(sign > 0) {
+            context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
+            context.lineTo(world.camera.xRight - world.camera.x, Ray.yAtX(ray, world.camera.xRight) - world.camera.y);
+        }
+        else if (sign < 0) {
+            context.moveTo(world.camera.xLeft - world.camera.x, Ray.yAtX(ray, world.camera.xLeft) - world.camera.y);
+            context.lineTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);            
+        }
+        else {
+            context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
+            context.lineTo(ray.a.x - world.camera.x, ray.b.y > ray.a.y ? world.camera.yBottom : world.camera.yTop);
+        }
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
         context.lineWidth = lineWidth;

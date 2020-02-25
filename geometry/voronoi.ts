@@ -1,11 +1,11 @@
-import { Point } from './point';
+import { Point, IPoint } from './point';
 import { Triangle } from './triangle';
 import { tau, moduloSafe } from '@engine-ts/core/utils';
 import { Circle } from './circle';
 
 export type VoronoiCell = { point: Point, vertices: Point[] };
 
-export function Voronoi(points: Point[]): VoronoiCell[] {
+export function Voronoi(points: IPoint[]): VoronoiCell[] {
     const cells: VoronoiCell[] = [];
     const triangles: Triangle[] = Triangle.triangulation(points);
     points.forEach(point => {
@@ -15,7 +15,7 @@ export function Voronoi(points: Point[]): VoronoiCell[] {
             .sorted((a: Circle, b: Circle) => moduloSafe(a.subtract(point).angle, tau) - moduloSafe(b.subtract(point).angle, tau));
         if(neighborCircumcircles.length > 2) {
             cells.push({
-                point,
+                point: new Point(point.x, point.y),
                 vertices: neighborCircumcircles
             });
         }
