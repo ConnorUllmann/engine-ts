@@ -125,7 +125,9 @@ export class Point implements IPoint {
         return reflectionPoint.subtract(this).scale(2).add(this);
     }
 
+    // TODO: move this to PointPair
     public closestPointOnLine(a: Point, b: Point): Point { return this.subtract(a).proj(b.subtract(a)).add(a); };
+    // TODO: move this to PointPair
     public closestPointOnLineSegment(a: Point, b: Point): Point {
         let ab = b.subtract(a);
         let ret = this.subtract(a).proj(ab).add(a);

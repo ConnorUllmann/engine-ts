@@ -11,15 +11,15 @@ export interface ITriangle {
 export class Triangle implements ITriangle {
     constructor(public a: Point, public b: Point, public c: Point) {}
 
-    public get vertices(): Point[] { return [this.a, this.b, this.c]; }
+    public vertices(): Point[] { return [this.a, this.b, this.c]; }
     public static segments(triangle: ITriangle): Segment[] { 
         return [
-            new Segment(triangle.a, triangle.b),
-            new Segment(triangle.b, triangle.c),
-            new Segment(triangle.c, triangle.a)
+            new Segment(triangle.a.clonePoint(), triangle.b.clonePoint()),
+            new Segment(triangle.b.clonePoint(), triangle.c.clonePoint()),
+            new Segment(triangle.c.clonePoint(), triangle.a.clonePoint())
         ];
     }
-    public get segments(): Segment[] { return Triangle.segments(this); }
+    public segments(): Segment[] { return Triangle.segments(this); }
     public static hash(triangle: ITriangle): string { return [triangle.a, triangle.b, triangle.c].sorted(o => o.x).sorted(o => o.y).map(o => o.hash).join('|'); }
     public get hash(): string { return Triangle.hash(this); }
     public isEqualTo(triangle: ITriangle): boolean { return Triangle.hash(triangle) === this.hash; }
@@ -84,7 +84,7 @@ export class Triangle implements ITriangle {
                 const circumcircle = triangle.circumcircle;
                 const collides = circumcircle.collidesPoint(point);
                 if(collides) {
-                    segments.push(...triangle.segments);
+                    segments.push(...triangle.segments());
                     trianglesToRemove.push(triangleIndex);
                 }
             });

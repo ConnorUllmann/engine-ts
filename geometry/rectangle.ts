@@ -43,7 +43,7 @@ export class Rectangle extends Point implements IRectangle {
             new Segment(corners[3], corners[0])
         ];
     }
-    public get segments(): Segment[] { return Rectangle.segments(this); }
+    public segments(): Segment[] { return Rectangle.segments(this); }
 
     private _w: number;
     private _h: number;
