@@ -186,7 +186,7 @@ export class Point implements IPoint {
             : intersectionPoint;
     };
 
-    public closest(points: IPoint[]): IPoint { return points.minOf(o => this.distanceSqTo(o)); }
+    public closest<T extends IPoint>(points: T[]): T { return points.minOf(o => this.distanceSqTo(o)); }
 
     public rotated(angle: number, center: Point | null=null): Point {
         const x = this.x - (center ? center.x : 0);

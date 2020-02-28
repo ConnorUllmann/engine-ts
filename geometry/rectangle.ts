@@ -1,13 +1,18 @@
 import { Point, IPoint } from './point';
 import { ICircle } from './circle';
 import { random } from '../core/utils';
-import { Segment } from './segment';
+import { Segment, ISegment } from './segment';
+import { IPointPair, PointPairType, PointPair } from './point-pair';
+import { ILine } from './line';
+import { IRay } from './ray';
+import { IPolygon } from './polygon';
+import { Triangle } from './triangle';
 
 export interface IRectangle extends IPoint {
     readonly w: number;
     readonly h: number;
 }
-export class Rectangle extends Point implements IRectangle {
+export class Rectangle extends Point implements IRectangle, IPolygon {
     public get xLeft(): number { return this.x; }
     public set xLeft(x: number) { this.x = x; }
     public get xRight(): number { return this.x + this.w; }
@@ -43,7 +48,9 @@ export class Rectangle extends Point implements IRectangle {
             new Segment(corners[3], corners[0])
         ];
     }
-    public segments(): Segment[] { return Rectangle.segments(this); }
+    public get segments(): Segment[] { return Rectangle.segments(this); }
+    public get triangulation(): Triangle[] { return Triangle.triangulation(this.vertices); }
+    public get area(): number { return this.w * this.h; }
 
     private _w: number;
     private _h: number;
@@ -64,30 +71,38 @@ export class Rectangle extends Point implements IRectangle {
     public offset(other: IPoint): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
     public collidesPoint(point: IPoint): boolean { return point.x >= this.x && point.y >= this.y && point.x < this.x + this.w && point.y < this.y + this.h; }
     public collidesRectangle(other: IRectangle): boolean { return Rectangle.collide(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h); }
-    public collidesCircle(circle: ICircle, rectangleAngle: number=0, rectangleIsCentered: boolean=false) { return Rectangle.collidesCircle(this, circle, rectangleAngle, rectangleIsCentered); }
-    public static collidesCircle(rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0, rectangleIsCentered: boolean=false) {
+    public collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean { return Rectangle.collidesCircle(this, circle, rectangleAngle); }
+    public static collidesCircle(rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0): boolean {
         // The rectangle's (x, y) position is its top-left corner if it were not rotated,
         // however the rectangle still rotates about its center (by "rectangleAngle" radians)
         //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
+        const halfW = rectangle.w/2;
+        const halfH = rectangle.h/2;
         const circlePosition = rectangleAngle === 0
             ? new Point(circle.x, circle.y)
-            : new Point(circle.x, circle.y).rotated(-rectangleAngle, rectangleIsCentered ? new Point(rectangle.x, rectangle.y) : new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2));
+            : new Point(circle.x, circle.y).rotated(-rectangleAngle, new Point(rectangle.x + halfW, rectangle.y + halfH));
+        const xCircleDistance = Math.abs(circlePosition.x - rectangle.x + halfW);
+        const yCircleDistance = Math.abs(circlePosition.y - rectangle.y + halfH);
 
-        const xCircleDistance = Math.abs(circlePosition.x - (rectangleIsCentered ? rectangle.x : rectangle.x + rectangle.w/2));
-        const yCircleDistance = Math.abs(circlePosition.y - (rectangleIsCentered ? rectangle.y : rectangle.y + rectangle.h/2));
-
-        if (xCircleDistance > (rectangle.w/2 + circle.radius)) { return false; }
-        if (yCircleDistance > (rectangle.h/2 + circle.radius)) { return false; }
-
-        if (xCircleDistance <= (rectangle.w/2)) { return true; }
-        if (yCircleDistance <= (rectangle.h/2)) { return true; }
+        if (xCircleDistance > (halfW + circle.radius) || yCircleDistance > (halfH + circle.radius))
+            return false;
+        if (xCircleDistance <= halfW || yCircleDistance <= halfH)
+            return true;
 
         const cornerDistanceSq =
-            (xCircleDistance - rectangle.w/2) * (xCircleDistance - rectangle.w/2) +
-            (yCircleDistance - rectangle.h/2) * (yCircleDistance - rectangle.h/2);
-
+            (xCircleDistance - halfW) * (xCircleDistance - halfW) +
+            (yCircleDistance - halfH) * (yCircleDistance - halfH);
         return cornerDistanceSq <= (circle.radius * circle.radius);
     };
+    
+    public lineIntersections(line: ILine): Point[] { return Rectangle.intersections(this, line, PointPairType.LINE); }
+    public rayIntersections(ray: IRay): Point[] { return Rectangle.intersections(this, ray, PointPairType.LINE); }
+    public segmentIntersections(segment: ISegment): Point[] { return Rectangle.intersections(this, segment, PointPairType.LINE); }
+    public static intersections(rectangle: IRectangle, pair: IPointPair, pairType: PointPairType): Point[] { 
+        return Rectangle.segments(rectangle)
+            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
+            .filter(point => point != null);
+    }
 
     public static collide(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number): boolean { 
         return ax + aw > bx && ay + ah > by && ax < bx + bw && ay < by + bh;
@@ -128,4 +143,34 @@ export class Rectangle extends Point implements IRectangle {
     public get randomPointInside(): Point {
         return new Point(random() * this.w + this.x, random() * this.h + this.y);
     }
+
+    public get boundingRectangle(): Rectangle { return this.cloneRectangle(); }
+
+    public static boundingPoints(points: IPoint[]): Rectangle {
+        if(points == null || points.length <= 0)
+            return new Rectangle();
+        const xMin = points.minOf(o => o.x).x;
+        const yMin = points.minOf(o => o.y).y;
+        const xMax = points.maxOf(o => o.x).x;
+        const yMax = points.maxOf(o => o.y).y;
+        return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+    };
+
+    public static boundingPolygon(polygon: IPolygon): Rectangle {
+        return Rectangle.boundingPoints(polygon.vertices);
+    }
+
+    public static boundingRectangles(rectangles: IRectangle[]): Rectangle {
+        if(rectangles == null || rectangles.length <= 0)
+            return new Rectangle();
+        const xMin = rectangles.map(o => o.x).min();
+        const yMin = rectangles.map(o => o.y).min();
+        const xMax = rectangles.map(o => o.x + o.w).max();
+        const yMax = rectangles.map(o => o.y + o.h).max();
+        return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
+    };
+
+    public static boundingCircle(circle: ICircle): Rectangle {
+        return new Rectangle(circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
+    };
 }

@@ -32,12 +32,10 @@ export class Ray implements IRay {
     public lineIntersection(line: ILine): Point | null { return PointPair.intersection(this, PointPairType.RAY, line, PointPairType.LINE); }
     public rayIntersection(ray: IRay): Point | null { return PointPair.intersection(this, PointPairType.RAY, ray, PointPairType.RAY); }
     public segmentIntersection(segment: ISegment): Point | null { return PointPair.intersection(this, PointPairType.RAY, segment, PointPairType.SEGMENT); }
-    public rectangleIntersection(rectangle: IRectangle): Point[] { return PointPair.rectangleIntersection(this, PointPairType.RAY, rectangle); }
-    public triangleIntersection(triangle: ITriangle): Point[] { return PointPair.triangleIntersection(this, PointPairType.RAY, triangle); }
 
     constructor(public a: Point, public angle: number) { }
 
-    public static cast = function<T extends ISegment>(ray: IRay, segments: T[], maxDistance: number=Ray.DefaultMaxDistance): RaycastResult<T> {
+    public static cast<T extends ISegment>(ray: IRay, segments: T[], maxDistance: number=Ray.DefaultMaxDistance): RaycastResult<T> {
         const raySegment = Ray.asSegment(ray, maxDistance);
         const segmentIntersection = segments
             .map(segment => ({ segment, intersection: raySegment.segmentIntersection(segment) }))
@@ -49,7 +47,7 @@ export class Ray implements IRay {
             segmentHit: hit ? segmentIntersection.segment : null
         }
     }
-    public cast = function<T extends ISegment>(segments: T[], maxDistance: number=Ray.DefaultMaxDistance): RaycastResult<T> { return Ray.cast(this, segments, maxDistance); }
+    public cast<T extends ISegment>(segments: T[], maxDistance: number=Ray.DefaultMaxDistance): RaycastResult<T> { return Ray.cast(this, segments, maxDistance); }
 }
 
 export interface RaycastResult<T extends ISegment> {

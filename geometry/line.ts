@@ -42,8 +42,6 @@ export class Line implements ILine {
     public lineIntersection(line: ILine): Point | null { return PointPair.intersection(this, PointPairType.LINE, line, PointPairType.LINE); }
     public rayIntersection(ray: IRay): Point | null { return PointPair.intersection(this, PointPairType.LINE, ray, PointPairType.RAY); }
     public segmentIntersection(segment: ISegment): Point | null { return PointPair.intersection(this, PointPairType.LINE, segment, PointPairType.SEGMENT); }
-    public rectangleIntersection(rectangle: IRectangle): Point[] { return PointPair.rectangleIntersection(this, PointPairType.LINE, rectangle); }
-    public triangleIntersection(triangle: ITriangle): Point[] { return PointPair.triangleIntersection(this, PointPairType.LINE, triangle); }
 
     constructor(public a: Point, public b: Point) {}
 }

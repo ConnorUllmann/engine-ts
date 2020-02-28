@@ -1,13 +1,31 @@
 import { IPoint, Point } from './point';
-import { Segment } from './segment';
+import { Segment, ISegment } from './segment';
 import { tau } from '@engine-ts/core/utils';
+import { ILine } from './line';
+import { PointPairType, IPointPair, PointPair } from './point-pair';
+import { IRay } from './ray';
+import { Rectangle } from './rectangle';
+import { Triangle } from './triangle';
 
 export interface IPolygon {
-    vertices: Point[];
-}
-export class Polygon {
     // counter-clockwise order
     // TODO: consider using windingNumber around a point that is known to be inside the polygon to determine if it's clockwise and flip it if so
+    vertices: Point[];
+    segments: Segment[];
+    triangulation: Triangle[];
+    boundingRectangle: Rectangle;
+    area: number;
+
+    // TODO:
+    // collidesRectangle(rectangle: IRectangle): boolean;
+    // collidesTriangle(triangle: ITriangle): boolean;
+    // collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean
+    collidesPoint(point: Point): boolean;
+    lineIntersections(line: ILine): Point[];
+    rayIntersections(ray: IRay): Point[];
+    segmentIntersections(segment: ISegment): Point[];    
+}
+export class Polygon implements IPolygon {
     public vertices: Point[] = [];
 
     constructor(points: IPoint[]) {
@@ -22,7 +40,7 @@ export class Polygon {
         }
         return segments;
     }
-    public segments(): Segment[] { return Polygon.segments(this); }
+    public get segments(): Segment[] { return Polygon.segments(this); }
     public static segmentsWithNormals(polygon: IPolygon): { a: Point, b: Point, normal: Point }[] {
         const segments = [];
         for(let i = 0; i < polygon.vertices.length; i++) {
@@ -62,6 +80,20 @@ export class Polygon {
         return windingNumber;
     }
 
+    public get boundingRectangle(): Rectangle { return Rectangle.boundingPolygon(this); }
+    public get triangulation(): Triangle[] { return Triangle.triangulation(this.vertices); }
+    public get area(): number { return this.triangulation.map(o => o.area).sum(); }
+
     public static collidesPoint(polygon: IPolygon, point: Point) { return Polygon.windingNumber(polygon.vertices, point) != 0; }
     public collidesPoint(point: Point): boolean { return Polygon.collidesPoint(this, point); }
+    
+    public lineIntersections(line: ILine): Point[] { return Polygon.intersections(this, line, PointPairType.LINE); }
+    public rayIntersections(ray: IRay): Point[] { return Polygon.intersections(this, ray, PointPairType.LINE); }
+    public segmentIntersections(segment: ISegment): Point[] { return Polygon.intersections(this, segment, PointPairType.LINE); }
+    public static intersections(polygon: IPolygon, pair: IPointPair, pairType: PointPairType): Point[] { 
+        return Polygon.segments(polygon)
+            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
+            .filter(point => point != null);
+    }
+
 }

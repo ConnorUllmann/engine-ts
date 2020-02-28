@@ -27,12 +27,16 @@ export function moduloSafe(value: number, modulo: number) { return ((value % mod
 
 export function angleDifference(from: number, to: number) { return moduloSafe(to - from - Math.PI, tau) - Math.PI; };
 
-export const randomSeed = Math.random(); //0.8960552343494206;//Math.random()// 0.5857513213147061; //Math.random(); // 0.8848090285063617 // 0.01445618278625016 // 0.7747721362588182
-console.log(`Random seed: ${randomSeed}`);
 export function getRandomNumberGenerator(seed: number): () => number {
-    return () => { seed = Math.sin(seed) * 10000; return seed - Math.floor(seed); }
+    return () => { 
+        seed = Math.sin(seed) * 10000;
+        return seed - Math.floor(seed);
+    };
 }
+export const randomSeed = Math.random();
+console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
+
 
 declare global {
     interface Array<T> {
@@ -57,6 +61,10 @@ declare global {
         sorted(compare?: (a: T, b: T) => number): T[];
         distinct(valueGetter?: (o: T) => string | number): T[];
         distincted(valueGetter?: (o: T) => string | number): T[];
+
+        // number only
+        min(this: Array<number>): number | null;
+        max(this: Array<number>): number | null;
     }
 }
 

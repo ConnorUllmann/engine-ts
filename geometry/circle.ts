@@ -24,3 +24,4 @@ export class Circle extends Point implements ICircle {
         return new Circle(center.x, center.y, radius);
     }
 }
+

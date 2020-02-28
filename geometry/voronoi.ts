@@ -10,7 +10,7 @@ export function Voronoi(points: IPoint[]): VoronoiCell[] {
     const cells: VoronoiCell[] = [];
     const triangles: Triangle[] = Triangle.triangulation(points);
     points.forEach(point => {
-        const neighborTriangles = triangles.filter(triangle => triangle.vertices().any(vertex => vertex.isEqualTo(point)));
+        const neighborTriangles = triangles.filter(triangle => triangle.vertices.any(vertex => vertex.isEqualTo(point)));
         const neighborCircumcircles = neighborTriangles
             .map(triangle => triangle.circumcircle)
             .sorted((a: Circle, b: Circle) => moduloSafe(a.subtract(point).angle, tau) - moduloSafe(b.subtract(point).angle, tau));

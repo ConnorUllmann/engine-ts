@@ -1,17 +1,24 @@
 import { Point, IPoint } from './point';
-import { Segment } from './segment';
+import { Segment, ISegment } from './segment';
 import { Circle } from './circle';
 import { tau } from '../core/utils';
+import { ILine } from './line';
+import { PointPairType, IPointPair, PointPair } from './point-pair';
+import { IRay } from './ray';
+import { IPolygon } from './polygon';
+import { IRectangle, Rectangle } from './rectangle';
 
 export interface ITriangle {
     readonly a: Point;
     readonly b: Point;
     readonly c: Point;
 }
-export class Triangle implements ITriangle {
+export class Triangle implements ITriangle, IPolygon {
     constructor(public a: Point, public b: Point, public c: Point) {}
 
-    public vertices(): Point[] { return [this.a, this.b, this.c]; }
+    public cloneTriangle(): Triangle { return new Triangle(this.a.clonePoint(), this.b.clonePoint(), this.c.clonePoint()); }
+
+    public get vertices(): Point[] { return [this.a, this.b, this.c]; }
     public static segments(triangle: ITriangle): Segment[] { 
         return [
             new Segment(triangle.a.clonePoint(), triangle.b.clonePoint()),
@@ -19,10 +26,11 @@ export class Triangle implements ITriangle {
             new Segment(triangle.c.clonePoint(), triangle.a.clonePoint())
         ];
     }
-    public segments(): Segment[] { return Triangle.segments(this); }
+    public get segments(): Segment[] { return Triangle.segments(this); }
     public static hash(triangle: ITriangle): string { return [triangle.a, triangle.b, triangle.c].sorted(o => o.x).sorted(o => o.y).map(o => o.hash).join('|'); }
     public get hash(): string { return Triangle.hash(this); }
     public isEqualTo(triangle: ITriangle): boolean { return Triangle.hash(triangle) === this.hash; }
+
 
     public get circumcircle(): Circle {
         const midpointAB = this.a.midpoint(this.b);
@@ -47,6 +55,7 @@ export class Triangle implements ITriangle {
     }
     public get areaSigned(): number { return Triangle.areaSigned(this); }
     public get area(): number { return Math.abs(this.areaSigned); }
+    public get boundingRectangle(): Rectangle { return Rectangle.boundingPolygon(this); }
 
     public collidesPoint(point: IPoint): boolean { return Triangle.collidesPoint(this, point); }
     public static collidesPoint(triangle: ITriangle, point: IPoint): boolean { 
@@ -55,6 +64,15 @@ export class Triangle implements ITriangle {
         const s = 1/(2*areaSigned)*(triangle.a.y*triangle.c.x - triangle.a.x*triangle.c.y + (triangle.c.y - triangle.a.y)*point.x + (triangle.a.x - triangle.c.x)*point.y);
         const t = 1/(2*areaSigned)*(triangle.a.x*triangle.b.y - triangle.a.y*triangle.b.x + (triangle.a.y - triangle.b.y)*point.x + (triangle.b.x - triangle.a.x)*point.y);
         return s > 0 && t > 0 && 1 - s - t > 0;
+    }
+
+    public lineIntersections(line: ILine): Point[] { return Triangle.intersections(this, line, PointPairType.LINE); }
+    public rayIntersections(ray: IRay): Point[] { return Triangle.intersections(this, ray, PointPairType.LINE); }
+    public segmentIntersections(segment: ISegment): Point[] { return Triangle.intersections(this, segment, PointPairType.LINE); }
+    public static intersections(triangle: ITriangle, pair: IPointPair, pairType: PointPairType): Point[] { 
+        return Triangle.segments(triangle)
+            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
+            .filter(point => point != null);
     }
 
     public static supertriangle(points: IPoint[]): Triangle {
@@ -67,9 +85,10 @@ export class Triangle implements ITriangle {
         );
     }
     
+    public get triangulation(): Triangle[] { return [this.cloneTriangle()]; }
     public static triangulation(points: IPoint[]): Triangle[] {
         // http://paulbourke.net/papers/triangulate/
-        
+
         // add supertriangle to points and triangles lists
         const supertriangle: Triangle = Triangle.supertriangle(points);
         const supertriangleVertices = [supertriangle.a, supertriangle.b, supertriangle.c]
@@ -86,7 +105,7 @@ export class Triangle implements ITriangle {
                 const circumcircle = triangle.circumcircle;
                 const collides = circumcircle.collidesPoint(point);
                 if(collides) {
-                    segments.push(...triangle.segments());
+                    segments.push(...triangle.segments);
                     trianglesToRemove.push(triangleIndex);
                 }
             });

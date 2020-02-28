@@ -1,6 +1,4 @@
 import { Point } from './point';
-import { Rectangle, IRectangle } from './rectangle';
-import { ITriangle, Triangle } from './triangle';
 
 export enum PointPairType {
     LINE = "LINE",
@@ -55,16 +53,4 @@ export class PointPair {
                 ? null
                 : intersectionPoint;
     };
-    
-    public static rectangleIntersection(pair: IPointPair, pairType: PointPairType, rectangle: IRectangle): Point[] { 
-        return Rectangle.segments(rectangle)
-            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
-            .filter(point => point != null);
-    }
-
-    public static triangleIntersection(pair: IPointPair,  pairType: PointPairType, triangle: ITriangle): Point[] { 
-        return Triangle.segments(triangle)
-            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
-            .filter(point => point != null);
-    }
 }

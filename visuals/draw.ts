@@ -235,7 +235,7 @@ export class Draw {
         if(lineWidth <= 0)
             return;
 
-        const points = PointPair.rectangleIntersection(line, PointPairType.LINE, world.camera);
+        const points = world.camera.lineIntersections(line);
         if(points.length < 2)
             return;
 
@@ -254,7 +254,7 @@ export class Draw {
             return;
 
         const context = world.context;
-        const points = PointPair.rectangleIntersection(ray, PointPairType.RAY, world.camera);
+        const points = world.camera.rayIntersections(ray);
         if(points.length === 1) {
             context.beginPath();
             context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
