@@ -6,6 +6,7 @@ import { Circle } from './circle';
 export type VoronoiCell = { point: Point, vertices: Point[] };
 
 export function Voronoi(points: IPoint[]): VoronoiCell[] {
+    // https://en.wikipedia.org/wiki/Delaunay_triangulation#/media/File:Delaunay_Voronoi.svg
     const cells: VoronoiCell[] = [];
     const triangles: Triangle[] = Triangle.triangulation(points);
     points.forEach(point => {

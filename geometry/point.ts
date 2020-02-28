@@ -117,21 +117,27 @@ export class Point implements IPoint {
     public reflect(normal: Point, origin: Point | null=null): Point {
         if(origin == null)
         {
-            const reflectionPoint = this.closestPointOnLine(Point.zero, normal);
+            const reflectionPoint = this.closestPointOnLine({ a: Point.zero, b: normal });
             return reflectionPoint.subtract(this).scale(2).add(this);
         }
 
-        const reflectionPoint = this.closestPointOnLine(origin, origin.add(normal));
+        const reflectionPoint = this.closestPointOnLine({ a: origin, b: origin.add(normal) });
         return reflectionPoint.subtract(this).scale(2).add(this);
     }
 
-    // TODO: move this to PointPair
-    public closestPointOnLine(a: Point, b: Point): Point { return this.subtract(a).proj(b.subtract(a)).add(a); };
-    // TODO: move this to PointPair
-    public closestPointOnLineSegment(a: Point, b: Point): Point {
-        let ab = b.subtract(a);
-        let ret = this.subtract(a).proj(ab).add(a);
-        let r = ret.subtract(a).dot(ab);
+    // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
+    // if result is < 0, then this point is right of the line/segment/ray formed by the two points. 
+    // if result == 0, then it is colinear with the two points.
+    public isLeftCenterRightOf({ a, b }: IPointPair): number { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)); }
+    public isLeftOf(pair: IPointPair): boolean { return this.isLeftCenterRightOf(pair) > 0; }
+    public isColinear(pair: IPointPair): boolean { return Point.isWithinToleranceOf(this.isLeftCenterRightOf(pair)); }
+    public isRightOf(pair: IPointPair): boolean { return this.isLeftCenterRightOf(pair) < 0; }
+
+    public closestPointOnLine({ a, b }: IPointPair): Point { return this.subtract(a).proj(b.subtract(a)).add(a); };
+    public closestPointOnLineSegment({ a, b }: IPointPair): Point {
+        const ab = b.subtract(a);
+        const ret = this.subtract(a).proj(ab).add(a);
+        const r = ret.subtract(a).dot(ab);
         if(r < 0) return a;
         if(r > ab.lengthSq()) return b;
         return ret;
@@ -181,7 +187,6 @@ export class Point implements IPoint {
     };
 
     public closest(points: IPoint[]): IPoint { return points.minOf(o => this.distanceSqTo(o)); }
-    public leftOfLine(a: IPoint, b: IPoint): boolean { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)) > 0; }
 
     public rotated(angle: number, center: Point | null=null): Point {
         const x = this.x - (center ? center.x : 0);
@@ -205,7 +210,8 @@ export class Point implements IPoint {
     public clampedInRectangle(rectangle: Rectangle): Point { return new Point(clamp(this.x, rectangle.xLeft, rectangle.xRight), clamp(this.y, rectangle.yTop, rectangle.yBottom)); }
     
     private static _tolerance: number = 0.00000001;
-    public isEqualTo(b: IPoint): boolean { return this.distanceSqTo(b) < Point._tolerance; }
+    public static isWithinToleranceOf(a: number, b: number=0): boolean { return Math.abs(a - b) < Point._tolerance; }
+    public isEqualTo(b: IPoint): boolean { return Point.isWithinToleranceOf(this.distanceSqTo(b)); }
     public get hash(): string { return `${this.x.toFixed(6)},${this.y.toFixed(6)}`; }
 }
 

@@ -66,8 +66,10 @@ export class Triangle implements ITriangle {
             circumcircle.add(Point.up.rotated(tau*2/3).scale(diameter))
         );
     }
-
+    
     public static triangulation(points: IPoint[]): Triangle[] {
+        // http://paulbourke.net/papers/triangulate/
+        
         // add supertriangle to points and triangles lists
         const supertriangle: Triangle = Triangle.supertriangle(points);
         const supertriangleVertices = [supertriangle.a, supertriangle.b, supertriangle.c]

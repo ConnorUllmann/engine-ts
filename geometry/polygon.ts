@@ -7,7 +7,12 @@ export interface IPolygon {
 }
 export class Polygon {
     // counter-clockwise order
+    // TODO: consider using windingNumber around a point that is known to be inside the polygon to determine if it's clockwise and flip it if so
     public vertices: Point[] = [];
+
+    constructor(points: IPoint[]) {
+        points.forEach(point => this.vertices.push(new Point(point.x, point.y)));
+    }
 
     public static segments(polygon: IPolygon): Segment[] { 
         const segments = [];
@@ -31,7 +36,32 @@ export class Polygon {
     }
     public segmentsWithNormals(): { a: Point, b: Point, normal: Point }[] { return Polygon.segmentsWithNormals(this); }
 
-    constructor(points: IPoint[]) {
-        points.forEach(point => this.vertices.push(new Point(point.x, point.y)));
+    public static windingNumber(vertices: Point[], point: Point): number {
+        // https://twitter.com/FreyaHolmer/status/1232826293902888960
+        // http://geomalgorithms.com/a03-_inclusion.html
+
+        let windingNumber = 0;
+        for(let i = 0; i < vertices.length; i++) {
+            const currentVertex = vertices[i];
+            const nextVertex = vertices[(i+1)%vertices.length];
+            if(currentVertex.y <= point.y) {
+                if(nextVertex.y > point.y) {
+                    if(point.isLeftOf({ a: currentVertex, b: nextVertex })) {
+                        windingNumber++;
+                    }
+                }
+            }
+            else {
+                if(nextVertex.y <= point.y) {
+                    if(point.isRightOf({ a: currentVertex, b: nextVertex })) {
+                        windingNumber--;
+                    }
+                }
+            }
+        }
+        return windingNumber;
     }
+
+    public static collidesPoint(polygon: IPolygon, point: Point) { return Polygon.windingNumber(polygon.vertices, point) != 0; }
+    public collidesPoint(point: Point): boolean { return Polygon.collidesPoint(this, point); }
 }
