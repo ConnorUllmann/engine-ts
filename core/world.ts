@@ -2,6 +2,7 @@ import { Entity } from './entity';
 import { Camera } from './camera';
 import { Mouse } from './mouse';
 import { Color } from '../visuals/color';
+import { Keyboard } from './keyboard';
 
 export class World {
     public canvas: HTMLCanvasElement;
@@ -9,6 +10,7 @@ export class World {
 
     public camera: Camera;
     public mouse: Mouse;
+    public keyboard: Keyboard;
 
     public entities: Entity[] = [];
     public entityById: { [id: number]: Entity } = {};
@@ -38,8 +40,10 @@ export class World {
         
         this.camera = new Camera(this);
         this.mouse = new Mouse(this);
+        this.keyboard = new Keyboard();
 
         this.mouse.start();
+        this.keyboard.start();
 
         setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
         return this;
@@ -53,6 +57,7 @@ export class World {
         this.clearCanvas(this.backgroundColor);
         this.renderEntities();
         this.mouse.update();
+        this.keyboard.update();
     }
 
     public updateEntities(): void {
