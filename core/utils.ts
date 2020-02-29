@@ -261,10 +261,8 @@ Array.prototype.batchify = function<T>(batchSize: number): T[][]
 //      bulbasaur: {id: 'bulbasaur'},
 //      charmander: {id: 'charmander'}
 // }
-Array.prototype.mappedBy = function<T>(keyGetter: (o: T) => string): { [key: string]: T }
-{
-    return this.reduce((obj: { [key: string]: T }, element: T) =>
-    {
+Array.prototype.mappedBy = function<T>(keyGetter: (o: T) => string): { [key: string]: T } {
+    return this.reduce((obj: { [key: string]: T }, element: T) => {
         obj[keyGetter(element)] = element;
         return obj
     },

@@ -105,7 +105,7 @@ export class Keyboard {
         return result;
     };
 
-    public static NamedKeysMap = {
+    public static readonly NamedKeysMap = {
         8: [Key.BACKSPACE],
         9: [Key.TAB],
         16: [Key.SHIFT],

@@ -3,6 +3,7 @@ import { Camera } from './camera';
 import { Mouse } from './mouse';
 import { Color } from '../visuals/color';
 import { Keyboard } from './keyboard';
+import { Gamepads } from './gamepads';
 
 export class World {
     public canvas: HTMLCanvasElement;
@@ -11,6 +12,7 @@ export class World {
     public camera: Camera;
     public mouse: Mouse;
     public keyboard: Keyboard;
+    public gamepads: Gamepads;
 
     public entities: Entity[] = [];
     public entityById: { [id: number]: Entity } = {};
@@ -41,6 +43,7 @@ export class World {
         this.camera = new Camera(this);
         this.mouse = new Mouse(this);
         this.keyboard = new Keyboard();
+        this.gamepads = new Gamepads();
 
         this.mouse.start();
         this.keyboard.start();
@@ -58,6 +61,7 @@ export class World {
         this.renderEntities();
         this.mouse.update();
         this.keyboard.update();
+        this.gamepads.update();
     }
 
     public updateEntities(): void {
