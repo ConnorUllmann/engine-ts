@@ -2,18 +2,15 @@ import { Point } from '@engine-ts/geometry/point';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { Button } from './buttons';
 
-export class Gamepads
-{
-    constructor() {}
+export class Gamepads {
+    private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
+    private rightAnalogStickByIndex: { [gamepadId: number]: Point } = {};
+    private leftTriggerByIndex: { [gamepadId: number]: number } = {};
+    private rightTriggerByIndex: { [gamepadId: number]: number } = {};
 
-    public leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
-    public rightAnalogStickByIndex: { [gamepadId: number]: Point } = {};
-    public leftTriggerByIndex: { [gamepadId: number]: number } = {};
-    public rightTriggerByIndex: { [gamepadId: number]: number } = {};
-
-    public downByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
-    public pressedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
-    public releasedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
+    private downByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
+    private pressedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
+    private releasedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
 
     private static readonly DeadzoneDefault = 0.2;
     private get gamepads(): { [gamepadId: number]: Gamepad } {
@@ -24,6 +21,7 @@ export class Gamepads
             .mappedBy(o => o.index.toString());
     }
 
+    public static get AreAvailable(): boolean { return !!(navigator.getGamepads); };
     public static readonly ButtonMappings = {
         0: [Button.A],
         1: [Button.B],
@@ -44,10 +42,10 @@ export class Gamepads
         // 16 - ???
     };
 
-    public isAvailable() { return !!(navigator.getGamepads); };
+    constructor() {}
 
     public update() {
-        if(!this.isAvailable())
+        if(!Gamepads.AreAvailable)
             return;
 
         const gamepads = this.gamepads;
