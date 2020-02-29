@@ -1,16 +1,11 @@
 import { Color } from './color';
-import { BlendMode } from './blend-mode';
+import { World } from '@engine-ts/core/world';
+import { tau } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
-import { Point, IPoint } from '../geometry/point';
-import { World } from '../core/world';
-import { tau } from '../core/utils';
-import { ICircle } from '@engine-ts/geometry/circle';
-import { ITriangle } from '@engine-ts/geometry/triangle';
-import { IRectangle } from '@engine-ts/geometry/rectangle';
-import { ISegment } from '@engine-ts/geometry/segment';
-import { Line, ILine } from '@engine-ts/geometry/line';
-import { IRay, Ray } from '@engine-ts/geometry/ray';
-import { PointPair, PointPairType } from '@engine-ts/geometry/point-pair';
+import { BlendMode } from './blend-mode';
+import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment } from '@engine-ts/geometry/interfaces';
+import { Point } from '@engine-ts/geometry/point';
+
 
 export type FillStyle = Color | string | null;
 export type StrokeStyle = FillStyle;
@@ -208,7 +203,7 @@ export class Draw {
         ];
         if(angle !== 0) {
             const center = new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2);
-            points = points.map(point => point.rotated(angle, center));
+            points = points.map(point => point.rotate(angle, center));
         }
         Draw.path(world, points, strokeStyle, lineWidth, true);
     };

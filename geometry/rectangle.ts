@@ -1,17 +1,10 @@
-import { Point, IPoint } from './point';
-import { ICircle } from './circle';
-import { random } from '../core/utils';
-import { Segment, ISegment } from './segment';
-import { IPointPair, PointPairType, PointPair } from './point-pair';
-import { ILine } from './line';
-import { IRay } from './ray';
-import { IPolygon } from './polygon';
-import { Triangle } from './triangle';
+import { Segment } from './segment';
+import { random } from '@engine-ts/core/utils';
+import { Geometry } from './geometry';
+import { Point } from './point';
+import { IRectangle, IPolygon, ITriangle, ICircle, IPoint, ILine, PointPairType, IRay, ISegment, IPointPair } from './interfaces';
 
-export interface IRectangle extends IPoint {
-    readonly w: number;
-    readonly h: number;
-}
+
 export class Rectangle extends Point implements IRectangle, IPolygon {
     public get xLeft(): number { return this.x; }
     public set xLeft(x: number) { this.x = x; }
@@ -34,23 +27,13 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
     public get bottomRight(): Point { return new Point(this.xRight, this.yBottom); }
     public get corners(): Point[] { return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]; }
     public get vertices(): Point[] { return this.corners; }
-    public static segments(rectangle: IRectangle): Segment[] {
-        const corners = [
-            new Point(rectangle.x, rectangle.y),
-            new Point(rectangle.x + rectangle.w, rectangle.y),
-            new Point(rectangle.x + rectangle.w, rectangle.y + rectangle.h),
-            new Point(rectangle.x, rectangle.y + rectangle.h)
-        ];
-        return [
-            new Segment(corners[0], corners[1]),
-            new Segment(corners[1], corners[2]),
-            new Segment(corners[2], corners[3]),
-            new Segment(corners[3], corners[0])
-        ];
+    public get segments(): Segment[] {
+        return Geometry.Points.Segments(this.corners)
+            .map(segment => new Segment(new Point().setTo(segment.a), new Point().setTo(segment.b)));
     }
-    public get segments(): Segment[] { return Rectangle.segments(this); }
-    public get triangulation(): Triangle[] { return Triangle.triangulation(this.vertices); }
-    public get area(): number { return this.w * this.h; }
+    public get triangulation(): ITriangle[] { return Geometry.Rectangle.Triangulation(this); }
+    public get circumcircle(): ICircle { return Geometry.Rectangle.Circumcircle(this); }
+    public get area(): number { return Geometry.Rectangle.Area(this); }
 
     private _w: number;
     private _h: number;
@@ -69,43 +52,18 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
 
     public cloneRectangle(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
     public offset(other: IPoint): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
-    public collidesPoint(point: IPoint): boolean { return point.x >= this.x && point.y >= this.y && point.x < this.x + this.w && point.y < this.y + this.h; }
-    public collidesRectangle(other: IRectangle): boolean { return Rectangle.collide(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h); }
-    public collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean { return Rectangle.collidesCircle(this, circle, rectangleAngle); }
-    public static collidesCircle(rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0): boolean {
-        // The rectangle's (x, y) position is its top-left corner if it were not rotated,
-        // however the rectangle still rotates about its center (by "rectangleAngle" radians)
-        //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
-        const halfW = rectangle.w/2;
-        const halfH = rectangle.h/2;
-        const circlePosition = rectangleAngle === 0
-            ? new Point(circle.x, circle.y)
-            : new Point(circle.x, circle.y).rotated(-rectangleAngle, new Point(rectangle.x + halfW, rectangle.y + halfH));
-        const xCircleDistance = Math.abs(circlePosition.x - rectangle.x + halfW);
-        const yCircleDistance = Math.abs(circlePosition.y - rectangle.y + halfH);
-
-        if (xCircleDistance > (halfW + circle.radius) || yCircleDistance > (halfH + circle.radius))
-            return false;
-        if (xCircleDistance <= halfW || yCircleDistance <= halfH)
-            return true;
-
-        const cornerDistanceSq =
-            (xCircleDistance - halfW) * (xCircleDistance - halfW) +
-            (yCircleDistance - halfH) * (yCircleDistance - halfH);
-        return cornerDistanceSq <= (circle.radius * circle.radius);
-    };
+    public collidesPoint(point: IPoint): boolean { return Geometry.Collide.RectanglePoint(this, point); }
+    public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectangleRectangle(this, rectangle); }
+    public collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean { return Geometry.Collide.RectangleCircle(this, circle, rectangleAngle); }
     
     public lineIntersections(line: ILine): Point[] { return Rectangle.intersections(this, line, PointPairType.LINE); }
-    public rayIntersections(ray: IRay): Point[] { return Rectangle.intersections(this, ray, PointPairType.LINE); }
-    public segmentIntersections(segment: ISegment): Point[] { return Rectangle.intersections(this, segment, PointPairType.LINE); }
+    public rayIntersections(ray: IRay): Point[] { return Rectangle.intersections(this, ray, PointPairType.RAY); }
+    public segmentIntersections(segment: ISegment): Point[] { return Rectangle.intersections(this, segment, PointPairType.SEGMENT); }
     public static intersections(rectangle: IRectangle, pair: IPointPair, pairType: PointPairType): Point[] { 
-        return Rectangle.segments(rectangle)
-            .map(segment => PointPair.intersection(pair, pairType, segment, PointPairType.SEGMENT))
-            .filter(point => point != null);
-    }
-
-    public static collide(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number): boolean { 
-        return ax + aw > bx && ay + ah > by && ax < bx + bw && ay < by + bh;
+        return Geometry.Rectangle.Segments(rectangle)
+            .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
+            .filter(point => point != null)
+            .map(point => new Point().setTo(point));
     }
 
     // Expands the rectangle by the given amount on each side
@@ -144,8 +102,10 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
         return new Point(random() * this.w + this.x, random() * this.h + this.y);
     }
 
-    public get boundingRectangle(): Rectangle { return this.cloneRectangle(); }
+    // don't return a copy since it's readonly anyway
+    public get bounds(): IRectangle { return this; }
 
+    // TODO: delete this
     public static boundingPoints(points: IPoint[]): Rectangle {
         if(points == null || points.length <= 0)
             return new Rectangle();
@@ -155,10 +115,6 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
         const yMax = points.maxOf(o => o.y).y;
         return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
     };
-
-    public static boundingPolygon(polygon: IPolygon): Rectangle {
-        return Rectangle.boundingPoints(polygon.vertices);
-    }
 
     public static boundingRectangles(rectangles: IRectangle[]): Rectangle {
         if(rectangles == null || rectangles.length <= 0)

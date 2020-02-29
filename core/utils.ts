@@ -8,6 +8,7 @@ export function clamp(value: number, min: number, max: number) {
 
 export const tau: number = Math.PI * 2;
 
+// TODO: remove in favor of Geometry.distanceSq/distance
 export function distanceSq(x0: number, y0: number, x1: number, y1: number): number {
     return (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1);
 }
@@ -33,7 +34,7 @@ export function getRandomNumberGenerator(seed: number): () => number {
         return seed - Math.floor(seed);
     };
 }
-export const randomSeed = Math.random();
+export const randomSeed = 0.90420463199876//Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 

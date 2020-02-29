@@ -1,13 +1,11 @@
 import { Rectangle } from './rectangle';
 import { Circle } from './circle';
-import { distanceSq, distance, random, clamp } from '../core/utils';
+import { random, clamp } from '../core/utils';
 import { Triangle } from './triangle';
-import { IPointPair } from './point-pair';
+import { Geometry } from './geometry';
+import { IPoint, IPointPair, IRectangle, ICircle, ITriangle } from './interfaces';
 
-export interface IPoint {
-    readonly x: number;
-    readonly y: number;
-}
+
 export class Point implements IPoint {
     private static _zero: ConstPoint;
     public static get zero(): ConstPoint { return Point._zero; }
@@ -77,142 +75,69 @@ export class Point implements IPoint {
 
     public clonePoint(): Point { return new Point(this.x, this.y); }
     public toString(): string { return JSON.stringify({ x: this.x.toFixed(1), y: this.y.toFixed(1) }); }
+    public isEqualTo(b: IPoint): boolean { return Geometry.Point.AreEqual(this, b); }
+    public get hash(): string { return Geometry.Point.Hash(this); }
 
     public setTo(b: IPoint): Point { this.x = b.x; this.y = b.y; return this; }
-    public lengthSq(): number { return this.x * this.x + this.y * this.y; }
-    public dot(b: IPoint): number { return this.x * b.x + this.y * b.y; }
-    public cross(b: IPoint): number { return this.x * b.y - b.x * this.y; }
-    public add(b: IPoint): Point { return new Point(this.x + b.x, this.y + b.y); }
-    public subtract(b: IPoint): Point { return new Point(this.x - b.x, this.y - b.y); }
-    public proj(b: Point): Point { return b.scale(this.dot(b) / Math.max(b.lengthSq(), 0.000001)); }
-    public normalized(length: number=1): Point {
-        if((this.x === 0 && this.y === 0) || length === 0)
-            return new Point();
-        let temp = length / Math.sqrt(this.lengthSq());
-        return new Point(this.x * temp, this.y * temp);
-    }
+    public lengthSq(): number { return Geometry.Point.LengthSq(this); }
+    public dot(b: IPoint): number { return Geometry.Point.Dot(this, b); }
+    public cross(b: IPoint): number { return Geometry.Point.Cross(this, b); }
+    public add(b: IPoint): Point { return new Point().setTo(Geometry.Point.Add(this, b)); }
+    public subtract(b: IPoint): Point { return new Point().setTo(Geometry.Point.Subtract(this, b)); }
+    public proj(b: IPoint): Point { return new Point().setTo(Geometry.Point.Proj(this, b)); }
+    public normalized(length: number=1): Point { return new Point().setTo(Geometry.Point.Normalized(this, length)); }
+    public scale(scalar: number | IPoint): Point { return new Point().setTo(Geometry.Point.Scale(this, scalar)); }
+    public midpoint(...points: IPoint[]): Point { return new Point().setTo(Geometry.Point.Midpoint(this, ...points)); }
+    public distanceSqTo(b: IPoint): number { return Geometry.Point.DistanceSq(this, b); }
+    public distanceTo(b: IPoint): number { return Geometry.Point.Distance(this, b); }
+    public get angle(): number { return Geometry.Point.Angle(this); };
 
-    // if "scalar" is a number, then a new point scaled on both x/y by that amount will be returned.
-    // if "scalar" is a point, then a new point scaled on both x/y by scalar's x/y will be returned.
-    public scale(scalar: number | Point): Point {
-        return scalar instanceof Point
-            ? new Point(this.x * scalar.x, this.y * scalar.y)
-            : new Point(this.x * scalar, this.y * scalar)
-    }
-
-    public midpoint(...points: IPoint[]): Point { return Point.midpoint([ this, ...points ])!; }
-    public static midpoint(points: IPoint[]): Point | null {
-        if(points == null || points.length <= 0)
-            return null;
-        const sum = new Point();
-        points.forEach(point => { sum.x += point.x; sum.y += point.y; });
-        return sum.scale(1/points.length);
-    }
-    public distanceSqTo(b: IPoint): number { return distanceSq(this.x, this.y, b.x, b.y); }
-    public distanceTo(b: IPoint): number { return distance(this.x, this.y, b.x, b.y); }
-
-    // radians!
-    public get angle(): number { return Math.atan2(this.y, this.x); };
-
-    public reflect(normal: Point, origin: Point | null=null): Point {
+    public reflect(normal: IPoint, origin: IPoint | null=null): Point {
         if(origin == null)
         {
             const reflectionPoint = this.closestPointOnLine({ a: Point.zero, b: normal });
             return reflectionPoint.subtract(this).scale(2).add(this);
         }
 
-        const reflectionPoint = this.closestPointOnLine({ a: origin, b: origin.add(normal) });
+        const reflectionPoint = this.closestPointOnLine({ a: origin, b: Geometry.Point.Add(origin, normal) });
         return reflectionPoint.subtract(this).scale(2).add(this);
     }
 
-    // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
-    // if result is < 0, then this point is right of the line/segment/ray formed by the two points. 
-    // if result == 0, then it is colinear with the two points.
-    public isLeftCenterRightOf({ a, b }: IPointPair): number { return Math.sign((b.x - a.x) * (this.y - a.y) - (b.y - a.y) * (this.x - a.x)); }
-    public isLeftOf(pair: IPointPair): boolean { return this.isLeftCenterRightOf(pair) > 0; }
-    public isColinear(pair: IPointPair): boolean { return Point.isWithinToleranceOf(this.isLeftCenterRightOf(pair)); }
-    public isRightOf(pair: IPointPair): boolean { return this.isLeftCenterRightOf(pair) < 0; }
-
-    public closestPointOnLine({ a, b }: IPointPair): Point { return this.subtract(a).proj(b.subtract(a)).add(a); };
-    public closestPointOnLineSegment({ a, b }: IPointPair): Point {
-        const ab = b.subtract(a);
-        const ret = this.subtract(a).proj(ab).add(a);
-        const r = ret.subtract(a).dot(ab);
-        if(r < 0) return a;
-        if(r > ab.lengthSq()) return b;
-        return ret;
-    }
-
-    public collidesRectangle(rectangle: Rectangle): boolean { return rectangle.collidesPoint(this); }
-    public collidesCircle(circle: Circle): boolean { return circle.collidesPoint(this); }
-    public collidesTriangle(triangle: Triangle): boolean { return triangle.collidesPoint(this); }
-
-    // Returns how much this point (as a vector) faces in the direction of the given point (as a vector)
-    // -1 = this point faces opposite the direction of argument "point"
-    // 0 = this point faces perpendicular to the direction of argument "point"
-    // 1 = this point faces the exact same direction as argument "point"
-    public towardness(point: Point): number { return this.normalized().dot(point.normalized()); }
-
-    // t = 0 = this point
-    // t = 0.5 = midpoint between this point and the argument "point:
-    // t = 1 = the argument "point"
-    public lerp(point: IPoint, t: number): Point { return new Point((point.x - this.x) * t + this.x, (point.y - this.y) * t + this.y); };
-
-
-    public static linesIntersection(firstLineA: IPoint, firstLineB: IPoint, secondLineA: IPoint, secondLineB: IPoint, isFirstSegment: boolean = true, isSecondSegment: boolean = true): Point | null {
-        const yFirstLineDiff = firstLineB.y - firstLineA.y;
-        const xFirstLineDiff = firstLineA.x - firstLineB.x;
-        const cFirst = firstLineB.x * firstLineA.y - firstLineA.x * firstLineB.y;
-        const ySecondLineDiff = secondLineB.y - secondLineA.y;
-        const xSecondLineDiff = secondLineA.x - secondLineB.x;
-        const cSecond = secondLineB.x * secondLineA.y - secondLineA.x * secondLineB.y;
-
-        const denominator = yFirstLineDiff * xSecondLineDiff - ySecondLineDiff * xFirstLineDiff;
-        if (denominator === 0)
-            return null;
-        const intersectionPoint = new Point(
-            (xFirstLineDiff * cSecond - xSecondLineDiff * cFirst) / denominator,
-            (ySecondLineDiff * cFirst - yFirstLineDiff * cSecond) / denominator);
-        return (isFirstSegment && (
-                Math.pow(intersectionPoint.x - firstLineB.x, 2) + Math.pow(intersectionPoint.y - firstLineB.y, 2) > Math.pow(firstLineA.x - firstLineB.x, 2) + Math.pow(firstLineA.y - firstLineB.y, 2) ||
-                Math.pow(intersectionPoint.x - firstLineA.x, 2) + Math.pow(intersectionPoint.y - firstLineA.y, 2) > Math.pow(firstLineA.x - firstLineB.x, 2) + Math.pow(firstLineA.y - firstLineB.y, 2)
-            ))
-            ||
-            (isSecondSegment && (
-                Math.pow(intersectionPoint.x - secondLineB.x, 2) + Math.pow(intersectionPoint.y - secondLineB.y, 2) > Math.pow(secondLineA.x - secondLineB.x, 2) + Math.pow(secondLineA.y - secondLineB.y, 2) ||
-                Math.pow(intersectionPoint.x - secondLineA.x, 2) + Math.pow(intersectionPoint.y - secondLineA.y, 2) > Math.pow(secondLineA.x - secondLineB.x, 2) + Math.pow(secondLineA.y - secondLineB.y, 2)
-            ))
-            ? null
-            : intersectionPoint;
-    };
-
+    // TODO: move these to Geometry.Point
     public closest<T extends IPoint>(points: T[]): T { return points.minOf(o => this.distanceSqTo(o)); }
-
-    public rotated(angle: number, center: Point | null=null): Point {
-        const x = this.x - (center ? center.x : 0);
-        const y = this.y - (center ? center.y : 0);
-        return new Point(
-            (center ? center.x : 0) + x * Math.cos(angle) - y * Math.sin(angle),
-            (center ? center.y : 0) + y * Math.cos(angle) + x * Math.sin(angle)
-        );
+    public closestPointOnLine({ a, b }: IPointPair): Point { 
+        return new Point().setTo(Geometry.Point.Add(
+            Geometry.Point.Proj(
+                Geometry.Point.Subtract(this, a), 
+                Geometry.Point.Subtract(b, a)
+            ),
+            a)
+        ); 
+    };
+    public closestPointOnLineSegment({ a, b }: IPointPair): Point {
+        const ab = Geometry.Point.Subtract(b, a);
+        const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(this, a), ab), a);
+        const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
+        if(r < 0) return new Point().setTo(a);
+        if(r > Geometry.Point.LengthSq(ab)) return new Point().setTo(b);
+        return new Point().setTo(ret);
     }
 
-    // rotates the point randomly in the range given (about the origin)
-    public wiggle(angleRangeMax: number): Point { return this.rotated(angleRangeMax * (random() - 0.5)); }
+    public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectanglePoint(rectangle, this); }
+    public collidesCircle(circle: ICircle): boolean { return Geometry.Collide.CirclePoint(circle, this); }
+    public collidesTriangle(triangle: ITriangle): boolean { return Geometry.Collide.TrianglePoint(triangle, this); }
 
-    // same as rotating a vector 180 degrees
-    public negative(): Point { return new Point(-this.x, -this.y); }
-
-    // returns a version of this point which is flipped over (rotated 180 degrees around) the given point
-    // (or the origin if none is provided). Provided because it is faster than using rotate/reflect.
-    public flip(center: IPoint | null=null): Point { return center == null ? this.negative() : new Point(2 * center.x - this.x, 2 * center.y - this.y); }
-
-    public clampedInRectangle(rectangle: Rectangle): Point { return new Point(clamp(this.x, rectangle.xLeft, rectangle.xRight), clamp(this.y, rectangle.yTop, rectangle.yBottom)); }
-    
-    private static _tolerance: number = 0.00000001;
-    public static isWithinToleranceOf(a: number, b: number=0): boolean { return Math.abs(a - b) < Point._tolerance; }
-    public isEqualTo(b: IPoint): boolean { return Point.isWithinToleranceOf(this.distanceSqTo(b)); }
-    public get hash(): string { return `${this.x.toFixed(6)},${this.y.toFixed(6)}`; }
+    public towardness(point: IPoint): number { return Geometry.Point.Towardness(this, point); }
+    public lerp(point: IPoint, t: number): Point { return new Point().setTo(Geometry.Point.Lerp(this, point, t)); };
+    public wiggle(angleRangeMax: number): Point { return new Point().setTo(Geometry.Point.Wiggle(this, angleRangeMax)); }
+    public negative(): Point { return new Point().setTo(Geometry.Point.Negative(this)); }
+    public rotate(angle: number, center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Rotate(this, angle, center)); }
+    public flip(center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Flip(this, center)); }
+    public clampedInRectangle(rectangle: Rectangle): Point { return new Point().setTo(Geometry.Point.ClampedInRectangle(this, rectangle)); }
+    public isLeftCenterRightOf(pair: IPointPair): number { return Geometry.Point.IsLeftCenterRightOf(this, pair); }
+    public isLeftOf(pair: IPointPair): boolean { return Geometry.Point.IsLeftOf(this, pair); }
+    public isColinear(pair: IPointPair): boolean { return Geometry.Point.IsColinear(this, pair); }
+    public isRightOf(pair: IPointPair): boolean { return Geometry.Point.IsRightOf(this, pair); }
 }
 
 class ConstPoint extends Point {
