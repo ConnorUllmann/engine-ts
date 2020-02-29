@@ -34,7 +34,7 @@ export function getRandomNumberGenerator(seed: number): () => number {
         return seed - Math.floor(seed);
     };
 }
-export const randomSeed = 0.90420463199876//Math.random();
+export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 
