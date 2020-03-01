@@ -4,6 +4,7 @@ import { tau } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment } from '@engine-ts/geometry/interfaces';
+// TODO: use IPoint everywhere instead
 import { Point } from '@engine-ts/geometry/point';
 
 
@@ -168,7 +169,7 @@ export class Draw {
         for(let i = 0; i < sides; i++)
         {
             const angleToCorner = tau * i / sides + angle;
-            const point = Point.create(radius, angleToCorner).add(position);
+            const point = Point.Create(radius, angleToCorner).add(position);
             points.push(point);
         }
         return points;

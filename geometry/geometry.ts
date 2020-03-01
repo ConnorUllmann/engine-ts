@@ -124,6 +124,12 @@ export class Geometry {
                 ? Geometry.Point.Negative(point) 
                 : { x: 2 * center.x - point.x, y: 2 * center.y - point.y };
         },
+        // reflects the given point over the given line
+        Reflect: (point: IPoint, pair: IPointPair): IPoint => {
+            // use the Line method for Rays & Segments too
+            const reflectionPoint = Geometry.Line.ClosestPointTo(pair, point);
+            return Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Subtract(reflectionPoint, point), 2), point);
+        },
         ClampedInRectangle: (point: IPoint, rectangle: IRectangle): IPoint => ({
             x: clamp(point.x, rectangle.x, rectangle.x + rectangle.w),
             y: clamp(point.y, rectangle.y, rectangle.y + rectangle.h)
