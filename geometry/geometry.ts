@@ -33,7 +33,8 @@ interface IPointPairStatic<T extends IPointPair> {
     YatX: (pair: T, x: number) => number,
     XatY: (pair: T, y: number) => number,
     Slope: (pair: T) => number,
-    Hash: (pair: T) => string
+    Hash: (pair: T) => string,
+    ClosestPointTo: (pair: T, point: IPoint) => IPoint
 }
 
 interface ILineStatic extends IPointPairStatic<ILine> {
@@ -163,7 +164,14 @@ export class Geometry {
         YatX: (line: ILine, x: number): number => Geometry.PointPair.YatX(line, x),
         XatY: (line: ILine, y: number): number => Geometry.PointPair.XatY(line, y),
         Slope: (line: ILine): number => Geometry.PointPair.Slope(line),
-        Hash: (line: ILine): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`
+        Hash: (line: ILine): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`,
+        ClosestPointTo: (line: ILine, point: IPoint): IPoint =>
+            Geometry.Point.Add(line.a,
+                Geometry.Point.Proj(
+                    Geometry.Point.Subtract(point, line.a), 
+                    Geometry.Point.Subtract(line.b, line.a)
+                )
+            ),
     };
 
     public static Ray: IRayStatic = {
@@ -192,6 +200,12 @@ export class Geometry {
                     contactPoint: segmentIntersection.intersection,
                     segmentHit: segmentIntersection.segment
                 };
+        },
+        ClosestPointTo: ({ a, b }: IRay, point: IPoint): IPoint => {
+            const ab = Geometry.Point.Subtract(b, a);
+            const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(point, a), ab), a);
+            const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
+            return r < 0 ? a : ret;
         }
     };
 
@@ -208,7 +222,15 @@ export class Geometry {
                 ? Geometry.PointPair.XatY(segment, y) 
                 : null,
         Slope: (segment: ISegment): number => Geometry.PointPair.Slope(segment),
-        Hash: (segment: ISegment): string => Geometry.Points.Hash([segment.a, segment.b])
+        Hash: (segment: ISegment): string => Geometry.Points.Hash([segment.a, segment.b]),
+        ClosestPointTo: ({ a, b }: ISegment, point: IPoint): IPoint => {
+            const ab = Geometry.Point.Subtract(b, a);
+            const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(point, a), ab), a);
+            const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
+            if(r < 0) return a;
+            if(r > Geometry.Point.LengthSq(ab)) return b;
+            return ret;
+        }
     };
 
     public static Triangle: ITriangleStatic = {
@@ -471,7 +493,21 @@ export class Geometry {
         CirclePoint: (circle: ICircle, point: IPoint): boolean => { 
             return Geometry.Point.DistanceSq(point, circle) <= circle.radius * circle.radius;
         },
-        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle): boolean => { throw "not implemented"; },
+        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle): boolean => {
+            const segmentsA = Geometry.Triangle.Segments(triangleA);
+            const segmentsB = Geometry.Triangle.Segments(triangleB);
+            // if a segment on either triangle intersects the other, then there is a collision
+            if(segmentsA.first(segmentA => 
+                    segmentsB.first(segmentB => 
+                        Geometry.Intersection.SegmentSegment(segmentA, segmentB
+                        ) != null
+                    ) != null
+                ) != null)
+                return true;
+            // if there are no intersections but any vertex of one triangle collides with the other, then there is a collision
+            return Geometry.Collide.TrianglePoint(triangleA, triangleB.a)
+                || Geometry.Collide.TrianglePoint(triangleB, triangleA.a);            
+        },
         TrianglePolygon: (triangle: ITriangle, polygon: IPolygon): boolean => { throw "not implemented"; },
         TrianglePoint: (triangle: ITriangle, point: IPoint): boolean => { 
             // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle

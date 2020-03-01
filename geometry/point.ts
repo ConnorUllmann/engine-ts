@@ -1,9 +1,5 @@
-import { Rectangle } from './rectangle';
-import { Circle } from './circle';
-import { random, clamp } from '../core/utils';
-import { Triangle } from './triangle';
 import { Geometry } from './geometry';
-import { IPoint, IPointPair, IRectangle, ICircle, ITriangle } from './interfaces';
+import { IPoint, IPointPair, IRectangle, ICircle, ITriangle, ILine, ISegment, IRay } from './interfaces';
 
 
 export class Point implements IPoint {
@@ -92,6 +88,7 @@ export class Point implements IPoint {
     public distanceTo(b: IPoint): number { return Geometry.Point.Distance(this, b); }
     public get angle(): number { return Geometry.Point.Angle(this); };
 
+    // TODO: move to Geometry.Point
     public reflect(normal: IPoint, origin: IPoint | null=null): Point {
         if(origin == null)
         {
@@ -103,25 +100,12 @@ export class Point implements IPoint {
         return reflectionPoint.subtract(this).scale(2).add(this);
     }
 
-    // TODO: move these to Geometry.Point
+    // TODO: move to Geometry.Point
     public closest<T extends IPoint>(points: T[]): T { return points.minOf(o => this.distanceSqTo(o)); }
-    public closestPointOnLine({ a, b }: IPointPair): Point { 
-        return new Point().setTo(Geometry.Point.Add(
-            Geometry.Point.Proj(
-                Geometry.Point.Subtract(this, a), 
-                Geometry.Point.Subtract(b, a)
-            ),
-            a)
-        ); 
-    };
-    public closestPointOnLineSegment({ a, b }: IPointPair): Point {
-        const ab = Geometry.Point.Subtract(b, a);
-        const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(this, a), ab), a);
-        const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
-        if(r < 0) return new Point().setTo(a);
-        if(r > Geometry.Point.LengthSq(ab)) return new Point().setTo(b);
-        return new Point().setTo(ret);
-    }
+    
+    public closestPointOnLine(line: ILine): Point { return new Point().setTo(Geometry.Line.ClosestPointTo(line, this)); };
+    public closestPointOnSegment(segment: ISegment): Point { return new Point().setTo(Geometry.Segment.ClosestPointTo(segment, this)); }
+    public closestPointOnRay(ray: IRay): Point { return new Point().setTo(Geometry.Ray.ClosestPointTo(ray, this)); }
 
     public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectanglePoint(rectangle, this); }
     public collidesCircle(circle: ICircle): boolean { return Geometry.Collide.CirclePoint(circle, this); }
@@ -133,13 +117,15 @@ export class Point implements IPoint {
     public negative(): Point { return new Point().setTo(Geometry.Point.Negative(this)); }
     public rotate(angle: number, center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Rotate(this, angle, center)); }
     public flip(center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Flip(this, center)); }
-    public clampedInRectangle(rectangle: Rectangle): Point { return new Point().setTo(Geometry.Point.ClampedInRectangle(this, rectangle)); }
+    public clampedInRectangle(rectangle: IRectangle): Point { return new Point().setTo(Geometry.Point.ClampedInRectangle(this, rectangle)); }
     public isLeftCenterRightOf(pair: IPointPair): number { return Geometry.Point.IsLeftCenterRightOf(this, pair); }
     public isLeftOf(pair: IPointPair): boolean { return Geometry.Point.IsLeftOf(this, pair); }
     public isColinear(pair: IPointPair): boolean { return Geometry.Point.IsColinear(this, pair); }
     public isRightOf(pair: IPointPair): boolean { return Geometry.Point.IsRightOf(this, pair); }
 }
 
+
+// TODO: delete this in favor of Geometry.Point.Up etc. (since they're compile-time readonly)
 class ConstPoint extends Point {
     public get x(): number { return this._x; }
     public get y(): number { return this._y; }

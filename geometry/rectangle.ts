@@ -104,29 +104,4 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
 
     // don't return a copy since it's readonly anyway
     public get bounds(): IRectangle { return this; }
-
-    // TODO: delete this
-    public static boundingPoints(points: IPoint[]): Rectangle {
-        if(points == null || points.length <= 0)
-            return new Rectangle();
-        const xMin = points.minOf(o => o.x).x;
-        const yMin = points.minOf(o => o.y).y;
-        const xMax = points.maxOf(o => o.x).x;
-        const yMax = points.maxOf(o => o.y).y;
-        return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
-    };
-
-    public static boundingRectangles(rectangles: IRectangle[]): Rectangle {
-        if(rectangles == null || rectangles.length <= 0)
-            return new Rectangle();
-        const xMin = rectangles.map(o => o.x).min();
-        const yMin = rectangles.map(o => o.y).min();
-        const xMax = rectangles.map(o => o.x + o.w).max();
-        const yMax = rectangles.map(o => o.y + o.h).max();
-        return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
-    };
-
-    public static boundingCircle(circle: ICircle): Rectangle {
-        return new Rectangle(circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
-    };
 }
