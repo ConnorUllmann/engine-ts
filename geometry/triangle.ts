@@ -27,6 +27,6 @@ export class Triangle implements ITriangle, IPolygon {
         return Geometry.Triangle.Segments(triangle)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
             .filter(point => point != null)
-            .map(point => new Point().setTo(point));
+            .map(point => Point.Create(point));
     }    
 }

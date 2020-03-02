@@ -169,7 +169,7 @@ export class Draw {
         for(let i = 0; i < sides; i++)
         {
             const angleToCorner = tau * i / sides + angle;
-            const point = Point.Create(radius, angleToCorner).add(position);
+            const point = Point.Vector(radius, angleToCorner).add(position);
             points.push(point);
         }
         return points;

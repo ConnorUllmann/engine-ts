@@ -1,4 +1,4 @@
-import { tau, random, clamp } from '@engine-ts/core/utils';
+import { tau, random, clamp, angleDifference, moduloSafe } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 interface IPointsStatic<T> {
@@ -12,20 +12,93 @@ interface IPointsStatic<T> {
 }
 
 interface IShapeStatic<T> extends IPointsStatic<T> {
+    Midpoint: (o: T) => IPoint,
     Area: (o: T) => number
 }
 
 interface ITriangleStatic extends IShapeStatic<ITriangle> {
-    AreaSigned: (triangle: ITriangle) => number
+    AreaSigned: (triangle: ITriangle) => number,
+    
+    // TODO: add these to IShapeStatic<T>
+    Perimeter: (triangle: ITriangle) => number,
+    Semiperimeter: (triangle: ITriangle) => number,
+
+    Incenter: (triangle: ITriangle) => IPoint,
+    Inradius: (triangle: ITriangle) => number,
+    InscribedCircle: (triangle: ITriangle) => ICircle,
+    AngleA: (triangle: ITriangle) => number,
+    AngleB: (triangle: ITriangle) => number,
+    AngleC: (triangle: ITriangle) => number,
+    LengthAB: (triangle: ITriangle) => number,
+    LengthBC: (triangle: ITriangle) => number,
+    LengthCA: (triangle: ITriangle) => number,
+    AngleBisector: (bisectionVertex: IPoint, previousVertex: IPoint, nextVertex: IPoint)=> IRay,
+    AngleBisectorA: (triangle: ITriangle) => IRay,
+    AngleBisectorB: (triangle: ITriangle) => IRay,
+    AngleBisectorC: (triangle: ITriangle) => IRay,
+    PerpendicularBisectorAB: (triangle: ITriangle) => ILine,
+    PerpendicularBisectorBC: (triangle: ITriangle) => ILine,
+    PerpendicularBisectorCA: (triangle: ITriangle) => ILine,
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
     BoundsRectangles: (rectangles: IRectangle[]) => IRectangle,
-    BoundsCircle: (circle: ICircle) => IRectangle
+    Scale: (rectangle: IRectangle, scalar: number, center?: IPoint) => IRectangle,
+    // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
+    Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
     WindingNumber: (polygon: IPolygon, point: IPoint) => number
+}
+
+interface ICircleStatic {
+    Circumcircle: (circle: ICircle) => ICircle,
+    Supertriangle: (o: ICircle) => ITriangle,
+    Midpoint: (o: ICircle) => IPoint,
+    Area: (o: ICircle) => number,
+    Circumference: (o: ICircle) => number,
+    Bounds: (o: ICircle) => IRectangle,
+    Hash: (o: ICircle) => string
+}
+
+interface IPointStatic {
+    readonly Tolerance: 0.00000001,
+    readonly Zero: IPoint,
+    readonly One: IPoint,
+    readonly Up: IPoint,
+    readonly Down: IPoint,
+    readonly Left: IPoint,
+    readonly Right: IPoint,
+    IsWithinToleranceOf: (a: number, b?: number) => boolean,
+    AreEqual: (a: IPoint, b: IPoint) => boolean,
+    Hash: (point: IPoint) => string,
+    DistanceSq: (a: IPoint, b: IPoint) => number,
+    Distance: (a: IPoint, b: IPoint) => number,
+    Add: (a: IPoint, b: IPoint) => IPoint,
+    Subtract: (a: IPoint, b: IPoint) => IPoint,
+    Midpoint: (...points: IPoint[]) => IPoint | null,
+    Angle: (point: IPoint) => number,
+    Scale: (point: IPoint, scalar: number | IPoint) => IPoint,
+    LengthSq: (point: IPoint) => number,
+    Length: (point: IPoint) => number,
+    Dot: (a: IPoint, b: IPoint) => number,
+    Cross: (a: IPoint, b: IPoint) => number,
+    Proj: (a: IPoint, b: IPoint) => IPoint,
+    Normalized: (point: IPoint, length?: number) => IPoint,
+    Rotate: (point: IPoint, angle: number, center?: IPoint) => IPoint,
+    Negative: (point: IPoint) => IPoint,
+    Wiggle: (point: IPoint, angleRangeMax: number) => IPoint,
+    Towardness: (a: IPoint, b: IPoint) => number,
+    Lerp: (from: IPoint, to: IPoint, t: number) => IPoint,
+    Flip: (point: IPoint, center?: IPoint) => IPoint,
+    Reflect: (point: IPoint, pair: IPointPair) => IPoint,
+    ClampedInRectangle: (point: IPoint, rectangle: IRectangle) => IPoint,
+    Vector: (length: number, angle: number) => IPoint,
+    IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair) => number,
+    IsLeftOf: (point: IPoint, pair: IPointPair) => boolean,
+    IsColinear: (point: IPoint, pair: IPointPair) => boolean,
+    IsRightOf: (point: IPoint, pair: IPointPair) => boolean
 }
 
 interface IPointPairStatic<T extends IPointPair> {
@@ -48,21 +121,25 @@ interface IRayStatic extends IPointPairStatic<IRay> {
 };
 
 interface ISegmentStatic extends IPointPairStatic<ISegment> {
+    Midpoint: (segment: ISegment) => IPoint,
+    PerpendicularBisector: (segment: ISegment) => ILine
 }
 
 export class Geometry {
 
-    public static Point = {
+    private static readonly HashDecimalDigits: number = 6;
+
+    public static Point: IPointStatic = {
         Tolerance: 0.00000001,
-        IsWithinToleranceOf: (a: number, b: number=0): boolean => Math.abs(a - b) < Geometry.Point.Tolerance,
-        AreEqual: (a: IPoint, b: IPoint) => Geometry.Point.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
-        Hash: (point: IPoint) => `${point.x.toFixed(6)},${point.y.toFixed(6)}`,
         Zero: { x: 0, y: 0 },
         One: { x: 1, y: 1 },
         Up: { x: 0, y: -1 },
         Down: { x: 0, y: 1 },
         Left: { x: -1, y: 0 },
         Right: { x: 1, y: 0 },
+        IsWithinToleranceOf: (a: number, b?: number): boolean => Math.abs(a - (b == undefined ? 0: b)) < Geometry.Point.Tolerance,
+        AreEqual: (a: IPoint, b: IPoint) => Geometry.Point.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
+        Hash: (point: IPoint) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
         DistanceSq: (a: IPoint, b: IPoint): number => (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y),
         Distance: (a: IPoint, b: IPoint): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
         Add: (a: IPoint, b: IPoint): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
@@ -90,13 +167,13 @@ export class Geometry {
         Proj: (a: IPoint, b: IPoint): IPoint => { 
             return Geometry.Point.Scale(b, Geometry.Point.Dot(a, b) / Math.max(Geometry.Point.LengthSq(b), Geometry.Point.Tolerance)); 
         },
-        Normalized: (point: IPoint, length: number=1): IPoint => {
+        Normalized: (point: IPoint, length?: number): IPoint => {
             if((point.x === 0 && point.y === 0) || length === 0)
                 return { x: 0, y: 0 };
-            const temp = length / Geometry.Point.Length(point);
+            const temp = (length == undefined ? 1 : length) / Geometry.Point.Length(point);
             return { x: point.x * temp, y: point.y * temp };
         },
-        Rotate: (point: IPoint, angle: number, center: IPoint | null=null): IPoint => {
+        Rotate: (point: IPoint, angle: number, center?: IPoint): IPoint => {
             const x = point.x - (center ? center.x : 0);
             const y = point.y - (center ? center.y : 0);
             return {
@@ -119,10 +196,10 @@ export class Geometry {
         Lerp: (from: IPoint, to: IPoint, t: number): IPoint => Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Subtract(to, from), t), from),
         // returns a version of this point which is flipped over (rotated 180 degrees around) the given point
         // (or the origin if none is provided). Provided because it is faster than using rotate/reflect.
-        Flip: (point: IPoint, center: IPoint | null=null): IPoint => { 
-            return center == null
-                ? Geometry.Point.Negative(point) 
-                : { x: 2 * center.x - point.x, y: 2 * center.y - point.y };
+        Flip: (point: IPoint, center?: IPoint): IPoint => { 
+            return center
+                ? { x: 2 * center.x - point.x, y: 2 * center.y - point.y } 
+                : Geometry.Point.Negative(point);
         },
         // reflects the given point over the given line
         Reflect: (point: IPoint, pair: IPointPair): IPoint => {
@@ -134,6 +211,7 @@ export class Geometry {
             x: clamp(point.x, rectangle.x, rectangle.x + rectangle.w),
             y: clamp(point.y, rectangle.y, rectangle.y + rectangle.h)
         }),
+        Vector: (length: number, angle: number): IPoint => ({ x: Math.cos(angle) * length, y: Math.sin(angle) * length }),
         // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
         // if result is < 0, then this point is right of the line/segment/ray formed by the two points. 
         // if result == 0, then it is colinear with the two points.
@@ -236,6 +314,21 @@ export class Geometry {
             if(r < 0) return a;
             if(r > Geometry.Point.LengthSq(ab)) return b;
             return ret;
+        },
+        Midpoint: (segment: ISegment): IPoint => ({ 
+            x: (segment.a.x + segment.b.x) / 2,
+            y: (segment.a.y + segment.b.y) / 2
+        }),
+        PerpendicularBisector: (segment: ISegment): ILine => {
+            const midpoint = Geometry.Segment.Midpoint(segment);
+            return {
+                a: midpoint,
+                b: Geometry.Point.Add(
+                    midpoint, 
+                    Geometry.Point.Rotate(
+                        Geometry.Point.Subtract(segment.b, segment.a),
+                        tau/4))
+            };
         }
     };
 
@@ -243,21 +336,9 @@ export class Geometry {
         Segments: (triangle: ITriangle): ISegment[] => Geometry.Points.Segments(Geometry.Triangle.Vertices(triangle)),
         Vertices: (triangle: ITriangle): IPoint[] => [triangle.a, triangle.b, triangle.c],
         Circumcircle: (triangle: ITriangle): ICircle => {
-            const midpointAB = Geometry.Point.Midpoint(triangle.a, triangle.b);
-            const perpendicularAB = Geometry.Point.Rotate(Geometry.Point.Subtract(triangle.a, triangle.b), tau/4);
-    
-            const midpointBC = Geometry.Point.Midpoint(triangle.b, triangle.c);
-            const perpendicularBC = Geometry.Point.Rotate(Geometry.Point.Subtract(triangle.b, triangle.c), tau/4);
-
             const intersection = Geometry.Intersection.LineLine(
-                {
-                    a: midpointAB,
-                    b: Geometry.Point.Add(midpointAB, perpendicularAB)
-                }, 
-                {
-                    a: midpointBC, 
-                    b: Geometry.Point.Add(midpointBC, perpendicularBC)
-                }
+                Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
+                Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c})
             );
             if(!intersection)
                 throw "No intersection found!";
@@ -271,6 +352,7 @@ export class Geometry {
         Supertriangle: (triangle: ITriangle): ITriangle => triangle,
         Triangulation: (triangle: ITriangle): ITriangle[] => [triangle],
         Bounds: (triangle: ITriangle): IRectangle => Geometry.Points.Bounds(Geometry.Triangle.Vertices(triangle)),
+        Midpoint: (triangle: ITriangle): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle)),
         Area: (triangle: ITriangle): number => Math.abs(Geometry.Triangle.AreaSigned(triangle)),
         AreaSigned: (triangle: ITriangle): number => 0.5 * (
             -triangle.b.y * triangle.c.x 
@@ -278,7 +360,63 @@ export class Geometry {
             + triangle.a.x * (triangle.b.y - triangle.c.y) 
             + triangle.b.x * triangle.c.y
         ),
-        Hash: (triangle: ITriangle): string => Geometry.Points.Hash(Geometry.Triangle.Vertices(triangle))
+        Perimeter: (triangle: ITriangle): number => Geometry.Triangle.LengthAB(triangle) + Geometry.Triangle.LengthBC(triangle) + Geometry.Triangle.LengthCA(triangle),
+        Semiperimeter: (triangle: ITriangle): number => Geometry.Triangle.Perimeter(triangle) / 2,
+        Hash: (triangle: ITriangle): string => Geometry.Points.Hash(Geometry.Triangle.Vertices(triangle)),
+        Incenter: (triangle: ITriangle): IPoint => {
+            const bisectorA = Geometry.Triangle.AngleBisectorA(triangle);
+            const bisectorB = Geometry.Triangle.AngleBisectorB(triangle);
+            const intersection = Geometry.Intersection.RayRay(bisectorA, bisectorB);
+            if(!intersection)
+                throw `No intersection found between angle bisectors of points "a" and "b" in triangle (${triangle.a}, ${triangle.b}, ${triangle.c}`;
+            return intersection;
+		},
+        Inradius: (triangle: ITriangle): number => {
+            const lengthAB = Geometry.Triangle.LengthAB(triangle);
+            const lengthBC = Geometry.Triangle.LengthBC(triangle);
+            const lengthCA = Geometry.Triangle.LengthCA(triangle);
+            const s = (lengthAB + lengthBC + lengthCA) / 2;
+            return Math.sqrt(s * (s - lengthAB) * (s - lengthBC) * (s - lengthCA)) / s;
+		},
+        InscribedCircle: (triangle: ITriangle): ICircle => {
+            const { x, y } = Geometry.Triangle.Incenter(triangle);
+            const radius = Geometry.Triangle.Inradius(triangle);
+            return { x, y, radius };
+		},
+        AngleA: (triangle: ITriangle): number => {
+            const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.b, triangle.a));
+            const angleAC = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.c, triangle.a));
+            return Math.abs(angleAC - angleAB);
+		},
+        AngleB: (triangle: ITriangle): number => {
+            const angleBC = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.c, triangle.b));
+            const angleBA = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.a, triangle.b));
+            return Math.abs(angleBA - angleBC);
+		},
+        AngleC: (triangle: ITriangle): number => {
+            const angleCA = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.a, triangle.c));
+            const angleCB = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.b, triangle.c));
+            return Math.abs(angleCB - angleCA);
+		},
+        LengthAB: (triangle: ITriangle): number => Geometry.Point.Distance(triangle.a, triangle.b),
+        LengthBC: (triangle: ITriangle): number => Geometry.Point.Distance(triangle.b, triangle.c),
+        LengthCA: (triangle: ITriangle): number => Geometry.Point.Distance(triangle.c, triangle.a),
+        // returns the angle bisector of a given vertex ( vertices ordered: a => b => c )
+        AngleBisector: (bisectionVertex: IPoint, previousVertex: IPoint, nextVertex: IPoint): IRay => {
+            const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(nextVertex, bisectionVertex));
+            const angleAC = Geometry.Point.Angle(Geometry.Point.Subtract(previousVertex, bisectionVertex));
+            const angleBisector = moduloSafe(angleDifference(angleAB, angleAC) / 2 + angleAB, tau);
+            return { 
+                a: bisectionVertex,
+                b: Geometry.Point.Add(bisectionVertex, Geometry.Point.Vector(1, angleBisector))
+            }
+        },
+        AngleBisectorA: ({ a, b, c }: ITriangle): IRay => Geometry.Triangle.AngleBisector(a, c, b),
+        AngleBisectorB: ({ a, b, c }: ITriangle): IRay => Geometry.Triangle.AngleBisector(b, a, c),
+        AngleBisectorC: ({ a, b, c }: ITriangle): IRay => Geometry.Triangle.AngleBisector(c, b, a),
+        PerpendicularBisectorAB: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
+        PerpendicularBisectorBC: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c }),
+        PerpendicularBisectorCA: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.c, b: triangle.a }),
     }
 
     public static Rectangle: IRectangleStatic = {
@@ -312,13 +450,46 @@ export class Geometry {
             const yMax = rectangles.map(o => o.y + o.h).max();
             return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
         },
-        BoundsCircle: (circle: ICircle) => ({
-            x: circle.x - circle.radius,
-            y: circle.y - circle.radius,
-            w: circle.radius * 2,h: circle.radius * 2
-        }),
+        Midpoint: (rectangle: IRectangle): IPoint => ({ x: rectangle.x + rectangle.w/2, y: rectangle.y + rectangle.h/2 }),
         Area: (rectangle: IRectangle): number => rectangle.w * rectangle.h,
-        Hash: (rectangle: IRectangle): string => Geometry.Points.Hash(Geometry.Rectangle.Vertices(rectangle))
+        Hash: (rectangle: IRectangle): string => Geometry.Points.Hash(Geometry.Rectangle.Vertices(rectangle)),
+        // Expands the size of this rectangle by the given amount relative to its current size.
+        // "center" defines the position the rectangle is expanding from (if undefined, the center of the rectangle is used)
+        Scale: (rectangle: IRectangle, scalar: number, center?: IPoint): IRectangle => {
+            if(scalar === 1)
+                return rectangle;
+
+            if(!center) {
+                const wAmount = rectangle.w / 2 * scalar;
+                const hAmount = rectangle.h / 2 * scalar;
+                return {
+                    x: rectangle.x - wAmount,
+                    y: rectangle.y - hAmount,
+                    w: rectangle.w + 2 * wAmount,
+                    h: rectangle.h + 2 * hAmount
+                };
+            }
+
+            const position = Geometry.Point.Add(
+                Geometry.Point.Scale(
+                    Geometry.Point.Subtract(rectangle, center),
+                    scalar
+                ),
+                center
+            );
+            return {
+                x: position.x,
+                y: position.y,
+                w: rectangle.w * scalar,
+                h: rectangle.h * scalar
+            }
+        },
+        Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number): IRectangle => ({
+            x: rectangle.x - wAmount,
+            y: rectangle.y - (hAmount == null ? wAmount : null),
+            w: rectangle.w + 2 * wAmount,
+            h: rectangle.h + 2 * (hAmount == null ? wAmount : null)
+        })
     }
 
     public static Polygon: IPolygonStatic = {
@@ -328,6 +499,7 @@ export class Geometry {
         Supertriangle: (polygon: IPolygon): ITriangle => Geometry.Points.Supertriangle(polygon.vertices),
         Triangulation: (polygon: IPolygon): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
         Bounds: (polygon: IPolygon): IRectangle => Geometry.Points.Bounds(polygon.vertices),
+        Midpoint: (polygon: IPolygon): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
         Area: (polygon: IPolygon): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
         Hash: (polygon: IPolygon): string => Geometry.Points.Hash(polygon.vertices),
         WindingNumber: (polygon: IPolygon, point: IPoint) : number => {
@@ -355,6 +527,25 @@ export class Geometry {
             }
             return windingNumber;
         }
+    }
+
+    public static Circle: ICircleStatic = {
+        Circumcircle: (circle: ICircle): ICircle => circle,
+        Supertriangle: (circle: ICircle): ITriangle => ({
+            a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, circle.radius * 2), circle),
+            b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), circle.radius * 2), circle),
+            c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), circle.radius * 2), circle)
+        }),
+        Bounds: (circle: ICircle): IRectangle => ({
+            x: circle.x - circle.radius,
+            y: circle.y - circle.radius,
+            w: circle.radius * 2,
+            h: circle.radius * 2
+        }),
+        Midpoint: (circle: ICircle): IPoint => circle,
+        Area: (circle: ICircle): number => Math.PI * circle.radius * circle.radius,
+        Circumference: (circle: ICircle): number => tau * circle.radius,
+        Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`
     }
 
     public static Points: IPointsStatic<IPoint[]> = {
@@ -453,7 +644,7 @@ export class Geometry {
         Hash: (points: IPoint[]): string => points
             .sorted((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
             .map(o => Geometry.Point.Hash(o))
-            .join('|')
+            .join(';')
     }
 
     public static Collide = {
@@ -531,6 +722,7 @@ export class Geometry {
         PolygonPoint: (polygon: IPolygon, point: IPoint): boolean => Geometry.Polygon.WindingNumber(polygon, point) != 0
     }
 
+    // TODO: test what happens when the lines/rays/segments are directly atop one another
     public static Intersection = {
         LineLine: (lineA: ILine, lineB: ILine): IPoint | null => {
             return Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE);

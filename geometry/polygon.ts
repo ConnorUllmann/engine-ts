@@ -19,7 +19,7 @@ export class Polygon implements IPolygon {
         const segments = [];
         for(let i = 0; i < polygon.vertices.length; i++) {
             const j = (i + 1) % polygon.vertices.length;
-            segments.push(new Segment(new Point().setTo(polygon.vertices[i]), new Point().setTo(polygon.vertices[j])));
+            segments.push(new Segment(Point.Create(polygon.vertices[i]), Point.Create(polygon.vertices[j])));
         }
         return segments;
     }
@@ -49,7 +49,7 @@ export class Polygon implements IPolygon {
         return Polygon.segments(polygon)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
             .filter(point => point != null)
-            .map(point => new Point().setTo(point));
+            .map(point => Point.Create(point));
     }
     
 

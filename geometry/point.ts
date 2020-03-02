@@ -67,41 +67,41 @@ export class Point implements IPoint {
         this._y = y;
     }
 
-    public static Create(length: number, angle: number): Point { return new Point(Math.cos(angle) * length, Math.sin(angle) * length); }
-
+    public static Create(point: IPoint): Point { return new Point(point.x, point.y); }
+    public static Vector(length: number, angle: number): Point { return Point.Create(Geometry.Point.Vector(length, angle)); }
     public clonePoint(): Point { return new Point(this.x, this.y); }
-    public setTo(b: IPoint): Point { this.x = b.x; this.y = b.y; return this; }
+    public setTo(b: IPoint): this { this.x = b.x; this.y = b.y; return this; }
     public toString(): string { return JSON.stringify({ x: this.x.toFixed(1), y: this.y.toFixed(1) }); }
     public isEqualTo(b: IPoint): boolean { return Geometry.Point.AreEqual(this, b); }
     public get hash(): string { return Geometry.Point.Hash(this); }
     public lengthSq(): number { return Geometry.Point.LengthSq(this); }
     public dot(b: IPoint): number { return Geometry.Point.Dot(this, b); }
     public cross(b: IPoint): number { return Geometry.Point.Cross(this, b); }
-    public add(b: IPoint): Point { return new Point().setTo(Geometry.Point.Add(this, b)); }
-    public subtract(b: IPoint): Point { return new Point().setTo(Geometry.Point.Subtract(this, b)); }
-    public proj(b: IPoint): Point { return new Point().setTo(Geometry.Point.Proj(this, b)); }
-    public normalized(length: number=1): Point { return new Point().setTo(Geometry.Point.Normalized(this, length)); }
-    public scale(scalar: number | IPoint): Point { return new Point().setTo(Geometry.Point.Scale(this, scalar)); }
-    public midpoint(...points: IPoint[]): Point { return new Point().setTo(Geometry.Point.Midpoint(this, ...points)); }
+    public add(b: IPoint): Point { return Point.Create(Geometry.Point.Add(this, b)); }
+    public subtract(b: IPoint): Point { return Point.Create(Geometry.Point.Subtract(this, b)); }
+    public proj(b: IPoint): Point { return Point.Create(Geometry.Point.Proj(this, b)); }
+    public normalized(length: number=1): Point { return Point.Create(Geometry.Point.Normalized(this, length)); }
+    public scale(scalar: number | IPoint): Point { return Point.Create(Geometry.Point.Scale(this, scalar)); }
+    public midpoint(...points: IPoint[]): Point { return Point.Create(Geometry.Point.Midpoint(this, ...points)); }
     public distanceSqTo(b: IPoint): number { return Geometry.Point.DistanceSq(this, b); }
     public distanceTo(b: IPoint): number { return Geometry.Point.Distance(this, b); }
     public get angle(): number { return Geometry.Point.Angle(this); };
-    public reflect(pair: IPointPair): Point { return new Point().setTo(Geometry.Point.Reflect(this, pair)); }
+    public reflect(pair: IPointPair): Point { return Point.Create(Geometry.Point.Reflect(this, pair)); }
     public towardness(point: IPoint): number { return Geometry.Point.Towardness(this, point); }
-    public lerp(point: IPoint, t: number): Point { return new Point().setTo(Geometry.Point.Lerp(this, point, t)); };
-    public wiggle(angleRangeMax: number): Point { return new Point().setTo(Geometry.Point.Wiggle(this, angleRangeMax)); }
-    public negative(): Point { return new Point().setTo(Geometry.Point.Negative(this)); }
-    public rotate(angle: number, center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Rotate(this, angle, center)); }
-    public flip(center: IPoint | null=null): Point { return new Point().setTo(Geometry.Point.Flip(this, center)); }
-    public clampedInRectangle(rectangle: IRectangle): Point { return new Point().setTo(Geometry.Point.ClampedInRectangle(this, rectangle)); }
+    public lerp(point: IPoint, t: number): Point { return Point.Create(Geometry.Point.Lerp(this, point, t)); };
+    public wiggle(angleRangeMax: number): Point { return Point.Create(Geometry.Point.Wiggle(this, angleRangeMax)); }
+    public negative(): Point { return Point.Create(Geometry.Point.Negative(this)); }
+    public rotate(angle: number, center: IPoint | null=null): Point { return Point.Create(Geometry.Point.Rotate(this, angle, center)); }
+    public flip(center: IPoint | null=null): Point { return Point.Create(Geometry.Point.Flip(this, center)); }
+    public clampedInRectangle(rectangle: IRectangle): Point { return Point.Create(Geometry.Point.ClampedInRectangle(this, rectangle)); }
     public isLeftCenterRightOf(pair: IPointPair): number { return Geometry.Point.IsLeftCenterRightOf(this, pair); }
     public isLeftOf(pair: IPointPair): boolean { return Geometry.Point.IsLeftOf(this, pair); }
     public isColinear(pair: IPointPair): boolean { return Geometry.Point.IsColinear(this, pair); }
     public isRightOf(pair: IPointPair): boolean { return Geometry.Point.IsRightOf(this, pair); }
 
-    public closestPointOnLine(line: ILine): Point { return new Point().setTo(Geometry.Line.ClosestPointTo(line, this)); };
-    public closestPointOnSegment(segment: ISegment): Point { return new Point().setTo(Geometry.Segment.ClosestPointTo(segment, this)); }
-    public closestPointOnRay(ray: IRay): Point { return new Point().setTo(Geometry.Ray.ClosestPointTo(ray, this)); }
+    public closestPointOnLine(line: ILine): Point { return Point.Create(Geometry.Line.ClosestPointTo(line, this)); };
+    public closestPointOnSegment(segment: ISegment): Point { return Point.Create(Geometry.Segment.ClosestPointTo(segment, this)); }
+    public closestPointOnRay(ray: IRay): Point { return Point.Create(Geometry.Ray.ClosestPointTo(ray, this)); }
 
     public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectanglePoint(rectangle, this); }
     public collidesCircle(circle: ICircle): boolean { return Geometry.Collide.CirclePoint(circle, this); }

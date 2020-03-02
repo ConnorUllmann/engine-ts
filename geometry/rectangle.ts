@@ -4,7 +4,7 @@ import { Geometry } from './geometry';
 import { Point } from './point';
 import { IRectangle, IPolygon, ITriangle, ICircle, IPoint, ILine, PointPairType, IRay, ISegment, IPointPair } from './interfaces';
 
-
+// TODO: decide if this should extend Point or just implement IPoint via IRectangle
 export class Rectangle extends Point implements IRectangle, IPolygon {
     public get xLeft(): number { return this.x; }
     public set xLeft(x: number) { this.x = x; }
@@ -18,21 +18,18 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
     public set xCenter(x: number) { this.x = x - this.w/2; }
     public get yCenter(): number { return this.y + this.h/2; }
     public set yCenter(y: number) { this.y = y - this.h/2; }
-    public get center(): Point { return new Point(this.xCenter, this.yCenter); }
+    public get center(): Point { return Point.Create(Geometry.Rectangle.Midpoint(this)); }
     public set center(center: Point) { this.x = center.x - this.w/2; this.y = center.y - this.h/2; }
 
     public get topLeft(): Point { return new Point(this.xLeft, this.yTop); }
     public get topRight(): Point { return new Point(this.xRight, this.yTop); }
     public get bottomLeft(): Point { return new Point(this.xLeft, this.yBottom); }
     public get bottomRight(): Point { return new Point(this.xRight, this.yBottom); }
-    public get corners(): Point[] { return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]; }
-    public get vertices(): Point[] { return this.corners; }
-    public get segments(): Segment[] {
-        return Geometry.Points.Segments(this.corners)
-            .map(segment => new Segment(new Point().setTo(segment.a), new Point().setTo(segment.b)));
-    }
+    public get vertices(): Point[] { return Geometry.Rectangle.Vertices(this).map(p => Point.Create(p)); }
+    public get segments(): Segment[] { return Geometry.Rectangle.Segments(this).map(segment => Segment.Create(segment)); }
     public get triangulation(): ITriangle[] { return Geometry.Rectangle.Triangulation(this); }
     public get circumcircle(): ICircle { return Geometry.Rectangle.Circumcircle(this); }
+    public get bounds(): IRectangle { return this; }
     public get area(): number { return Geometry.Rectangle.Area(this); }
 
     private _w: number;
@@ -50,7 +47,17 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
         this._h = h;
     }
 
+    public static Create(rectangle: IRectangle): Rectangle { return new Rectangle(rectangle.x, rectangle.y, rectangle.w, rectangle.h); }
+
     public cloneRectangle(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
+    public setTo(rectangle: IRectangle): this {
+        this.x = rectangle.x;
+        this.y = rectangle.y;
+        this.w = rectangle.w;
+        this.h = rectangle.h;
+        return this;
+    }
+
     public offset(other: IPoint): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
     public collidesPoint(point: IPoint): boolean { return Geometry.Collide.RectanglePoint(this, point); }
     public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectangleRectangle(this, rectangle); }
@@ -63,45 +70,18 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
         return Geometry.Rectangle.Segments(rectangle)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
             .filter(point => point != null)
-            .map(point => new Point().setTo(point));
+            .map(point => Point.Create(point));
     }
 
-    // Expands the rectangle by the given amount on each side
-    public expandFromCenter(amount: number): void {
-        this.x -= amount;
-        this.w += 2 * amount;
-        this.y -= amount;
-        this.h += 2 * amount;
+    public expand(wAmount: number, hAmount?: number): Rectangle {
+        return Rectangle.Create(Geometry.Rectangle.Expand(this, wAmount, hAmount));
     };
 
-    // Returns a copy of this rectangle expanded by the given amount on each side
-    public expandedFromCenter(amount: number): Rectangle {
-        const result = this.cloneRectangle();
-        result.expandFromCenter(amount);
-        return result;
-    };
-
-    // Expands the rectangle by the given amount on each side, scaled by the current side lengths
-    public scaleFromCenter(scalar: number): void {
-        const wAmount = this.w / 2 * scalar;
-        const hAmount = this.h / 2 * scalar;
-        this.x -= wAmount;
-        this.w += 2 * wAmount;
-        this.y -= hAmount;
-        this.h += 2 * hAmount;
-    };
-
-    // Returns a copy of this rectangle expanded by the given amount on each side, scaled by the current side lengths
-    public scaledFromCenter(scalar: number): Rectangle {
-        const result = this.cloneRectangle();
-        result.scaleFromCenter(scalar);
-        return result;
+    public scale(scalar: number, center?: IPoint): Rectangle {
+        return Rectangle.Create(Geometry.Rectangle.Scale(this, scalar, center))
     };
 
     public get randomPointInside(): Point {
         return new Point(random() * this.w + this.x, random() * this.h + this.y);
     }
-
-    // don't return a copy since it's readonly anyway
-    public get bounds(): IRectangle { return this; }
 }

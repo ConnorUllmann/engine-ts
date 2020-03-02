@@ -14,6 +14,8 @@ export class Color {
     public static get yellow(): ConstColor { return Color._yellow; }
     private static _magenta: ConstColor;
     public static get magenta(): ConstColor { return Color._magenta; }
+    private static _orange: ConstColor;
+    public static get orange(): ConstColor { return Color._orange; }
     private static _black: ConstColor;
     public static get black(): ConstColor { return Color._black; }
     private static _lightGrey: ConstColor;
@@ -33,6 +35,7 @@ export class Color {
         Color._blue = new ConstColor(0, 0, 255);
         Color._cyan = new ConstColor(0, 255, 255);
         Color._yellow = new ConstColor(255, 255, 0);
+        Color._orange = new ConstColor(255, 128, 0);
         Color._magenta = new ConstColor(255, 0, 255);
         Color._black = new ConstColor(0, 0, 0);
         Color._lightGrey = new ConstColor(192, 192, 192);

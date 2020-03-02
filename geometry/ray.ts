@@ -18,12 +18,12 @@ export class Ray implements IRay {
     public isEqualTo(ray: IRay): boolean { return Geometry.Ray.AreEqual(this, ray); }
     public get slope(): number { return Geometry.Ray.Slope(this); }
     public asSegment(length: number=Ray.DefaultMaxDistance): Segment { return Segment.Create(Geometry.Ray.AsSegment(this, length)); }
-    public pointAtDistance(length: number=Ray.DefaultMaxDistance): Point { return new Point().setTo(Geometry.Ray.PointAtDistance(this, length)); }
+    public pointAtDistance(length: number=Ray.DefaultMaxDistance): Point { return Point.Create(Geometry.Ray.PointAtDistance(this, length)); }
     public YatX(x: number): number { return Geometry.Ray.YatX(this, x); }
     public XatY(y: number): number { return Geometry.Ray.XatY(this, y); }
-    public lineIntersection(line: ILine): Point | null { return new Point().setTo(Geometry.Intersection.PointPair(this, PointPairType.RAY, line, PointPairType.LINE)); }
-    public rayIntersection(ray: IRay): Point | null { return new Point().setTo(Geometry.Intersection.PointPair(this, PointPairType.RAY, ray, PointPairType.RAY)); }
-    public segmentIntersection(segment: ISegment): Point | null { return new Point().setTo(Geometry.Intersection.PointPair(this, PointPairType.RAY, segment, PointPairType.SEGMENT)); }
+    public lineIntersection(line: ILine): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, line, PointPairType.LINE)); }
+    public rayIntersection(ray: IRay): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, ray, PointPairType.RAY)); }
+    public segmentIntersection(segment: ISegment): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, segment, PointPairType.SEGMENT)); }
     public cast<T extends ISegment>(segments: T[], maxDistance: number=Ray.DefaultMaxDistance): IRaycastResult<T> | null { return Geometry.Ray.Cast(this, segments, maxDistance); }
     
     constructor(public a: Point, public angle: number) { }

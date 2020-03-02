@@ -10,9 +10,9 @@ export class Circle extends Point implements ICircle {
     }
     public cloneCircle(): Circle { return new Circle(this.x, this.y, this.radius); }
 
-    public get circumference(): number { return tau * this.radius; }
-    public get area(): number { return Math.PI * this.radius * this.radius; }
-    public get bounds(): IRectangle { return Geometry.Rectangle.BoundsCircle(this); }
+    public get circumference(): number { return Geometry.Circle.Circumference(this); }
+    public get area(): number { return Geometry.Circle.Area(this); }
+    public get bounds(): IRectangle { return Geometry.Circle.Bounds(this); }
     public get diameter(): number { return this.radius * 2; }
     public collidesPoint(point: IPoint): boolean { return Geometry.Collide.CirclePoint(this, point); }
     public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectangleCircle(rectangle, this); }
