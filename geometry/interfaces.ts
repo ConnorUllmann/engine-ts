@@ -32,7 +32,6 @@ export interface IRaycastResult<T extends ISegment> {
 }
 
 export interface IPolygon {
-    // TODO: turn these into functions with no arguments to emphasize how expensive some of them can be
     vertices: IPoint[]; // counter-clockwise order
     segments: ISegment[];
     triangulation: ITriangle[];

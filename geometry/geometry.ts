@@ -97,7 +97,7 @@ interface IPointStatic {
     Vector: (length: number, angle: number) => IPoint,
     IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair) => number,
     IsLeftOf: (point: IPoint, pair: IPointPair) => boolean,
-    IsColinear: (point: IPoint, pair: IPointPair) => boolean,
+    IsColinearWith: (point: IPoint, pair: IPointPair) => boolean,
     IsRightOf: (point: IPoint, pair: IPointPair) => boolean
 }
 
@@ -111,6 +111,7 @@ interface IPointPairStatic<T extends IPointPair> {
 }
 
 interface ILineStatic extends IPointPairStatic<ILine> {
+    Yintercept: (line: ILine) => number
 };
 
 interface IRayStatic extends IPointPairStatic<IRay> {
@@ -217,7 +218,7 @@ export class Geometry {
         // if result == 0, then it is colinear with the two points.
         IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
         IsLeftOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
-        IsColinear: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
+        IsColinearWith: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
         IsRightOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0
     };
 
@@ -256,6 +257,7 @@ export class Geometry {
                     Geometry.Point.Subtract(line.b, line.a)
                 )
             ),
+        Yintercept: (line: ILine): number => Geometry.Line.YatX(line, 0)
     };
 
     public static Ray: IRayStatic = {
@@ -647,13 +649,19 @@ export class Geometry {
             .join(';')
     }
 
+    // TODO:
+    //  1. include segments, rays, and lines vs. shapes
+    //  2. create matching functions in Geometry.Intersection that actually returns intersection points, if any
     public static Collide = {
-        RectangleRectangle: (rectangleA: IRectangle, rectangleB: IRectangle): boolean => { 
-            return rectangleA.x + rectangleA.w > rectangleB.x 
+        SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[]): boolean =>
+            segmentsA.any(segmentA => 
+                segmentsB.any(segmentB => 
+                    Geometry.Intersection.SegmentSegment(segmentA, segmentB) != null)),
+        RectangleRectangle: (rectangleA: IRectangle, rectangleB: IRectangle): boolean =>
+            rectangleA.x + rectangleA.w > rectangleB.x 
                 && rectangleA.y + rectangleA.h > rectangleB.y 
                 && rectangleA.x < rectangleB.x + rectangleB.w 
-                && rectangleA.y < rectangleB.y + rectangleB.h;
-        },
+                && rectangleA.y < rectangleB.y + rectangleB.h,
         RectangleCircle: (rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0): boolean => {
             // The rectangle's (x, y) position is its top-left corner if it were not rotated,
             // however the rectangle still rotates about its center (by "rectangleAngle" radians)
@@ -676,36 +684,36 @@ export class Geometry {
                 (yCircleDistance - halfH) * (yCircleDistance - halfH);
             return cornerDistanceSq <= (circle.radius * circle.radius);
         },
-        // TODO:
-        RectangleTriangle: (rectangle: IRectangle, triangle: ITriangle): boolean => { throw "not implemented" },
-        RectanglePolygon: (rectangle: IRectangle, polygon: IPolygon): boolean => { throw "not implemented" },
-        RectanglePoint: (rectangle: IRectangle, point: IPoint): boolean => { 
-            return point.x >= rectangle.x && point.y >= rectangle.y && point.x < rectangle.x + rectangle.w && point.y < rectangle.y + rectangle.h;
-        },
-        CircleCircle: (circleA: ICircle, circleB: ICircle): boolean => {
-            return Geometry.Point.DistanceSq(circleA, circleB) <= (circleA.radius + circleB.radius) * (circleA.radius + circleB.radius);
-        },
-        CircleTriangle: (circle: ICircle, triangle: ITriangle): boolean => { throw "not implemented"; },
-        CirclePolygon: (circle: ICircle, polygon: IPolygon): boolean => { throw "not implemented"; },
-        CirclePoint: (circle: ICircle, point: IPoint): boolean => { 
-            return Geometry.Point.DistanceSq(point, circle) <= circle.radius * circle.radius;
-        },
-        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle): boolean => {
-            const segmentsA = Geometry.Triangle.Segments(triangleA);
-            const segmentsB = Geometry.Triangle.Segments(triangleB);
-            // if a segment on either triangle intersects the other, then there is a collision
-            if(segmentsA.first(segmentA => 
-                    segmentsB.first(segmentB => 
-                        Geometry.Intersection.SegmentSegment(segmentA, segmentB
-                        ) != null
-                    ) != null
-                ) != null)
-                return true;
-            // if there are no intersections but any vertex of one triangle collides with the other, then there is a collision
-            return Geometry.Collide.TrianglePoint(triangleA, triangleB.a)
-                || Geometry.Collide.TrianglePoint(triangleB, triangleA.a);            
-        },
-        TrianglePolygon: (triangle: ITriangle, polygon: IPolygon): boolean => { throw "not implemented"; },
+        RectangleTriangle: (rectangle: IRectangle, triangle: ITriangle): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangle), Geometry.Rectangle.Segments(rectangle))
+            || Geometry.Collide.TrianglePoint(triangle, rectangle)
+            || Geometry.Collide.RectanglePoint(rectangle, triangle.a),
+        RectanglePolygon: (rectangle: IRectangle, polygon: IPolygon): boolean => 
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon), Geometry.Rectangle.Segments(rectangle))
+            || Geometry.Collide.PolygonPoint(polygon, rectangle)
+            || Geometry.Collide.RectanglePoint(rectangle, polygon.vertices.first()),
+        RectanglePoint: (rectangle: IRectangle, point: IPoint): boolean =>
+            point.x >= rectangle.x && point.y >= rectangle.y && point.x < rectangle.x + rectangle.w && point.y < rectangle.y + rectangle.h,
+        CircleCircle: (circleA: ICircle, circleB: ICircle): boolean =>
+            Geometry.Point.DistanceSq(circleA, circleB) <= (circleA.radius + circleB.radius) * (circleA.radius + circleB.radius),
+        CircleTriangle: (circle: ICircle, triangle: ITriangle): boolean => 
+            Geometry.Triangle.Segments(triangle).any(segment => Geometry.Intersection.CircleSegment(circle, segment).length > 0)
+            || Geometry.Collide.TrianglePoint(triangle, circle)
+            || Geometry.Collide.CirclePoint(circle, triangle.a),
+        CirclePolygon: (circle: ICircle, polygon: IPolygon): boolean => 
+            Geometry.Polygon.Segments(polygon).any(segment => Geometry.Intersection.CircleSegment(circle, segment).length > 0)
+            || Geometry.Collide.PolygonPoint(polygon, circle)
+            || Geometry.Collide.CirclePoint(circle, polygon.vertices.first()),
+        CirclePoint: (circle: ICircle, point: IPoint): boolean =>
+            Geometry.Point.DistanceSq(point, circle) <= circle.radius * circle.radius,
+        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle): boolean => 
+            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangleA), Geometry.Triangle.Segments(triangleB))
+            || Geometry.Collide.TrianglePoint(triangleA, triangleB.a)
+            || Geometry.Collide.TrianglePoint(triangleB, triangleA.a),
+        TrianglePolygon: (triangle: ITriangle, polygon: IPolygon): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon), Geometry.Triangle.Segments(triangle))
+            || Geometry.Collide.PolygonPoint(polygon, triangle.a)
+            || Geometry.Collide.TrianglePoint(triangle, polygon.vertices.first()),
         TrianglePoint: (triangle: ITriangle, point: IPoint): boolean => { 
             // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
             const areaSigned2xInverse =  1 / (
@@ -718,30 +726,88 @@ export class Geometry {
             const t = areaSigned2xInverse*(triangle.a.x*triangle.b.y - triangle.a.y*triangle.b.x + (triangle.a.y - triangle.b.y)*point.x + (triangle.b.x - triangle.a.x)*point.y);
             return s > 0 && t > 0 && 1 - s - t > 0;
         },
-        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon): boolean => { throw "not implemented"; },
-        PolygonPoint: (polygon: IPolygon, point: IPoint): boolean => Geometry.Polygon.WindingNumber(polygon, point) != 0
+        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygonA), Geometry.Polygon.Segments(polygonB))
+            || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first())
+            || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first()),
+        PolygonPoint: (polygon: IPolygon, point: IPoint): boolean =>
+            Geometry.Polygon.WindingNumber(polygon, point) != 0
     }
 
-    // TODO: test what happens when the lines/rays/segments are directly atop one another
+
+    // given 3 colinear points, returns true if "b" and "c" are on the same side of "a"
+    // i.e. used to check if a point has exceeded the endpoint of a PointPair
+    //  a = endpoint of PointPair being checked
+    //  b = other endpoint of the same PointPair
+    //  c = point being checked against the PointPair)
+    // TODO: rename 
+    private static isSameSideOfPoint = (a: IPoint, b: IPoint, c: IPoint) =>
+        a.x === b.x
+            ? Math.sign(c.y - a.y) === Math.sign(b.y - a.y)
+            : Math.sign(c.x - a.x) === Math.sign(b.x - a.x);
+
+    // TODO:
+    //  1. test what happens when the lines/rays/segments are directly atop one another
+    //  2. add shape vs. shape intersections as well
     public static Intersection = {
-        LineLine: (lineA: ILine, lineB: ILine): IPoint | null => {
-            return Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE);
+        CirclePointPair: (circle: ICircle, pair: IPointPair): IPoint[] => {
+            const b = Geometry.Line.Yintercept(pair);
+            const m = Geometry.Line.Slope(pair);
+            const t = 1 + m * m;
+            const u = 2 * b * m - 2 * circle.y * m - 2 * circle.x;
+            const v = circle.x * circle.x + b * b + circle.y * circle.y - circle.radius * circle.radius - 2 * b * circle.y;
+
+            const sq = u * u - 4 * t * v;
+            if(sq < 0)
+                return [];
+            
+            if(sq == 0) {
+                const x = -u / (2 * t);
+                const y = m * x + b;
+                return [{ x, y }];
+            }
+
+            const sqrt = Math.sqrt(sq);
+            const x1 = (-u + sqrt) / (2 * t);
+            const y1 = m * x1 + b;
+            const x2 = (-u - sqrt) / (2 * t);
+            const y2 = m * x2 + b;
+            return [
+                { x: x1, y: y1 },
+                { x: x2, y: y2 }
+            ];
         },
-        LineRay: (line: ILine, ray: IRay): IPoint | null => {
-            return Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY);
-        },
-        LineSegment: (line: ILine, segment: ISegment): IPoint | null => {
-            return Geometry.Intersection.PointPair(line, PointPairType.LINE, segment, PointPairType.SEGMENT);
-        },
-        RayRay: (rayA: IRay, rayB: IRay): IPoint | null => {
-            return Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY);
-        },
-        RaySegment: (ray: IRay, segment: ISegment): IPoint | null => {
-            return Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT);
-        },
-        SegmentSegment: (segmentA: ISegment, segmentB: ISegment): IPoint | null => {
-            return Geometry.Intersection.PointPair(segmentA, PointPairType.SEGMENT, segmentB, PointPairType.SEGMENT);
-        },  
+        CircleLine: (circle: ICircle, line: ILine): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, line),
+        CircleRay: (circle: ICircle, ray: IRay): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, ray)
+                .filter(o => Geometry.isSameSideOfPoint(ray.a, ray.b, o)),
+        CircleSegment: (circle: ICircle, segment: ISegment): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, segment)
+                .filter(o =>
+                    Geometry.isSameSideOfPoint(segment.a, segment.b, o) && 
+                    Geometry.isSameSideOfPoint(segment.b, segment.a, o)
+                ),
+        LineLine: (lineA: ILine, lineB: ILine): IPoint | null =>
+            Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE),
+        LineRay: (line: ILine, ray: IRay): IPoint | null =>
+            Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY),
+        LineSegment: (line: ILine, segment: ISegment): IPoint | null =>
+            Geometry.Intersection.PointPair(line, PointPairType.LINE, segment, PointPairType.SEGMENT),
+        RayRay: (rayA: IRay, rayB: IRay): IPoint | null =>
+            Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY),
+        RaySegment: (ray: IRay, segment: ISegment): IPoint | null =>
+            Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT),
+        SegmentSegment: (segmentA: ISegment, segmentB: ISegment): IPoint | null =>
+            Geometry.Intersection.PointPair(segmentA, PointPairType.SEGMENT, segmentB, PointPairType.SEGMENT),
+        SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[]): IPoint[] =>
+            segmentsA.map(segmentA => 
+                segmentsB.map(segmentB => 
+                    Geometry.Intersection.SegmentSegment(segmentA, segmentB)
+                ).filter(o => o != null)
+            ).flattened(),
+        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon): IPoint[] =>
+            Geometry.Intersection.SegmentsSegments(Geometry.Polygon.Segments(polygonA), Geometry.Polygon.Segments(polygonB)),
         PointPair: (
             first: IPointPair, firstType: PointPairType, 
             second: IPointPair, secondType: PointPairType
@@ -756,33 +822,22 @@ export class Geometry {
             const denominator = yFirstLineDiff * xSecondLineDiff - ySecondLineDiff * xFirstLineDiff;
             if (denominator === 0)
                 return null;
-            const intersectionPoint = {
+            const intersection = {
                 x: (xFirstLineDiff * cSecond - xSecondLineDiff * cFirst) / denominator,
                 y: (ySecondLineDiff * cFirst - yFirstLineDiff * cSecond) / denominator
             };
     
-            const beyondFirstA = first.a.x === first.b.x
-                ? Math.sign(intersectionPoint.y - first.a.y) !== Math.sign(first.b.y - first.a.y)
-                : Math.sign(intersectionPoint.x - first.a.x) !== Math.sign(first.b.x - first.a.x);
-            const beyondFirstB = first.a.x === first.b.x
-                ? Math.sign(intersectionPoint.y - first.b.y) !== Math.sign(first.a.y - first.b.y)
-                : Math.sign(intersectionPoint.x - first.b.x) !== Math.sign(first.a.x - first.b.x);
-            const beyondFirst = beyondFirstA || beyondFirstB;
+            const beyondFirstA = !Geometry.isSameSideOfPoint(first.a, first.b, intersection);
+            const beyondFirstB = !Geometry.isSameSideOfPoint(first.b, first.a, intersection);
+            const beyondSecondA = !Geometry.isSameSideOfPoint(second.a, second.b, intersection);
+            const beyondSecondB = !Geometry.isSameSideOfPoint(second.b, second.a, intersection)
     
-            const beyondSecondA = second.a.x === second.b.x
-                ? Math.sign(intersectionPoint.y - second.a.y) !== Math.sign(second.b.y - second.a.y)
-                : Math.sign(intersectionPoint.x - second.a.x) !== Math.sign(second.b.x - second.a.x);
-            const beyondSecondB = second.a.x === second.b.x
-                ? Math.sign(intersectionPoint.y - second.b.y) !== Math.sign(second.a.y - second.b.y)
-                : Math.sign(intersectionPoint.x - second.b.x) !== Math.sign(second.a.x - second.b.x);
-            const beyondSecond = beyondSecondA || beyondSecondB;
-    
-            return firstType === PointPairType.SEGMENT && beyondFirst
+            return firstType === PointPairType.SEGMENT && (beyondFirstA || beyondFirstB)
                 || firstType === PointPairType.RAY && beyondFirstA
-                || secondType === PointPairType.SEGMENT && beyondSecond
+                || secondType === PointPairType.SEGMENT && (beyondSecondA || beyondSecondB)
                 || secondType === PointPairType.RAY && beyondSecondA
                     ? null
-                    : intersectionPoint;
+                    : intersection;
         }
     }
 }

@@ -38,7 +38,6 @@ export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 
-
 declare global {
     interface Array<T> {
         remove(item: T): number | null;

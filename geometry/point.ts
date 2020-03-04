@@ -96,7 +96,7 @@ export class Point implements IPoint {
     public clampedInRectangle(rectangle: IRectangle): Point { return Point.Create(Geometry.Point.ClampedInRectangle(this, rectangle)); }
     public isLeftCenterRightOf(pair: IPointPair): number { return Geometry.Point.IsLeftCenterRightOf(this, pair); }
     public isLeftOf(pair: IPointPair): boolean { return Geometry.Point.IsLeftOf(this, pair); }
-    public isColinear(pair: IPointPair): boolean { return Geometry.Point.IsColinear(this, pair); }
+    public isColinearWith(pair: IPointPair): boolean { return Geometry.Point.IsColinearWith(this, pair); }
     public isRightOf(pair: IPointPair): boolean { return Geometry.Point.IsRightOf(this, pair); }
 
     public closestPointOnLine(line: ILine): Point { return Point.Create(Geometry.Line.ClosestPointTo(line, this)); };
