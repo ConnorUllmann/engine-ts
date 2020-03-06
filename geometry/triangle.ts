@@ -7,7 +7,7 @@ import { Point } from './point';
 
 export class Triangle implements ITriangle, IPolygon {
     constructor(public a: Point, public b: Point, public c: Point) {}
-    public cloneTriangle(): Triangle { return new Triangle(this.a.clonePoint(), this.b.clonePoint(), this.c.clonePoint()); }
+    public get clone(): Triangle { return new Triangle(this.a.clone, this.b.clone, this.c.clone); }
 
     public get vertices(): Point[] { return [this.a, this.b, this.c]; }
     public get segments(): Segment[] { return Geometry.Triangle.Segments(this).map(segment => Segment.Create(segment)); }

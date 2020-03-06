@@ -1,4 +1,5 @@
 import { Point } from './point';
+import { Geometry } from './geometry';
 
 export class Grid<T> {
     private tiles: T[][];
@@ -34,10 +35,10 @@ export class Grid<T> {
     }
 
     private static CardinalNeighborsRelativeIndexMap: Point[] = [
-        Point.up,
-        Point.right,
-        Point.down,
-        Point.left
+        Point.Create(Geometry.Point.Up),
+        Point.Create(Geometry.Point.Right),
+        Point.Create(Geometry.Point.Down),
+        Point.Create(Geometry.Point.Left)
     ];
     public getCardinalNeighbors(i: number, j: number): T[] {
         return Grid.CardinalNeighborsRelativeIndexMap

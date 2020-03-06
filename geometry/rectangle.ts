@@ -49,7 +49,7 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
 
     public static Create(rectangle: IRectangle): Rectangle { return new Rectangle(rectangle.x, rectangle.y, rectangle.w, rectangle.h); }
 
-    public cloneRectangle(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
+    public get clone(): Rectangle { return new Rectangle(this.x, this.y, this.w, this.h); }
     public setTo(rectangle: IRectangle): this {
         this.x = rectangle.x;
         this.y = rectangle.y;
@@ -73,12 +73,12 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
             .map(point => Point.Create(point));
     }
 
-    public expand(wAmount: number, hAmount?: number): Rectangle {
-        return Rectangle.Create(Geometry.Rectangle.Expand(this, wAmount, hAmount));
+    public expand(wAmount: number, hAmount?: number): this {
+        return this.setTo(Geometry.Rectangle.Expand(this, wAmount, hAmount));
     };
 
-    public scale(scalar: number, center?: IPoint): Rectangle {
-        return Rectangle.Create(Geometry.Rectangle.Scale(this, scalar, center))
+    public scale(scalar: number, center?: IPoint): this {
+        return this.setTo(Geometry.Rectangle.Scale(this, scalar, center))
     };
 
     public get randomPointInside(): Point {

@@ -27,5 +27,5 @@ export class Ray implements IRay {
     public cast<T extends ISegment>(segments: T[], maxDistance: number=Ray.DefaultMaxDistance): IRaycastResult<T> | null { return Geometry.Ray.Cast(this, segments, maxDistance); }
     
     constructor(public a: Point, public angle: number) { }
-    public cloneRay(): Ray { return new Ray(this.a.clonePoint(), this.angle); }
+    public cloneRay(): Ray { return new Ray(this.a.clone, this.angle); }
 }

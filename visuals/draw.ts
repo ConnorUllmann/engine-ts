@@ -3,7 +3,7 @@ import { World } from '@engine-ts/core/world';
 import { tau } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
-import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment } from '@engine-ts/geometry/interfaces';
+import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon } from '@engine-ts/geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '@engine-ts/geometry/point';
 
@@ -93,28 +93,28 @@ export class Draw {
         context.stroke();
     };
 
-    public static polygon(world: World, points: IPoint[], fillStyle: FillStyle=null) {
-        if(points.length <= 0)
+    public static polygon(world: World, { vertices }: IPolygon, fillStyle: FillStyle=null) {
+        if(vertices.length <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.moveTo(points.first().x - world.camera.x, points.first().y - world.camera.y);
-        for(let i = 1; i < points.length; i++)
-            context.lineTo(points[i].x - world.camera.x, points[i].y - world.camera.y);
+        context.moveTo(vertices.first().x - world.camera.x, vertices.first().y - world.camera.y);
+        for(let i = 1; i < vertices.length; i++)
+            context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
         context.closePath();
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
     };
 
-    public static polygonOutline(world: World, points: IPoint[], strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(points.length <= 0)
+    public static polygonOutline(world: World, { vertices }: IPolygon, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(vertices.length <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.moveTo(points.first().x - world.camera.x, points.first().y - world.camera.y);
-        for(let i = 1; i < points.length; i++)
-            context.lineTo(points[i].x - world.camera.x, points[i].y - world.camera.y);
+        context.moveTo(vertices.first().x - world.camera.x, vertices.first().y - world.camera.y);
+        for(let i = 1; i < vertices.length; i++)
+            context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
         context.closePath();
         context.lineWidth = lineWidth;
         if(strokeStyle)

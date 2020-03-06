@@ -50,6 +50,7 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
     WindingNumber: (polygon: IPolygon, point: IPoint) => number
+    // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
 interface ICircleStatic {
@@ -84,7 +85,7 @@ interface IPointStatic {
     Length: (point: IPoint) => number,
     Dot: (a: IPoint, b: IPoint) => number,
     Cross: (a: IPoint, b: IPoint) => number,
-    Proj: (a: IPoint, b: IPoint) => IPoint,
+    Project: (a: IPoint, b: IPoint) => IPoint,
     Normalized: (point: IPoint, length?: number) => IPoint,
     Rotate: (point: IPoint, angle: number, center?: IPoint) => IPoint,
     Negative: (point: IPoint) => IPoint,
@@ -165,7 +166,7 @@ export class Geometry {
         Length: (point: IPoint): number => Math.sqrt(Geometry.Point.LengthSq(point)),
         Dot: (a: IPoint, b: IPoint): number => a.x * b.x + a.y * b.y,
         Cross: (a: IPoint, b: IPoint): number => a.x * b.y - b.x * a.y,
-        Proj: (a: IPoint, b: IPoint): IPoint => { 
+        Project: (a: IPoint, b: IPoint): IPoint => { 
             return Geometry.Point.Scale(b, Geometry.Point.Dot(a, b) / Math.max(Geometry.Point.LengthSq(b), Geometry.Point.Tolerance)); 
         },
         Normalized: (point: IPoint, length?: number): IPoint => {
@@ -252,7 +253,7 @@ export class Geometry {
         Hash: (line: ILine): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`,
         ClosestPointTo: (line: ILine, point: IPoint): IPoint =>
             Geometry.Point.Add(line.a,
-                Geometry.Point.Proj(
+                Geometry.Point.Project(
                     Geometry.Point.Subtract(point, line.a), 
                     Geometry.Point.Subtract(line.b, line.a)
                 )
@@ -289,7 +290,7 @@ export class Geometry {
         },
         ClosestPointTo: ({ a, b }: IRay, point: IPoint): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
-            const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(point, a), ab), a);
+            const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
             const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
             return r < 0 ? a : ret;
         }
@@ -311,7 +312,7 @@ export class Geometry {
         Hash: (segment: ISegment): string => Geometry.Points.Hash([segment.a, segment.b]),
         ClosestPointTo: ({ a, b }: ISegment, point: IPoint): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
-            const ret = Geometry.Point.Add(Geometry.Point.Proj(Geometry.Point.Subtract(point, a), ab), a);
+            const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
             const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
             if(r < 0) return a;
             if(r > Geometry.Point.LengthSq(ab)) return b;
