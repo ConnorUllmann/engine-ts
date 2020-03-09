@@ -14,12 +14,17 @@ export class Actor extends Entity {
         };
     }
 
+    public w: number;
+    public h: number;
+
     public friction: number = 0.01;
     public readonly velocity: Point = new Point();
     public readonly acceleration: Point = new Point();
 
-    constructor(world: World, x: number, y: number, public w: number, public h: number) {
-        super(world, x, y);
+    constructor(world: World, rectangle: IRectangle) {
+        super(world, rectangle);
+        this.w = rectangle.w;
+        this.h = rectangle.h;
     }
 
     update() {

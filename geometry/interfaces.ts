@@ -33,21 +33,21 @@ export interface IRaycastResult<T extends ISegment> {
 
 export interface IPolygon {
     vertices: IPoint[]; // counter-clockwise order
-    segments: ISegment[];
-    triangulation: ITriangle[];
-    circumcircle: ICircle;
-    bounds: IRectangle;
-    area: number;
+    // segments: ISegment[];
+    // triangulation: ITriangle[];
+    // circumcircle: ICircle;
+    // bounds: IRectangle;
+    // area: number;
 
-    // TODO:
-    // collidesPolygon(polygon: IPolygon): boolean;
-    // collidesRectangle(rectangle: IRectangle): boolean;
-    // collidesTriangle(triangle: ITriangle): boolean;
-    // collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean
-    collidesPoint(point: IPoint): boolean;
-    lineIntersections(line: ILine): IPoint[];
-    rayIntersections(ray: IRay): IPoint[];
-    segmentIntersections(segment: ISegment): IPoint[];    
+    // // TODO:
+    // // collidesPolygon(polygon: IPolygon): boolean;
+    // // collidesRectangle(rectangle: IRectangle): boolean;
+    // // collidesTriangle(triangle: ITriangle): boolean;
+    // // collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean
+    // collidesPoint(point: IPoint): boolean;
+    // lineIntersections(line: ILine): IPoint[];
+    // rayIntersections(ray: IRay): IPoint[];
+    // segmentIntersections(segment: ISegment): IPoint[];    
 }
 
 export enum PointPairType {

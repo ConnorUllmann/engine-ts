@@ -1,7 +1,7 @@
 import { tau, random, clamp, angleDifference, moduloSafe } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
-interface IPointsStatic<T> {
+interface IPointListStatic<T> {
     Segments: (o: T) => ISegment[],
     Vertices: (o: T) => IPoint[],
     Circumcircle: (o: T) => ICircle,
@@ -11,7 +11,11 @@ interface IPointsStatic<T> {
     Hash: (o: T) => string
 }
 
-interface IShapeStatic<T> extends IPointsStatic<T> {
+interface IPointsStatic extends IPointListStatic<IPoint[]> {
+    Sum: (points: IPoint[]) => IPoint
+}
+
+interface IShapeStatic<T> extends IPointListStatic<T> {
     Midpoint: (o: T) => IPoint,
     Area: (o: T) => number
 }
@@ -124,7 +128,8 @@ interface IRayStatic extends IPointPairStatic<IRay> {
 
 interface ISegmentStatic extends IPointPairStatic<ISegment> {
     Midpoint: (segment: ISegment) => IPoint,
-    PerpendicularBisector: (segment: ISegment) => ILine
+    PerpendicularBisector: (segment: ISegment) => ILine,
+    SharedVertex: (segmentA: ISegment, segmentB: ISegment) => IPoint | null
 }
 
 export class Geometry {
@@ -332,7 +337,13 @@ export class Geometry {
                         Geometry.Point.Subtract(segment.b, segment.a),
                         tau/4))
             };
-        }
+        },
+        SharedVertex: (segmentA: ISegment, segmentB: ISegment): IPoint | null =>
+            Geometry.Point.AreEqual(segmentA.a, segmentB.a) || Geometry.Point.AreEqual(segmentA.a, segmentB.b)
+                ? segmentA.a
+                : Geometry.Point.AreEqual(segmentA.b, segmentB.a) || Geometry.Point.AreEqual(segmentA.b, segmentB.b)
+                    ? segmentA.b
+                    : null
     };
 
     public static Triangle: ITriangleStatic = {
@@ -487,11 +498,11 @@ export class Geometry {
                 h: rectangle.h * scalar
             }
         },
-        Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number): IRectangle => ({
+        Expand: (rectangle: IRectangle, wAmount: number, hAmount: number=wAmount): IRectangle => ({
             x: rectangle.x - wAmount,
-            y: rectangle.y - (hAmount == null ? wAmount : null),
+            y: rectangle.y - hAmount,
             w: rectangle.w + 2 * wAmount,
-            h: rectangle.h + 2 * (hAmount == null ? wAmount : null)
+            h: rectangle.h + 2 * hAmount
         })
     }
 
@@ -551,10 +562,12 @@ export class Geometry {
         Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`
     }
 
-    public static Points: IPointsStatic<IPoint[]> = {
-        Segments: (points: IPoint[]): ISegment[] => { 
+    public static Points: IPointsStatic = {
+        Segments: (points: IPoint[], closed: boolean=true): ISegment[] => { 
             const segments = [];
             for(let i = 0; i < points.length; i++) {
+                if(i == points.length-1 && !closed)
+                    break;
                 const j = (i + 1) % points.length;
                 segments.push({ a: points[i], b: points[j] });
             }
@@ -647,7 +660,15 @@ export class Geometry {
         Hash: (points: IPoint[]): string => points
             .sorted((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
             .map(o => Geometry.Point.Hash(o))
-            .join(';')
+            .join(';'),
+        Sum: (points: IPoint[]): IPoint => {
+            const sum = { x: 0, y: 0 };
+            points.forEach(point => {
+                sum.x += point.x;
+                sum.y += point.y;
+            });
+            return sum;
+        }
     }
 
     // TODO:

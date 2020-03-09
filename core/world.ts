@@ -113,9 +113,8 @@ export class World {
 
         this.sortEntitiesByUpdateOrder();
 
-        const entities = this.entities.filter((o: Entity) => o.active);
-        entities.forEach((o: Entity) => o.update());
-        entities.forEach((o: Entity) => o.postUpdate());
+        this.entities.forEach((o: Entity) => { if(o.active && !o.destroyed) o.update() });
+        this.entities.forEach((o: Entity) => { if(o.active && !o.destroyed) o.postUpdate() });
 
         for(const id in this.entityToRemoveById) {
             const entity = this.entityToRemoveById[id];
@@ -124,9 +123,7 @@ export class World {
             this.entities.remove(entity);
             delete this.entityById[entity.id];
             this.entitiesByClass[entity.class].remove(entity);
-
-            entity.removed();
-            entity.destroyed = true;
+            entity.removed = true;
         }
     }
 
@@ -148,6 +145,7 @@ export class World {
         if(entity.world != this || entity.destroyed)
             return;
         this.entityToRemoveById[entity.id] = entity;
+        entity.destroyed = true;
     }
 
     public clearCanvas(color: Color | null=null) {
@@ -168,4 +166,8 @@ export class World {
             ? a.id - b.id
             : b.depth - a.depth;
     };
+
+    public entitiesOfClass<T extends Entity>(_class: string): T[] {
+        return _class in this.entitiesByClass ? this.entitiesByClass[_class].map(e => e as T) : [];
+    }
 }

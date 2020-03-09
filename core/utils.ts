@@ -1,3 +1,5 @@
+import { IPoint } from '@engine-ts/geometry/interfaces';
+
 export function clamp(value: number, min: number, max: number) {
     return value <= min
         ? min
@@ -55,7 +57,7 @@ declare global {
         maxOf(valueGetter: (o: T) => number): T | null;
         sum(): T | null;
         batchify(batchSize: number): T[][];
-        mappedBy(keyGetter: (o: T) => string): { [key: string]: T };
+        mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
         clone(): T[];
         clear(): void;
         sorted(compare?: (a: T, b: T) => number): T[];
@@ -250,19 +252,25 @@ Array.prototype.batchify = function<T>(batchSize: number): T[][]
 
 // Example:
 // [
-//      {id:'squirtle'},
-//      {id:'bulbasaur'},
-//      {id:'charmander'}
+//      {name:'squirtle 1', type:'water'},
+//      {name:'bulbasaur 1', type:'grass'},
+//      {name:'bulbasaur 2', type:'grass'},
+//      {name:'charmander', type:'fire'},
+//      {name:'squirtle 2', type:'water'}
 // ]
-// .mappedBy(o => o.id) =
+// .mappedBy(o => o.name)
+//
 // {
-//      squirtle: {id: 'squirtle'},
-//      bulbasaur: {id: 'bulbasaur'},
-//      charmander: {id: 'charmander'}
+//      squirtle: [{name:'squirtle 1', type:'water'},{name:'squirtle 2', type:'water'}],
+//      bulbasaur: [{name:'bulbasaur 1', type:'grass'},{name:'bulbasaur 2', type:'grass'}],
+//      charmander: [{name:'charmander', type:'fire'}]
 // }
-Array.prototype.mappedBy = function<T>(keyGetter: (o: T) => string): { [key: string]: T } {
-    return this.reduce((obj: { [key: string]: T }, element: T) => {
-        obj[keyGetter(element)] = element;
+Array.prototype.mappedBy = function<T>(keyGetter: (o: T) => string): { [key: string]: T[] } {
+    return this.reduce((obj: { [key: string]: T[] }, element: T) => {
+        const key = keyGetter(element);
+        if(!(key in obj))
+            obj[key] = [];
+        obj[key].push(element);
         return obj
     },
     {});

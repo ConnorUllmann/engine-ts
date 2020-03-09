@@ -6,6 +6,8 @@ export class Camera extends Rectangle {
     public get w(): number { return this.world.canvas.width; }
     public get h(): number { return this.world.canvas.height; }
 
+    // TODO: add ability to set zoom level; check if setting screen resolution is all you need to do?
+
     constructor(public world: World) {
         super(0, 0, world.canvas.width, world.canvas.height);
     }

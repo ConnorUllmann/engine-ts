@@ -1,5 +1,7 @@
 import { World } from './world';
 import { Point } from '../geometry/point';
+import { Geometry } from '@engine-ts/geometry/geometry';
+import { IPoint } from '@engine-ts/geometry/interfaces';
 
 export enum MouseButton {
     Left = 0,
@@ -16,6 +18,11 @@ export class Mouse extends Point {
     public focus: boolean = false;
     public scroll: Point = new Point();
     public get touchscreen(): boolean { return 'ontouchstart' in document.documentElement; }
+
+    // position relative to the screen, e.g. always (0, 0) whenever the mouse is on the top-left pixel
+    public get screenPosition(): IPoint { return this; }
+    // position in the world relative to the camera
+    public get worldPosition(): IPoint { return Geometry.Point.Add(this.world.camera, this); }
 
     constructor(public world: World) { super(); }
 

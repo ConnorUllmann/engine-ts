@@ -1,0 +1,42 @@
+import { World } from '@engine-ts/core/world';
+import { clamp } from '@engine-ts/core/utils';
+
+export class Timer {
+    public value: number = 0;
+    public triggered: boolean = false; // whether or not the timer's value has crossed from < 1 to >= 1 this frame
+    public started: boolean = false; // whether or not the timer has had its .update() method called at least once
+    public paused: boolean = false;
+
+    protected get valueRaw(): number {
+        return this.seconds > 0
+            ? this.value + this.world.delta / 1000 / this.seconds
+            : 1;
+    }
+
+    protected clean(valueRaw: number): number { 
+        return clamp(valueRaw, 0, 1);
+    }
+
+    public get isFinished(): boolean { return this.value >= 1; }
+    public toRange(min: number, max: number) { return (max - min) * this.value + min; }
+    
+    constructor(private readonly world: World, public seconds: number=1) {}
+
+    public reset(seconds: number=this.seconds): void {
+        this.seconds = seconds;
+        this.value = this.seconds === 0 ? 1 : 0;
+        this.triggered = false;
+        this.started = false;
+        this.paused = false;
+    }
+
+    public update() {
+        if(this.paused)
+            return;
+
+        const valueRaw = this.valueRaw;
+        this.triggered = valueRaw >= 1;
+        this.value = this.clean(valueRaw);
+        this.started = true;
+    }
+}
