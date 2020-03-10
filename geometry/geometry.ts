@@ -693,8 +693,8 @@ export class Geometry {
             const circlePosition = rectangleAngle === 0
                 ? circle
                 : Geometry.Point.Rotate(circle, -rectangleAngle, { x: rectangle.x + halfW, y: rectangle.y + halfH });
-            const xCircleDistance = Math.abs(circle.x - (rectangle.x + halfW));
-            const yCircleDistance = Math.abs(circle.y - (rectangle.y + halfH));
+            const xCircleDistance = Math.abs(circlePosition.x - (rectangle.x + halfW));
+            const yCircleDistance = Math.abs(circlePosition.y - (rectangle.y + halfH));
     
             if (xCircleDistance > halfW + circle.radius || yCircleDistance > halfH + circle.radius)
                 return false;
