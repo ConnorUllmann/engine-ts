@@ -49,7 +49,8 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     BoundsRectangles: (rectangles: IRectangle[]) => IRectangle,
     Scale: (rectangle: IRectangle, scalar: number, center?: IPoint) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
-    Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle
+    Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle,
+    RandomPointInside: (rectangle: IRectangle) => IPoint
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
@@ -64,7 +65,8 @@ interface ICircleStatic {
     Area: (o: ICircle) => number,
     Circumference: (o: ICircle) => number,
     Bounds: (o: ICircle) => IRectangle,
-    Hash: (o: ICircle) => string
+    Hash: (o: ICircle) => string,
+    RandomPointInside: (circle: ICircle) => IPoint
 }
 
 interface IPointStatic {
@@ -100,6 +102,7 @@ interface IPointStatic {
     Reflect: (point: IPoint, pair: IPointPair) => IPoint,
     ClampedInRectangle: (point: IPoint, rectangle: IRectangle) => IPoint,
     Vector: (length: number, angle: number) => IPoint,
+    UnitVector: (angle: number) => IPoint,
     IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair) => number,
     IsLeftOf: (point: IPoint, pair: IPointPair) => boolean,
     IsColinearWith: (point: IPoint, pair: IPointPair) => boolean,
@@ -219,6 +222,7 @@ export class Geometry {
             y: clamp(point.y, rectangle.y, rectangle.y + rectangle.h)
         }),
         Vector: (length: number, angle: number): IPoint => ({ x: Math.cos(angle) * length, y: Math.sin(angle) * length }),
+        UnitVector: (angle: number): IPoint => Geometry.Point.Vector(1, angle),
         // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
         // if result is < 0, then this point is right of the line/segment/ray formed by the two points. 
         // if result == 0, then it is colinear with the two points.
@@ -503,6 +507,10 @@ export class Geometry {
             y: rectangle.y - hAmount,
             w: rectangle.w + 2 * wAmount,
             h: rectangle.h + 2 * hAmount
+        }),
+        RandomPointInside: (rectangle: IRectangle): IPoint => ({
+            x: rectangle.x + random() * rectangle.w,
+            y: rectangle.y + random() * rectangle.h
         })
     }
 
@@ -559,7 +567,8 @@ export class Geometry {
         Midpoint: (circle: ICircle): IPoint => circle,
         Area: (circle: ICircle): number => Math.PI * circle.radius * circle.radius,
         Circumference: (circle: ICircle): number => tau * circle.radius,
-        Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`
+        Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`,
+        RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, tau * random()))
     }
 
     public static Points: IPointsStatic = {

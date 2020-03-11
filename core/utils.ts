@@ -55,9 +55,9 @@ declare global {
         bestOf(boolCheck: (o: T) => boolean): T | null;
         minOf(valueGetter: (o: T) => number): T | null;
         maxOf(valueGetter: (o: T) => number): T | null;
-        sum(): T | null;
         batchify(batchSize: number): T[][];
         mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
+        mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
         clone(): T[];
         clear(): void;
         sorted(compare?: (a: T, b: T) => number): T[];
@@ -67,6 +67,7 @@ declare global {
         // number only
         min(this: Array<number>): number | null;
         max(this: Array<number>): number | null;
+        sum(this: Array<number>): number | null;
     }
 }
 
@@ -231,8 +232,9 @@ Array.prototype.maxOf = function<T>(valueGetter: (o: T) => number): T | null
         : null;
 };
 
-Array.prototype.sum = function<T>(): T | null
-{
+Array.prototype.min = function(): number | null { return this.length > 0 ? this.minOf((o: number) => o) : null; }
+Array.prototype.max = function(): number | null { return this.length > 0 ? this.maxOf((o: number) => o) : null; }
+Array.prototype.sum = function(): number | null {
     return this.length > 0
         ? this.reduce((total, increment) => total + increment)
         : null;
@@ -271,6 +273,17 @@ Array.prototype.mappedBy = function<T>(keyGetter: (o: T) => string): { [key: str
         if(!(key in obj))
             obj[key] = [];
         obj[key].push(element);
+        return obj
+    },
+    {});
+};
+
+// Same as Array.mappedBy except only the last element at each key is returned
+// Best for circumstances where you're expecting the key value to be unique
+Array.prototype.mappedByUnique = function<T>(keyGetter: (o: T) => string): { [key: string]: T } {
+    return this.reduce((obj: { [key: string]: T }, element: T) => {
+        const key = keyGetter(element);
+        obj[key] = element;
         return obj
     },
     {});

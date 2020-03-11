@@ -2,6 +2,7 @@ import { Entity } from './entity';
 import { World } from './world';
 import { IRectangle } from '@engine-ts/geometry/interfaces';
 import { Point } from '@engine-ts/geometry/point';
+import { Geometry } from '@engine-ts/geometry/geometry';
 
 export class Actor extends Entity {
     public readonly boundsOffset: Point = new Point(0, 0);
@@ -28,11 +29,18 @@ export class Actor extends Entity {
     }
 
     update() {
+        this.updateVelocity();
+        this.updatePosition();
+    }
+
+    protected updateVelocity() {
         this.velocity
             .add(this.acceleration.clone.scale(this.world.deltaNormal))
             .scale(1 - this.friction);
-        
+    }
+
+    protected updatePosition() {
         this.position
-            .add(this.velocity);
+            .add(this.velocity.clone.scale(this.world.deltaNormal));
     }
 }

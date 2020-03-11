@@ -24,7 +24,6 @@ export class World {
     private nextEntityId: number = 0;
 
     public paused: boolean = false;
-    public fps: number = 60;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
     public get millisecondsSinceStart(): number { return Date.now() - this.firstUpdateTimestamp; }
     public firstUpdateTimestamp: number = 0;
@@ -42,7 +41,8 @@ export class World {
         canvasHeight: number = 480,
         canvasResolutionWidth: number = 1280,
         canvasResolutionHeight: number = 960,
-        alpha: boolean=true
+        alpha: boolean=true,
+        public readonly fps: number=60
     ) {
         console.log(`World started using canvas with id '${canvasId}'`);
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -64,6 +64,8 @@ export class World {
         this.mouse.start();
         this.keyboard.start();
 
+        // default _delta to the value at the given fps
+        this._delta = this.millisecondsPerFrame;
         setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
     }
 
@@ -94,7 +96,8 @@ export class World {
         if(this.firstUpdateTimestamp == null)
             this.firstUpdateTimestamp = Date.now();
         const now = Date.now();
-        this._delta = now - this.lastUpdateTimestamp;
+        if(this.lastUpdateTimestamp != 0)
+            this._delta = now - this.lastUpdateTimestamp;
         this.lastUpdateTimestamp = now;
     }
 
@@ -105,9 +108,8 @@ export class World {
             
             this.entities.push(entity);
             this.entityById[id] = entity;
-            if(!(entity.class in this.entitiesByClass)) {
+            if(!(entity.class in this.entitiesByClass))
                 this.entitiesByClass[entity.class] = [];
-            }
             this.entitiesByClass[entity.class].push(entity);
         }
 
@@ -123,6 +125,8 @@ export class World {
             this.entities.remove(entity);
             delete this.entityById[entity.id];
             this.entitiesByClass[entity.class].remove(entity);
+            if(this.entitiesByClass[entity.class].length <= 0)
+                delete this.entitiesByClass[entity.class];
             entity.removed = true;
         }
     }
@@ -137,7 +141,8 @@ export class World {
     public addEntity(entity: Entity) {
         if(entity.world != this)
             return;
-        entity.id = this.nextEntityId++;
+        if(entity.id == null)
+            entity.id = this.nextEntityId++;
         this.entityToAddById[entity.id] = entity;
     }
 

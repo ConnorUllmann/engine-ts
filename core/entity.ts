@@ -20,6 +20,14 @@ export class Entity {
         this.position.y = position.y;
     }
 
+    public respawn(position?: IPoint): void {
+        this.destroyed = false;
+        this.removed = false;
+        this.world.addEntity(this);
+        if(position)
+            this.position.setTo(position);
+    }
+
     public destroy(): void {
         this.world.destroyEntity(this);
     }
@@ -31,7 +39,7 @@ export class Entity {
             position: this.position.toString()
         })
     }
-    
+
     public update(): void {}
     public postUpdate(): void {}
     public render(): void {}

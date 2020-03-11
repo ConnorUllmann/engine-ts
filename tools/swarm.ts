@@ -1,33 +1,33 @@
-import { Actor } from '@engine-ts/core/actor';
 import { IRectangle, IPoint } from '@engine-ts/geometry/interfaces';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { Point } from '@engine-ts/geometry/point';
 import { random, tau } from '@engine-ts/core/utils';
+import { Entity } from '@engine-ts/core/entity';
 
 export class Swarm {
     // TODO: make this a dictionary keyed by entityId instead of just a list
     private readonly swarmInstincts: SwarmInstinct[] = [];
-    private readonly predators: Actor[] = [];
+    private readonly predators: Entity[] = [];
 
-    public addPredator(predator: Actor) { this.predators.push(predator); }
-    public removePredator(predator: Actor) { this.predators.remove(predator); }
-    public addSwarmer(swarmer: Actor) { this.swarmInstincts.push(new SwarmInstinct(swarmer)); }
-    public removeSwarmer(swarmer: Actor) { this.swarmInstincts.remove(this.swarmInstincts.first(o => o.swarmer === swarmer)); }
+    public addPredator(predator: Entity) { this.predators.push(predator); }
+    public removePredator(predator: Entity) { this.predators.remove(predator); }
+    public addSwarmer(swarmer: Entity) { this.swarmInstincts.push(new SwarmInstinct(swarmer)); }
+    public removeSwarmer(swarmer: Entity) { this.swarmInstincts.remove(this.swarmInstincts.first(o => o.swarmer === swarmer)); }
 
     public update() {
         for(const swarmInstinct of this.swarmInstincts)
             swarmInstinct.updateAngle(this.swarmInstincts, this.predators);
     }
 
-    public getAngle(swarmer: Actor): number {
+    public getAngle(swarmer: Entity): number {
         return this.swarmInstincts.first(o => o.swarmer === swarmer).angle;
     }
 
-    public isAvoidingPredator(swarmer: Actor): boolean {
+    public isAvoidingPredator(swarmer: Entity): boolean {
         return this.swarmInstincts.first(o => o.swarmer === swarmer).isAvoidingPredator;
     }
 
-    public isRepulsed(swarmer: Actor): boolean {
+    public isRepulsed(swarmer: Entity): boolean {
         return this.swarmInstincts.first(o => o.swarmer === swarmer).isRepulsed;
     }
 }
@@ -58,9 +58,9 @@ class SwarmInstinct {
         };
     }
 
-    constructor(public readonly swarmer: Actor) {}
+    constructor(public readonly swarmer: Entity) {}
 
-    public updateAngle(swarmInstincts: SwarmInstinct[], predators: Actor[]) {
+    public updateAngle(swarmInstincts: SwarmInstinct[], predators: Entity[]) {
         const predatorAvoidanceRadiusSq = this.predatorAvoidanceRadius * this.predatorAvoidanceRadius;
         const visiblePredators = predators.filter(o => Geometry.Point.DistanceSq(o.position, this.swarmer.position) <= predatorAvoidanceRadiusSq);
         const predatorDirection: Point = Point.Create(Geometry.Points.Sum(visiblePredators

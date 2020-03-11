@@ -1,6 +1,7 @@
 import { Point } from '@engine-ts/geometry/point';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { Button } from './buttons';
+import { Geometry } from '@engine-ts/geometry/geometry';
 
 export class Gamepads {
     private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
@@ -12,13 +13,13 @@ export class Gamepads {
     private pressedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
     private releasedByIndex: { [gamepadId: number]: { [button: string]: boolean} } = {};
 
-    private static readonly DeadzoneDefault = 0.2;
+    private static readonly DeadzoneDefault = 0.3;
     private get gamepads(): { [gamepadId: number]: Gamepad } {
         const gamepadsRaw = navigator.getGamepads();
         // since navigator.getGamepads() doesn't seem to return an actual array, access the controllers individually
         return [gamepadsRaw[0], gamepadsRaw[1], gamepadsRaw[2], gamepadsRaw[3]]
             .filter(o => o != null && o.connected)
-            .mappedBy(o => o.index.toString());
+            .mappedByUnique(o => o.index.toString());
     }
 
     public static get AreAvailable(): boolean { return !!(navigator.getGamepads); };
@@ -153,4 +154,12 @@ export class Gamepads {
         return this.getButtonValue(this.releasedByIndex, button, gamepadId);
     };
 
+    public hasInput(gamepadId: number=0): boolean {
+        return this.leftTrigger(gamepadId) != 0
+            || this.rightTrigger(gamepadId) != 0
+            || Geometry.Point.LengthSq(this.leftAnalogStick(gamepadId)) > 0
+            || Geometry.Point.LengthSq(this.rightAnalogStick(gamepadId)) > 0
+            || Object.values(this.pressedByIndex[gamepadId] || {}).any(o => o)
+            || Object.values(this.releasedByIndex[gamepadId] || {}).any(o => o);
+    }
 }
