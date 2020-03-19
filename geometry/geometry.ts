@@ -1,6 +1,5 @@
 import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
-import { start } from 'repl';
 
 interface IPointListStatic<T> {
     Segments: (o: T) => ISegment[],
@@ -10,6 +9,8 @@ interface IPointListStatic<T> {
     Triangulation: (o: T) => ITriangle[],
     Bounds: (o: T) => IRectangle,
     Hash: (o: T) => string
+    // TODO: make Translate a function on IPointListStatic
+    // TODO: make Rotate a function on IPointListStatic
 }
 
 interface IPointsStatic extends IPointListStatic<IPoint[]> {
@@ -46,7 +47,8 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
     PerpendicularBisectorAB: (triangle: ITriangle) => ILine,
     PerpendicularBisectorBC: (triangle: ITriangle) => ILine,
     PerpendicularBisectorCA: (triangle: ITriangle) => ILine,
-    Translate: (triangle: ITriangle, position: IPoint) => ITriangle
+    Translate: (triangle: ITriangle, position: IPoint) => ITriangle,
+    Rotate: (triangle: ITriangle, angle: number, center?: IPoint) => ITriangle
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
@@ -73,7 +75,8 @@ interface ICircleStatic {
     Bounds: (o: ICircle) => IRectangle,
     Hash: (o: ICircle) => string,
     RandomPointInside: (circle: ICircle) => IPoint,
-    Translate: (circle: ICircle, translation: IPoint) => ICircle
+    Translate: (circle: ICircle, translation: IPoint) => ICircle,
+    Rotate: (circle: ICircle, angle: number, center?: IPoint) => ICircle
 }
 
 interface IPointStatic {
@@ -482,6 +485,11 @@ export class Geometry {
             a: Geometry.Point.Add(triangle.a, position),
             b: Geometry.Point.Add(triangle.b, position),
             c: Geometry.Point.Add(triangle.c, position),
+        }),
+        Rotate: ({ a, b, c }: ITriangle, angle: number, center?: IPoint) => ({
+            a: Geometry.Point.Rotate(a, angle, center),
+            b: Geometry.Point.Rotate(b, angle, center),
+            c: Geometry.Point.Rotate(c, angle, center)
         })
     };
 
@@ -563,7 +571,6 @@ export class Geometry {
         Square: (center: IPoint, sideLength: number): IRectangle => ({
             x: center.x - sideLength/2, y: center.y - sideLength/2, w: sideLength, h: sideLength
         }),
-        // TODO: make Translate a function on IPointListStatic
         Translate: (rectangle: IRectangle, translation: IPoint): IRectangle => ({
             x: rectangle.x + translation.x,
             y: rectangle.y + translation.y,
@@ -627,7 +634,11 @@ export class Geometry {
         Circumference: (circle: ICircle): number => tau * circle.radius,
         Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`,
         RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius * random(), tau * random())),
-        Translate: (circle: ICircle, translation: IPoint): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, radius: circle.radius })
+        Translate: (circle: ICircle, translation: IPoint): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, radius: circle.radius }),
+        Rotate: (circle: ICircle, angle: number, center?: IPoint): ICircle => ({
+            ...Geometry.Point.Rotate(circle, angle, center),
+            radius: circle.radius
+        })
     }
 
     public static Points: IPointsStatic = {

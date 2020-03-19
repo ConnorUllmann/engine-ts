@@ -46,6 +46,7 @@ export function getRandomNumberGenerator(seed: number): () => number {
 export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
+export const randomSign = (): number => Math.sign(random() - 0.5);
 
 declare global {
     interface Array<T> {

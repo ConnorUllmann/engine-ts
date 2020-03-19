@@ -13,6 +13,8 @@ export type StrokeStyle = FillStyle;
 export type Halign = "left" | "center" | "right" | "start" | "end";
 export type Valign = "top" | "hanging" | "middle" | "alphabetic" | "ideographic" | "bottom";
 
+// TODO: remove world from this doc and instead create a world.draw property which has all these
+// same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
     public static circle(world: World, circle: ICircle, fillStyle: FillStyle=null) {
         if(circle.radius <= 0)
