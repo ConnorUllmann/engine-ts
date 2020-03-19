@@ -45,5 +45,5 @@ export class Entity {
     public update(): void {}
     public postUpdate(): void {}
     // TODO: rename to "draw"?
-    public render(): void {}
+    public draw(): void {}
 }

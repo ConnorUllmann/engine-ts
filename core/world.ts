@@ -90,7 +90,7 @@ export class World {
         this.updateDelta();
         this.updateEntities();
         this.clearCanvas(this.backgroundColor);
-        this.renderEntities();
+        this.drawEntities();
         this.mouse.update();
         this.keyboard.update();
         this.gamepads.update();
@@ -135,11 +135,11 @@ export class World {
         }
     }
 
-    private renderEntities() {
+    private drawEntities() {
         this.sortEntitiesByUpdateOrder();
 
         const entities = this.entities.filter(o => o.visible);
-        entities.forEach((o: Entity) => o.render());
+        entities.forEach((o: Entity) => o.draw());
     }
 
     public addEntity(entity: Entity) {
