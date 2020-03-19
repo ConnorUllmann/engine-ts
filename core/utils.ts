@@ -1,5 +1,3 @@
-import { IPoint } from '@engine-ts/geometry/interfaces';
-
 export function clamp(value: number, min: number, max: number) {
     return value <= min
         ? min
@@ -16,6 +14,15 @@ export function distanceSq(x0: number, y0: number, x1: number, y1: number): numb
 }
 export function distance(x0: number, y0: number, x1: number, y1: number): number {
     return Math.sqrt(distanceSq(x0, y0, x1, y1));
+}
+
+export function binomialCoefficient(n: number, k: number) {
+    let result = 1;
+    for(let i = n - k + 1; i <= n; i++)
+        result *= i;
+    for(let i = 1; i <= k; i++)
+        result /= i;
+    return result;
 }
 
 

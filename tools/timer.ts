@@ -17,7 +17,7 @@ export class Timer {
         return clamp(valueRaw, 0, 1);
     }
 
-    public get isFinished(): boolean { return this.value >= 1; }
+    public get finished(): boolean { return this.value >= 1; }
     public toRange(min: number, max: number) { return (max - min) * this.value + min; }
     
     constructor(private readonly world: World, public seconds: number=1) {}

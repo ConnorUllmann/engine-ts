@@ -30,8 +30,12 @@ export class Grid<T> {
         this.tiles[i][j] = tile;
     }
 
-    public get(i: number, j: number): T {
+    public get(i: number, j: number): T | null {
         return this.indicesInside(i, j) ? this.tiles[i][j] : null;
+    }
+
+    public _get(i: number, j: number): T | null {
+        return this.tiles[i][j];
     }
 
     private static CardinalNeighborsRelativeIndexMap: Point[] = [

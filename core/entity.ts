@@ -6,6 +6,8 @@ export class Entity {
     public id: number | null = null;
     // rename to "species" or "breed" or something?
     public get class(): string { return this.constructor.name; }
+    public static get Class(): string { return this.name; }
+
     public destroyed: boolean = false;
     public removed: boolean = false;
     public active: boolean = true;
@@ -42,5 +44,6 @@ export class Entity {
 
     public update(): void {}
     public postUpdate(): void {}
+    // TODO: rename to "draw"?
     public render(): void {}
 }

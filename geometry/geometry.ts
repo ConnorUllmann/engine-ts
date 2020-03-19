@@ -1,5 +1,6 @@
-import { tau, random, clamp, angleDifference, moduloSafe } from '@engine-ts/core/utils';
+import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
+import { start } from 'repl';
 
 interface IPointListStatic<T> {
     Segments: (o: T) => ISegment[],
@@ -12,7 +13,9 @@ interface IPointListStatic<T> {
 }
 
 interface IPointsStatic extends IPointListStatic<IPoint[]> {
-    Sum: (points: IPoint[]) => IPoint
+    Sum: (points: IPoint[]) => IPoint,
+    BezierPoint: (points: IPoint[], t: number) => IPoint,
+    Bezier: (points: IPoint[], count: number) => IPoint[]
 }
 
 interface IShapeStatic<T> extends IPointListStatic<T> {
@@ -43,6 +46,7 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
     PerpendicularBisectorAB: (triangle: ITriangle) => ILine,
     PerpendicularBisectorBC: (triangle: ITriangle) => ILine,
     PerpendicularBisectorCA: (triangle: ITriangle) => ILine,
+    Translate: (triangle: ITriangle, position: IPoint) => ITriangle
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
@@ -50,7 +54,9 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     Scale: (rectangle: IRectangle, scalar: number, center?: IPoint) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
     Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle,
-    RandomPointInside: (rectangle: IRectangle) => IPoint
+    RandomPointInside: (rectangle: IRectangle) => IPoint,
+    Square: (center: IPoint, sideLength: number) => IRectangle,
+    Translate: (rectangle: IRectangle, translation: IPoint) => IRectangle
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
@@ -66,7 +72,8 @@ interface ICircleStatic {
     Circumference: (o: ICircle) => number,
     Bounds: (o: ICircle) => IRectangle,
     Hash: (o: ICircle) => string,
-    RandomPointInside: (circle: ICircle) => IPoint
+    RandomPointInside: (circle: ICircle) => IPoint,
+    Translate: (circle: ICircle, translation: IPoint) => ICircle
 }
 
 interface IPointStatic {
@@ -106,7 +113,10 @@ interface IPointStatic {
     IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair) => number,
     IsLeftOf: (point: IPoint, pair: IPointPair) => boolean,
     IsColinearWith: (point: IPoint, pair: IPointPair) => boolean,
-    IsRightOf: (point: IPoint, pair: IPointPair) => boolean
+    IsRightOf: (point: IPoint, pair: IPointPair) => boolean,
+    // Returns a list of the velocity vectors a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
+    // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
+    LaunchVectors: (start: IPoint, target: IPoint, gravityMagnitude: number, velocityMagnitude: number) => IPoint[]
 }
 
 interface IPointPairStatic<T extends IPointPair> {
@@ -229,7 +239,40 @@ export class Geometry {
         IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
         IsLeftOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
         IsColinearWith: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
-        IsRightOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0
+        IsRightOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
+        // Returns a list of the velocity vectors a projectile would need in order to hit 'target' from 'start'
+        // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
+        LaunchVectors: (start: IPoint, target: IPoint, gravityMagnitude: number, velocityMagnitude: number) => {
+            if(velocityMagnitude === 0)
+                return [];
+    
+            const diff = Geometry.Point.Subtract(target, start);
+            if(gravityMagnitude === 0)
+                return [Geometry.Point.Normalized(diff, velocityMagnitude)];
+    
+            const g = -gravityMagnitude;
+            const v = velocityMagnitude;
+            const v2 = v * v;
+            const sqrt = v2 * v2 - g * (g * diff.x * diff.x + 2 * diff.y * v2);
+    
+            if(diff.x === 0 && sqrt === 0)
+                return [Geometry.Point.Vector(Math.sign(diff.x) * v, -tau/4)];
+    
+            if(diff.x === 0)
+                return diff.y > 0
+                    ? [{ x: 0, y: v}]
+                    : diff.y < 0
+                        ? [{ x: 0, y: -v }]
+                        : [{ x: 0, y: v }, { x: 0, y: -v }];
+    
+            if (sqrt < 0)
+                return [];
+    
+            return [
+                Geometry.Point.Vector(Math.sign(diff.x) * v, Math.atan((v2 + Math.sqrt(sqrt))/(g * diff.x))),
+                Geometry.Point.Vector(Math.sign(diff.x) * v, Math.atan((v2 - Math.sqrt(sqrt))/(g * diff.x)))
+            ];
+        }
     };
 
     public static PointPair = {
@@ -435,7 +478,12 @@ export class Geometry {
         PerpendicularBisectorAB: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
         PerpendicularBisectorBC: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c }),
         PerpendicularBisectorCA: (triangle: ITriangle): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.c, b: triangle.a }),
-    }
+        Translate: (triangle: ITriangle, position: IPoint): ITriangle => ({
+            a: Geometry.Point.Add(triangle.a, position),
+            b: Geometry.Point.Add(triangle.b, position),
+            c: Geometry.Point.Add(triangle.c, position),
+        })
+    };
 
     public static Rectangle: IRectangleStatic = {
         Segments: (rectangle: IRectangle): ISegment[] => Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle)),
@@ -511,6 +559,16 @@ export class Geometry {
         RandomPointInside: (rectangle: IRectangle): IPoint => ({
             x: rectangle.x + random() * rectangle.w,
             y: rectangle.y + random() * rectangle.h
+        }),
+        Square: (center: IPoint, sideLength: number): IRectangle => ({
+            x: center.x - sideLength/2, y: center.y - sideLength/2, w: sideLength, h: sideLength
+        }),
+        // TODO: make Translate a function on IPointListStatic
+        Translate: (rectangle: IRectangle, translation: IPoint): IRectangle => ({
+            x: rectangle.x + translation.x,
+            y: rectangle.y + translation.y,
+            w: rectangle.w,
+            h: rectangle.h
         })
     }
 
@@ -568,7 +626,8 @@ export class Geometry {
         Area: (circle: ICircle): number => Math.PI * circle.radius * circle.radius,
         Circumference: (circle: ICircle): number => tau * circle.radius,
         Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`,
-        RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, tau * random()))
+        RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius * random(), tau * random())),
+        Translate: (circle: ICircle, translation: IPoint): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, radius: circle.radius })
     }
 
     public static Points: IPointsStatic = {
@@ -677,6 +736,32 @@ export class Geometry {
                 sum.y += point.y;
             });
             return sum;
+        },
+        BezierPoint: (points: IPoint[], t: number): IPoint => {
+            const n = points.length - 1;
+            let sum = { x: 0, y: 0 };
+            for(let i = 0; i < points.length; i++)
+            {
+                const point = points[i];
+                const binomial = binomialCoefficient(n, i);
+                const scalar = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
+                const pointToAdd = Geometry.Point.Scale(point, scalar);
+                sum.x += pointToAdd.x;
+                sum.y += pointToAdd.y;
+            }
+            return sum;
+        },
+        // count must be greater than 1
+        Bezier: (points: IPoint[], count: number): IPoint[] => {
+            if(points.length <= 0 || count < 1)
+                return [];
+            if(count === 1)
+                return [points.first()];
+            const bezierPoints = [];
+            const coarseness = 1 / (count-1);
+            for(let i = 0; i <= 1; i += coarseness)
+                bezierPoints.push(Geometry.Points.BezierPoint(points, i));
+            return bezierPoints;
         }
     }
 

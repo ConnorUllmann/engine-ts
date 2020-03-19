@@ -4,11 +4,13 @@ import { Mouse } from './mouse';
 import { Color } from '../visuals/color';
 import { Keyboard } from './keyboard';
 import { Gamepads } from './gamepads';
+import { Sounds } from './sounds';
 
 export class World {
     public readonly canvas: HTMLCanvasElement;
     public readonly context: CanvasRenderingContext2D;
 
+    public readonly sounds: Sounds;
     public readonly camera: Camera;
     public readonly mouse: Mouse;
     public readonly keyboard: Keyboard;
@@ -29,7 +31,8 @@ export class World {
     public firstUpdateTimestamp: number = 0;
     public lastUpdateTimestamp: number = 0;
     private _delta: number = 0;
-    public get delta(): number { return this._delta; }
+    public fixedFrameRate: boolean = true;
+    public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
     public get deltaNormal(): number { return this._delta / this.millisecondsPerFrame; }
 
     public backgroundColor: Color = Color.lightGrey;
@@ -56,6 +59,7 @@ export class World {
         this.setCanvasSize(canvasWidth, canvasHeight);
         this.setCanvasResolution(canvasResolutionWidth, canvasResolutionHeight);
         
+        this.sounds = new Sounds();
         this.camera = new Camera(this);
         this.mouse = new Mouse(this);
         this.keyboard = new Keyboard();
