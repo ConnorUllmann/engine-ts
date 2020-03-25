@@ -126,6 +126,7 @@ export class World {
             const entity = this.entityToRemoveById[id];
             delete this.entityToRemoveById[id];
 
+            entity.remove();
             this.entities.remove(entity);
             delete this.entityById[entity.id];
             this.entitiesByClass[entity.class].remove(entity);
@@ -142,12 +143,13 @@ export class World {
         entities.forEach((o: Entity) => o.draw());
     }
 
-    public addEntity(entity: Entity) {
+    // returns the id of the entity
+    public addEntity(entity: Entity): number | null {
         if(entity.world != this)
-            return;
-        if(entity.id == null)
-            entity.id = this.nextEntityId++;
-        this.entityToAddById[entity.id] = entity;
+            return null;
+        const entityId = this.nextEntityId++;
+        this.entityToAddById[entityId] = entity;
+        return entityId;
     }
 
     public destroyEntity(entity: Entity) {

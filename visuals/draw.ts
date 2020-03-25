@@ -330,6 +330,14 @@ export class Draw {
         return context.measureText(text).width;
     };
 
+    // uses width of a capital 'M' to estimate height of text
+    public static textHeight(world: World, font: string | null=null) {
+        const context = world.context;
+        if(font)
+            context.font = font;
+        return context.measureText('M').width;
+    }
+
     // Example:
     // Draw.applyBlendMode(world, BlendMode.Overlay, () =>
     // {
