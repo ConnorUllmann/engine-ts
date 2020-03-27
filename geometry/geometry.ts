@@ -1,4 +1,4 @@
-import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient } from '@engine-ts/core/utils';
+import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient, Halign, Valign } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 interface IPointListStatic<T> {
@@ -58,7 +58,8 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle,
     RandomPointInside: (rectangle: IRectangle) => IPoint,
     Square: (center: IPoint, sideLength: number) => IRectangle,
-    Translate: (rectangle: IRectangle, translation: IPoint) => IRectangle
+    Translate: (rectangle: IRectangle, translation: IPoint) => IRectangle,
+    Align: (rectangle: IRectangle, halign: Halign, valign: Valign) => IRectangle
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
@@ -576,7 +577,33 @@ export class Geometry {
             y: rectangle.y + translation.y,
             w: rectangle.w,
             h: rectangle.h
-        })
+        }),
+        Align: (rectangle: IRectangle, halign: Halign, valign: Valign): IRectangle => {
+            const offset = { x: 0, y: 0 };
+            switch(halign) {
+                case Halign.CENTER:
+                    offset.x -= rectangle.w/2;
+                    break;
+                case Halign.RIGHT:
+                    offset.x -= rectangle.w;
+                    break;
+                case Halign.LEFT:
+                default:
+                    break;
+            }
+            switch(valign) {
+                case Valign.MIDDLE:
+                    offset.y -= rectangle.h/2;
+                    break;
+                case Valign.BOTTOM:
+                    offset.y -= rectangle.h;
+                    break;
+                case Valign.TOP:
+                default:
+                    break;
+            }
+            return Geometry.Rectangle.Translate(rectangle, offset);
+        }
     }
 
     public static Polygon: IPolygonStatic = {

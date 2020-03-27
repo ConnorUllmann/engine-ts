@@ -1,17 +1,17 @@
 import { Color } from './color';
 import { World } from '@engine-ts/core/world';
-import { tau } from '@engine-ts/core/utils';
+import { tau, Halign, Valign } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon } from '@engine-ts/geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '@engine-ts/geometry/point';
-
+import { Geometry } from '@engine-ts/geometry/geometry';
 
 export type FillStyle = Color | string | null;
 export type StrokeStyle = FillStyle;
-export type Halign = "left" | "center" | "right" | "start" | "end";
-export type Valign = "top" | "hanging" | "middle" | "alphabetic" | "ideographic" | "bottom";
+export type HalignAll = Halign | "left" | "center" | "right" | "start" | "end";
+export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "ideographic" | "bottom";
 
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
@@ -198,15 +198,10 @@ export class Draw {
     };
     
     public static rectangleOutline(world: World, rectangle: IRectangle, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {
-        let points: Point[] = [
-            new Point(rectangle.x, rectangle.y),
-            new Point(rectangle.x + rectangle.w, rectangle.y),
-            new Point(rectangle.x + rectangle.w, rectangle.y + rectangle.h),
-            new Point(rectangle.x, rectangle.y + rectangle.h)
-        ];
+        let points: IPoint[] = Geometry.Rectangle.Vertices(rectangle)
         if(angle !== 0) {
             const center = new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2);
-            points = points.map(point => point.rotate(angle, center));
+            points = points.map(point => Geometry.Point.Rotate(point, angle, center));
         }
         Draw.path(world, points, strokeStyle, lineWidth, true);
     };
@@ -305,13 +300,13 @@ export class Draw {
         context.stroke();
     };
 
-    public static text(world: World, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:Halign="left", valign:Valign="top") {
+    public static text(world: World, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top") {
         const context = world.context;
         Draw.textStyle(world, fillStyle, font, halign, valign);
         context.fillText(text, position.x - world.camera.x, position.y - world.camera.y);
     };
 
-    public static textStyle(world: World, fillStyle: FillStyle=null, font: string | null=null, halign: Halign=null, valign: Valign=null) {
+    public static textStyle(world: World, fillStyle: FillStyle=null, font: string | null=null, halign: HalignAll=null, valign: ValignAll=null) {
         const context = world.context;
         if(font)
             context.font = font;
