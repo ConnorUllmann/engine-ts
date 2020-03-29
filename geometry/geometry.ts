@@ -77,7 +77,9 @@ interface ICircleStatic {
     Hash: (o: ICircle) => string,
     RandomPointInside: (circle: ICircle) => IPoint,
     Translate: (circle: ICircle, translation: IPoint) => ICircle,
-    Rotate: (circle: ICircle, angle: number, center?: IPoint) => ICircle
+    Rotate: (circle: ICircle, angle: number, center?: IPoint) => ICircle,
+    // returns the points on 'circle' that are tangent when they form a segment with 'point'
+    TangentPoints: (circle: ICircle, point: IPoint) => { a: IPoint, b: IPoint } | null
 }
 
 interface IPointStatic {
@@ -106,7 +108,7 @@ interface IPointStatic {
     Normalized: (point: IPoint, length?: number) => IPoint,
     Rotate: (point: IPoint, angle: number, center?: IPoint) => IPoint,
     Negative: (point: IPoint) => IPoint,
-    Wiggle: (point: IPoint, angleRangeMax: number) => IPoint,
+    Wiggle: (point: IPoint, angleRangeMax: number, center?: IPoint) => IPoint,
     Towardness: (a: IPoint, b: IPoint) => number,
     Lerp: (from: IPoint, to: IPoint, t: number) => IPoint,
     Flip: (point: IPoint, center?: IPoint) => IPoint,
@@ -207,8 +209,8 @@ export class Geometry {
         },
         // same as rotating a vector 180 degrees
         Negative: (point: IPoint): IPoint => ({ x: -point.x, y: -point.y }),
-        // rotates the point randomly in the range given (about the origin)
-        Wiggle: (point: IPoint, angleRangeMax: number): IPoint => Geometry.Point.Rotate(point, angleRangeMax * (random() - 0.5)),
+        // rotates the point randomly in the range given about the center, or the origin if it is not defined
+        Wiggle: (point: IPoint, angleRangeMax: number, center?: IPoint): IPoint => Geometry.Point.Rotate(point, angleRangeMax * (random() - 0.5), center),
         // Returns how much a (as a vector) faces in the direction of b (as a vector)
         // -1 = a faces opposite the direction of b
         // 0 = a faces perpendicular to the direction of b
@@ -665,7 +667,18 @@ export class Geometry {
         Rotate: (circle: ICircle, angle: number, center?: IPoint): ICircle => ({
             ...Geometry.Point.Rotate(circle, angle, center),
             radius: circle.radius
-        })
+        }),
+        TangentPoints: (circle: ICircle, point: IPoint): { a: IPoint, b: IPoint } | null => {
+            const distanceSq = Geometry.Point.DistanceSq(circle, point);
+            if(distanceSq <= 0 || circle.radius <= 0 || distanceSq < circle.radius * circle.radius)
+                return null;
+            const angle = Geometry.Point.Angle(Geometry.Point.Subtract(point, circle));
+            const angleDiff = Math.acos(circle.radius / Math.sqrt(distanceSq));
+            return {
+                a: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, angle + angleDiff)),
+                b: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, angle - angleDiff))
+            }
+        }
     }
 
     public static Points: IPointsStatic = {

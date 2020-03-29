@@ -7,12 +7,6 @@ export class Timer {
     public started: boolean = false; // whether or not the timer has had its .update() method called at least once
     public paused: boolean = false;
 
-    protected get valueRaw(): number {
-        return this.seconds > 0
-            ? this.value + this.world.delta / 1000 / this.seconds
-            : 1;
-    }
-
     protected clean(valueRaw: number): number { 
         return clamp(valueRaw, 0, 1);
     }
@@ -33,10 +27,9 @@ export class Timer {
     public update() {
         if(this.paused)
             return;
-
-        const valueRaw = this.valueRaw;
-        this.triggered = valueRaw >= 1;
-        this.value = this.clean(valueRaw);
+        const valueLast = this.value;
+        this.value = this.clean(this.seconds > 0 ? this.value + this.world.delta / 1000 / this.seconds : 1);
+        this.triggered = this.value >= 1 && valueLast < 1;
         this.started = true;
     }
 }

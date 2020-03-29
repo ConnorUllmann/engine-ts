@@ -2,16 +2,13 @@ import { Color } from './color';
 import { clamp } from '../core/utils';
 
 /* Color Stops - used for gradients */
-export class ColorStop {
-    constructor(public color: Color, public stop: number) {}
-
-    public applyToGradient(gradient: CanvasGradient) {
-        gradient.addColorStop(this.stop, this.color.toString());
-    }
+export interface ColorStop {
+    color: Color,
+    stop: number
 }
 
 export class ColorStopArray {
-    constructor(private colorStops: ColorStop[]) {
+    constructor(public readonly colorStops: ColorStop[]) {
         if(colorStops.length < 2)
             throw 'Cannot create ColorStopList with less than two colors';
         if(colorStops.first().stop !== 0)
@@ -28,7 +25,7 @@ export class ColorStopArray {
     //      new ColorStop(Color.red, 0),
     //      new ColorStop(Color.green, 0.4),
     //      new ColorStop(Color.blue, 1));
-    public static create(...colorStops: ColorStop[]): ColorStopArray {
+    public static Create(...colorStops: ColorStop[]): ColorStopArray {
         return new ColorStopArray(colorStops);
     };
 
@@ -37,22 +34,14 @@ export class ColorStopArray {
     //      Color.red,
     //      Color.green,
     //      Color.blue);
-    public static createEvenlySpaced(...colors: Color[]): ColorStopArray {
+    public static CreateEvenlySpaced(...colors: Color[]): ColorStopArray {
         if(colors.length < 2)
             throw 'Cannot create ColorStopList with less than two colors';
-        const colorStops = [];
-        for(let i = 0; i < colors.length; i++)
-        {
-            const color = colors[i];
-            const stop = i / (colors.length - 1);
-            const colorStop = new ColorStop(color, stop);
-            colorStops.push(colorStop);
-        }
-        return new ColorStopArray(colorStops);
+        return new ColorStopArray(colors.map((color, i) => ({ color, stop: i / (colors.length - 1) })));
     };
 
     public applyToGradient(gradient: CanvasGradient) {
-        this.colorStops.forEach(o => o.applyToGradient(gradient));
+        this.colorStops.forEach(o => gradient.addColorStop(o.stop, o.color.toString()));
     }
 
     // Returns the color from the gradient at the given position [0..1] given the ColorStops in this ColorStopArray
