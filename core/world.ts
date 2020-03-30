@@ -30,7 +30,7 @@ export class World {
     public get millisecondsSinceStart(): number { return Date.now() - this.firstUpdateTimestamp; }
     public firstUpdateTimestamp: number = 0;
     public lastUpdateTimestamp: number = 0;
-    private _delta: number = 0;
+    public _delta: number = 0;
     public fixedFrameRate: boolean = true;
     public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
     public get deltaNormal(): number { return this._delta / this.millisecondsPerFrame; }
