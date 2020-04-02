@@ -177,24 +177,23 @@ export class Draw {
         return points;
     };
 
-    public static rectangle(world: World, rectangle: IRectangle, fillStyle: FillStyle=null, angle: number=0) {
+    public static rectangle(world: World, rectangle: IRectangle, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {        
         const context = world.context;
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
 
-        if(angle === 0)
-        {
+        if(angle === 0) {
             context.fillRect(rectangle.x - world.camera.x, rectangle.y - world.camera.y, rectangle.w, rectangle.h);
             return;
         }
-    
-        const xCenter = rectangle.x + rectangle.w/2 - world.camera.x;
-        const yCenter = rectangle.y + rectangle.h/2 - world.camera.y;
-        context.translate(xCenter, yCenter);
+        
+        if(!center)
+            center = Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
+        context.translate(center.x, center.y);
         context.rotate(angle);
-        context.fillRect(-rectangle.w/2, -rectangle.h/2, rectangle.w, rectangle.h);
+        context.fillRect(rectangle.x - center.x, rectangle.y - center.y, rectangle.w, rectangle.h);
         context.rotate(-angle);
-        context.translate(-xCenter, -yCenter);
+        context.translate(-center.x, -center.y);
     };
     
     public static rectangleOutline(world: World, rectangle: IRectangle, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {

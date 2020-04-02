@@ -28,7 +28,7 @@ export class World {
     public paused: boolean = false;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
     public get millisecondsSinceStart(): number { return Date.now() - this.firstUpdateTimestamp; }
-    public firstUpdateTimestamp: number = 0;
+    public firstUpdateTimestamp: number | null = null;
     public lastUpdateTimestamp: number = 0;
     public _delta: number = 0;
     public fixedFrameRate: boolean = true;

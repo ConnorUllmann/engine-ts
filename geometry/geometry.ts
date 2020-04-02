@@ -59,11 +59,13 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     RandomPointInside: (rectangle: IRectangle) => IPoint,
     Square: (center: IPoint, sideLength: number) => IRectangle,
     Translate: (rectangle: IRectangle, translation: IPoint) => IRectangle,
-    Align: (rectangle: IRectangle, halign: Halign, valign: Valign) => IRectangle
+    Align: (rectangle: IRectangle, halign: Halign, valign: Valign) => IRectangle,
+    Center: (rectangle: IRectangle) => IPoint
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
-    WindingNumber: (polygon: IPolygon, point: IPoint) => number
+    WindingNumber: (polygon: IPolygon, point: IPoint) => number,
+    Rotate: (polygon: IPolygon, angle: number, center?: IPoint) => IPolygon
     // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
@@ -83,14 +85,12 @@ interface ICircleStatic {
 }
 
 interface IPointStatic {
-    readonly Tolerance: 0.00000001,
     readonly Zero: IPoint,
     readonly One: IPoint,
     readonly Up: IPoint,
     readonly Down: IPoint,
     readonly Left: IPoint,
     readonly Right: IPoint,
-    IsWithinToleranceOf: (a: number, b?: number) => boolean,
     AreEqual: (a: IPoint, b: IPoint) => boolean,
     Hash: (point: IPoint) => string,
     DistanceSq: (a: IPoint, b: IPoint) => number,
@@ -154,17 +154,20 @@ interface ISegmentStatic extends IPointPairStatic<ISegment> {
 export class Geometry {
 
     private static readonly HashDecimalDigits: number = 6;
+    private static readonly Tolerance: 0.00000001;
+
+    public static IsWithinToleranceOf(a: number, b: number=0): boolean {
+        return Math.abs(a - b) < Geometry.Tolerance;
+    }
 
     public static Point: IPointStatic = {
-        Tolerance: 0.00000001,
         Zero: { x: 0, y: 0 },
         One: { x: 1, y: 1 },
         Up: { x: 0, y: -1 },
         Down: { x: 0, y: 1 },
         Left: { x: -1, y: 0 },
         Right: { x: 1, y: 0 },
-        IsWithinToleranceOf: (a: number, b?: number): boolean => Math.abs(a - (b == undefined ? 0: b)) < Geometry.Point.Tolerance,
-        AreEqual: (a: IPoint, b: IPoint) => Geometry.Point.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
+        AreEqual: (a: IPoint, b: IPoint) => Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
         Hash: (point: IPoint) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
         DistanceSq: (a: IPoint, b: IPoint): number => (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y),
         Distance: (a: IPoint, b: IPoint): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
@@ -191,7 +194,7 @@ export class Geometry {
         Dot: (a: IPoint, b: IPoint): number => a.x * b.x + a.y * b.y,
         Cross: (a: IPoint, b: IPoint): number => a.x * b.y - b.x * a.y,
         Project: (a: IPoint, b: IPoint): IPoint => { 
-            return Geometry.Point.Scale(b, Geometry.Point.Dot(a, b) / Math.max(Geometry.Point.LengthSq(b), Geometry.Point.Tolerance)); 
+            return Geometry.Point.Scale(b, Geometry.Point.Dot(a, b) / Math.max(Geometry.Point.LengthSq(b), Geometry.Tolerance)); 
         },
         Normalized: (point: IPoint, length?: number): IPoint => {
             if((point.x === 0 && point.y === 0) || length === 0)
@@ -244,7 +247,7 @@ export class Geometry {
         // if result == 0, then it is colinear with the two points.
         IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
         IsLeftOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
-        IsColinearWith: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
+        IsColinearWith: (point: IPoint, pair: IPointPair): boolean => Geometry.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
         IsRightOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
         // Returns a list of the velocity vectors a projectile would need in order to hit 'target' from 'start'
         // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
@@ -572,7 +575,10 @@ export class Geometry {
             y: rectangle.y + random() * rectangle.h
         }),
         Square: (center: IPoint, sideLength: number): IRectangle => ({
-            x: center.x - sideLength/2, y: center.y - sideLength/2, w: sideLength, h: sideLength
+            x: center.x - sideLength/2,
+            y: center.y - sideLength/2,
+            w: sideLength,
+            h: sideLength
         }),
         Translate: (rectangle: IRectangle, translation: IPoint): IRectangle => ({
             x: rectangle.x + translation.x,
@@ -605,7 +611,11 @@ export class Geometry {
                     break;
             }
             return Geometry.Rectangle.Translate(rectangle, offset);
-        }
+        },
+        Center: (rectangle: IRectangle): IPoint => ({
+            x: rectangle.x + rectangle.w/2,
+            y: rectangle.y + rectangle.h/2
+        })
     }
 
     public static Polygon: IPolygonStatic = {
@@ -617,6 +627,7 @@ export class Geometry {
         Bounds: (polygon: IPolygon): IRectangle => Geometry.Points.Bounds(polygon.vertices),
         Midpoint: (polygon: IPolygon): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
         Area: (polygon: IPolygon): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
+        Rotate: (polygon: IPolygon, angle: number, center?: IPoint): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
         Hash: (polygon: IPolygon): string => Geometry.Points.Hash(polygon.vertices),
         WindingNumber: (polygon: IPolygon, point: IPoint) : number => {
             // https://twitter.com/FreyaHolmer/status/1232826293902888960
