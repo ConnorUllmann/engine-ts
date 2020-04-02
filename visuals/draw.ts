@@ -187,8 +187,7 @@ export class Draw {
             return;
         }
         
-        if(!center)
-            center = Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
+        center = center || Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
         context.translate(center.x, center.y);
         context.rotate(angle);
         context.fillRect(rectangle.x - center.x, rectangle.y - center.y, rectangle.w, rectangle.h);
