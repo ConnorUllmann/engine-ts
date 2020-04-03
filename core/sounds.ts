@@ -1,17 +1,24 @@
 interface Sound {
-    name: string,
+    soundName: string,
+    familyName?: string,
     src: string,
     element: HTMLAudioElement,
     play: () => void,
     stop: () => void
 }
 
+interface SoundFamily {
+    soundNames: string[],
+    sequentialIndex: number
+}
+
 export class Sounds {
-    private soundsByName: { [name: string]: Sound } = {};
+    private soundByName: { [soundName: string]: Sound } = {};
+    private familyByFamilyName: { [familyName: string]: SoundFamily } = {};
 
     constructor() { }
 
-    public add(name: string, src: string) {
+    public add(soundName: string, src: string, familyName?: string) {
         const element = document.createElement("audio");
         element.src = src;
         element.setAttribute('preload', 'auto');
@@ -19,28 +26,46 @@ export class Sounds {
         element.style.display = 'none';
         document.body.appendChild(element);
 
-        this.soundsByName[name] = { 
-            name,
+        this.soundByName[soundName] = { 
+            soundName,
             src,
             element,
             play: () => element.play(),
             stop: () => element.pause()
         };
+        if(familyName) {
+            if(!(familyName in this.familyByFamilyName))
+                this.familyByFamilyName[familyName] = { soundNames: [], sequentialIndex: 0 };
+            const family = this.familyByFamilyName[familyName];
+            if(!family.soundNames.includes(soundName))
+                family.soundNames.push(soundName);
+        }
     }
 
-    public play(name: string, stopIfPlaying:boolean=true) {
-        const sound = this.soundsByName[name];
+    public play(soundName: string, stopIfPlaying:boolean=true) {
+        const sound = this.soundByName[soundName];
         if(!sound)
-            throw `No sound known by the name (${name})`;
+            throw `No sound known by the name (${soundName})`;
         if(stopIfPlaying)
             sound.stop();
         sound.play();
     }
 
-    public stop(name: string) {
-        const sound = this.soundsByName[name];
+    public stop(soundName: string) {
+        const sound = this.soundByName[soundName];
         if(!sound)
-            throw `No sound known by the name (${name})`;
+            throw `No sound known by the name (${soundName})`;
         sound.stop();
+    }
+
+    public playFamily(familyName: string, stopIfPlaying:boolean=true) {
+        const family = this.familyByFamilyName[familyName];
+        if(!family)
+            throw `No family known by the name (${familyName})`;
+        if(family.soundNames.length <= 0)
+            throw `No sounds in family (${familyName})`
+        const soundName = family.soundNames[family.sequentialIndex];
+        this.play(soundName, stopIfPlaying);
+        family.sequentialIndex = (family.sequentialIndex + 1) % family.soundNames.length;
     }
 }

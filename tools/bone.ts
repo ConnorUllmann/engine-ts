@@ -1,6 +1,5 @@
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
-import { Entity } from '@engine-ts/core/entity';
 
 export class Bone {
     constructor(
@@ -25,8 +24,8 @@ export class Bone {
 }
 
 export class Skeleton extends Bone {
-    constructor(private readonly parentEntity: Entity, public offset: IPoint=Geometry.Point.Zero) {
-        super(null, 0, 0);
+    constructor(private readonly parentEntity: { position: IPoint } | null, public offset: IPoint=Geometry.Point.Zero, angleLocal: number=0) {
+        super(null, 0, angleLocal);
     }
 
     public get start(): IPoint { return Geometry.Point.Add(this.offset, this.parentEntity?.position || Geometry.Point.Zero); }
