@@ -39,15 +39,14 @@ export class Grid<T> {
     }
 
     private static CardinalNeighborsRelativeIndexMap: Point[] = [
-        Point.Create(Geometry.Point.Up),
         Point.Create(Geometry.Point.Right),
+        Point.Create(Geometry.Point.Up),
+        Point.Create(Geometry.Point.Left),
         Point.Create(Geometry.Point.Down),
-        Point.Create(Geometry.Point.Left)
     ];
-    public getCardinalNeighbors(i: number, j: number): T[] {
+    public getCardinalNeighbors(i: number, j: number): (T | null)[] {
         return Grid.CardinalNeighborsRelativeIndexMap
-            .map(o => this.get(i + o.x, j + o.y))
-            .filter(o => o != null);
+            .map(o => this.get(i + o.x, j + o.y));
     };
 
     public map(valueGetter: (tile: T, i?: number, j?: number) => any): any[] {

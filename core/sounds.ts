@@ -18,6 +18,13 @@ export class Sounds {
 
     constructor() { }
 
+    public addMultiple(count: number, src: string, familyName: string) {
+        for(let i = 0; i < count; i++) {
+            const soundName = `${familyName}${i}`;
+            this.add(soundName, src, familyName);
+        }
+    }
+
     public add(soundName: string, src: string, familyName?: string) {
         const element = document.createElement("audio");
         element.src = src;

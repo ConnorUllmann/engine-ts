@@ -154,10 +154,10 @@ interface ISegmentStatic extends IPointPairStatic<ISegment> {
 export class Geometry {
 
     private static readonly HashDecimalDigits: number = 6;
-    private static readonly Tolerance: 0.00000001;
+    private static readonly Tolerance: number = 0.00000001;
 
     public static IsWithinToleranceOf(a: number, b: number=0): boolean {
-        return Math.abs(a - b) < Geometry.Tolerance;
+        return Math.abs(a - b) < this.Tolerance;
     }
 
     public static Point: IPointStatic = {

@@ -16,15 +16,19 @@ export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
-    public static circle(world: World, circle: ICircle, fillStyle: FillStyle=null) {
+    public static circleArc(world: World, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
         if(circle.radius <= 0)
-            return;    
+            return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, 0, tau);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, startAngle, endAngle);
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
+    }
+
+    public static circle(world: World, circle: ICircle, fillStyle: FillStyle=null) {
+        this.circleArc(world, circle, 0, tau, fillStyle);
     };
 
     public static circleOutline(world: World, circle: ICircle, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
@@ -48,15 +52,19 @@ export class Draw {
         Draw.circleOutline(world, { x: position.x, y: position.y, radius }, strokeStyle, lineWidth);
     };
 
-    public static oval(world: World, position: IPoint, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
+    public static ovalArc(world: World, position: IPoint, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, 0, tau);
+        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, startAngle, endAngle);
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
+    };
+
+    public static oval(world: World, position: IPoint, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
+        this.ovalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle);
     };
 
     public static ovalOutline(world: World, position: IPoint, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {

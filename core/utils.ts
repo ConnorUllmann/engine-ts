@@ -68,6 +68,7 @@ declare global {
         removeWhere(valueGetter: (o: T, i?: number) => boolean): T[];
         reversed(): T[];
         sample(): T;
+        samples(count: number): T[];
         flattened(): T;
         any(boolCheck: (o: T) => boolean): boolean;
         first(boolCheck?: ((o: T) => boolean) | null): T | null;
@@ -147,6 +148,18 @@ Array.prototype.sample = function<T>(): T | null
     return this.length > 0
         ? this[Math.floor(random() * this.length)]
         : null;
+};
+
+//Returns random (different) elements of the array.
+//Fastest when you're going to end up selecting most of the array.
+Array.prototype.samples = function<T>(count: number): T[]
+{
+    if(count <= 0 || this.length <= 0)
+        return [];
+    const tempList = this.clone();
+    while(tempList.length > count)
+        tempList.removeAt(Math.floor(random() * tempList.length));
+    return tempList;
 };
 
 Array.prototype.flattened = function<T>(): T

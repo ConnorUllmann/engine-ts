@@ -33,7 +33,7 @@ export class World {
     public _delta: number = 0;
     public fixedFrameRate: boolean = true;
     public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
-    public get deltaNormal(): number { return this._delta / this.millisecondsPerFrame; }
+    public get deltaNormal(): number { return this.delta / this.millisecondsPerFrame; }
 
     public backgroundColor: Color = Color.lightGrey;
 
