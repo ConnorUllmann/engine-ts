@@ -1,31 +1,41 @@
 import { Entity } from './entity';
 import { World } from './world';
-import { IRectangle } from '@engine-ts/geometry/interfaces';
+import { IRectangle, IPoint } from '@engine-ts/geometry/interfaces';
 import { Point } from '@engine-ts/geometry/point';
 import { Geometry } from '@engine-ts/geometry/geometry';
+import { Rectangle } from '@engine-ts/geometry/rectangle';
 
 export class Actor extends Entity {
-    public readonly boundsOffset: Point = new Point(0, 0);
     public get bounds(): IRectangle {
-        return { 
-            x: this.position.x + this.boundsOffset.x - this.w/2,
-            y: this.position.y + this.boundsOffset.y - this.h/2,
-            w: this.w,
-            h: this.h
-        };
+        return Geometry.Rectangle.Translate(this.boundsLocal, this.position);
     }
+    public readonly boundsLocal: Rectangle;
 
-    public w: number;
-    public h: number;
+    public get w(): number {
+        return this.boundsLocal.w;
+    };
+    public set w(w: number) {
+        this.boundsLocal.w = w;
+    }
+    public get h(): number {
+        return this.boundsLocal.h;
+    }
+    public set h(h: number) {
+        this.boundsLocal.h = h;
+    }
 
     public friction: number = 0.01;
     public readonly velocity: Point = new Point();
     public readonly acceleration: Point = new Point();
 
-    constructor(world: World, rectangle: IRectangle) {
+    constructor(world: World, rectangle: IRectangle, centered: boolean=true) {
         super(world, rectangle);
-        this.w = rectangle.w;
-        this.h = rectangle.h;
+        this.boundsLocal = new Rectangle( 
+            centered ? -rectangle.w/2 : 0,
+            centered ? -rectangle.h/2 : 0,
+            rectangle.w,
+            rectangle.h
+        );
     }
 
     update() {
@@ -35,12 +45,28 @@ export class Actor extends Entity {
 
     protected updateVelocity() {
         this.velocity
-            .add(this.acceleration.clone.scale(this.world.deltaNormal))
+            .add(this.frameAcceleration)
             .scale(1 - this.friction);
     }
 
     protected updatePosition() {
         this.position
-            .add(this.velocity.clone.scale(this.world.deltaNormal));
+            .add(this.frameVelocity);
+    }
+
+    get frameVelocity(): IPoint {
+        const deltaNormal = this.world.deltaNormal;
+        return {
+            x: this.velocity.x * deltaNormal,
+            y: this.velocity.y * deltaNormal
+        }
+    }
+
+    get frameAcceleration(): IPoint {
+        const deltaNormal = this.world.deltaNormal;
+        return {
+            x: this.acceleration.x * deltaNormal,
+            y: this.acceleration.y * deltaNormal
+        }
     }
 }
