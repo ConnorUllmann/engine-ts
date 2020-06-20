@@ -16,6 +16,11 @@ export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
+    public static image(world: World, image: CanvasImageSource, position: IPoint) {
+        const context = world.context;
+        context.drawImage(image, position.x - world.camera.x, position.y - world.camera.y);
+    }
+
     public static circleArc(world: World, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
         if(circle.radius <= 0)
             return;
