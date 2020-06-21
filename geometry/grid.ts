@@ -2,7 +2,7 @@ import { Point } from './point';
 import { Geometry } from './geometry';
 
 export class Grid<T> {
-    private tiles: T[][];
+    protected tiles: T[][];
 
     constructor(public readonly rows: number, public readonly columns: number, private tileGetter: (i: number, j: number) => T) {
         this.rows = Math.ceil(this.rows);
@@ -20,7 +20,7 @@ export class Grid<T> {
         }
     }
 
-    private indicesInside(i: number, j: number): boolean {
+    protected indicesInside(i: number, j: number): boolean {
         return i >= 0 && i < this.rows && j >= 0 && j < this.columns;
     }
 

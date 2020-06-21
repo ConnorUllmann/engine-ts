@@ -91,6 +91,13 @@ export class Color {
     public inverted(): Color {
         return new Color(255 - this.red, 255 - this.green, 255 - this.blue, this.alpha);
     }
+
+    public isEqualTo(color:Color): boolean {
+        return this.red === color.red
+            && this.green === color.green
+            && this.blue === color.blue
+            && this.alpha === color.alpha;
+    }
 }
 
 class ConstColor extends Color {
