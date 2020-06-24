@@ -18,6 +18,13 @@ export function clamp(value: number, min: number, max: number) {
             : value;
 }
 
+export function millisecondsToExecute(call: () => any): number {
+    const start = Date.now();
+    call();
+    const end = Date.now();
+    return end - start;
+}
+
 export const tau: number = Math.PI * 2;
 
 // TODO: remove in favor of Geometry.distanceSq/distance
@@ -69,6 +76,7 @@ export function createCanvas(width: number, height: number): HTMLCanvasElement {
 
 declare global {
     interface Array<T> {
+        swap(firstIndex: number, secondIndex: number): void;
         remove(item: T): number | null;
         removeAt(index: number): T;
         removeAtMultiple(...indices: number[]): T[];
@@ -98,6 +106,11 @@ declare global {
         sum(this: Array<number>): number | null;
     }
 }
+
+Array.prototype.swap = function(firstIndex: number, secondIndex: number): void
+{
+    this[firstIndex] = this.splice(secondIndex, 1, this[firstIndex])[0];
+};
 
 Array.prototype.remove = function<T>(item: T): number | null
 {

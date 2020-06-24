@@ -16,6 +16,7 @@ export class Point implements IPoint {
     public toString(): string { return JSON.stringify({ x: this.x.toFixed(1), y: this.y.toFixed(1) }); }
     public isEqualTo(b: IPoint): boolean { return Geometry.Point.AreEqual(this, b); }
     public setTo(b: IPoint): this { this.x = b.x; this.y = b.y; return this; }
+    public setToXY(x: number, y: number): this { this.x = x; this.y = y; return this; }
 
     public dot(b: IPoint): number { return Geometry.Point.Dot(this, b); }
     public cross(b: IPoint): number { return Geometry.Point.Cross(this, b); }
