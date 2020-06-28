@@ -53,14 +53,18 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
     BoundsRectangles: (rectangles: IRectangle[]) => IRectangle,
-    Scale: (rectangle: IRectangle, scalar: number, center?: IPoint) => IRectangle,
+    Scale: (rectangle: IRectangle, scalar: number | IPoint, center?: IPoint) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
     Expand: (rectangle: IRectangle, wAmount: number, hAmount?: number) => IRectangle,
     RandomPointInside: (rectangle: IRectangle) => IPoint,
     Square: (center: IPoint, sideLength: number) => IRectangle,
     Translate: (rectangle: IRectangle, translation: IPoint) => IRectangle,
     Align: (rectangle: IRectangle, halign: Halign, valign: Valign) => IRectangle,
-    Center: (rectangle: IRectangle) => IPoint
+    Center: (rectangle: IRectangle) => IPoint,
+    TopLeft: (rectangle: IRectangle) => IPoint,
+    TopRight: (rectangle: IRectangle) => IPoint,
+    BottomLeft: (rectangle: IRectangle) => IPoint,
+    BottomRight: (rectangle: IRectangle) => IPoint
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
@@ -534,35 +538,34 @@ export class Geometry {
         Area: (rectangle: IRectangle): number => rectangle.w * rectangle.h,
         Hash: (rectangle: IRectangle): string => Geometry.Points.Hash(Geometry.Rectangle.Vertices(rectangle)),
         // Expands the size of this rectangle by the given amount relative to its current size.
-        // "center" defines the position the rectangle is expanding from (if undefined, the center of the rectangle is used)
-        Scale: (rectangle: IRectangle, scalar: number, center?: IPoint): IRectangle => {
+        // "center" defines the position the rectangle is expanding from (if undefined, the top-left of the rectangle is used)
+        Scale: (rectangle: IRectangle, scalar: number | IPoint, center?: IPoint): IRectangle => {
             if(scalar === 1)
                 return rectangle;
 
-            if(!center) {
-                const wAmount = rectangle.w / 2 * scalar;
-                const hAmount = rectangle.h / 2 * scalar;
-                return {
-                    x: rectangle.x - wAmount,
-                    y: rectangle.y - hAmount,
-                    w: rectangle.w + 2 * wAmount,
-                    h: rectangle.h + 2 * hAmount
-                };
-            }
-
-            const position = Geometry.Point.Add(
-                Geometry.Point.Scale(
-                    Geometry.Point.Subtract(rectangle, center),
-                    scalar
-                ),
-                center
-            );
-            return {
-                x: position.x,
-                y: position.y,
-                w: rectangle.w * scalar,
-                h: rectangle.h * scalar
-            }
+            const position = center
+                ? Geometry.Point.Add(
+                        Geometry.Point.Scale(
+                            Geometry.Point.Subtract(rectangle, center),
+                            scalar
+                        ),
+                        center
+                    )
+                : rectangle;
+            
+            return typeof scalar === "number"
+                ? {
+                    x: position.x,
+                    y: position.y,
+                    w: rectangle.w * scalar,
+                    h: rectangle.h * scalar
+                }
+                : {
+                    x: position.x,
+                    y: position.y,
+                    w: rectangle.w * scalar.x,
+                    h: rectangle.h * scalar.y
+                }
         },
         Expand: (rectangle: IRectangle, wAmount: number, hAmount: number=wAmount): IRectangle => ({
             x: rectangle.x - wAmount,
@@ -615,6 +618,19 @@ export class Geometry {
         Center: (rectangle: IRectangle): IPoint => ({
             x: rectangle.x + rectangle.w/2,
             y: rectangle.y + rectangle.h/2
+        }),
+        TopLeft: (rectangle: IRectangle): IPoint => rectangle,
+        TopRight: (rectangle: IRectangle): IPoint => ({
+            x: rectangle.x + rectangle.w,
+            y: rectangle.y
+        }),
+        BottomLeft: (rectangle: IRectangle): IPoint => ({
+            x: rectangle.x,
+            y: rectangle.y + rectangle.h
+        }),
+        BottomRight: (rectangle: IRectangle): IPoint => ({
+            x: rectangle.x + rectangle.w,
+            y: rectangle.y + rectangle.h
         })
     }
 

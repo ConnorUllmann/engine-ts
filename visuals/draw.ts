@@ -16,25 +16,26 @@ export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
-    public static image(world: World, image: CanvasImageSource, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint) {
+    public static image(world: World, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint) {
         const context = world.context;
+        const image = world.images.get(imageName);
         const w = scale.x * (image.width as number);
         const h = scale.y * (image.height as number);
         center = center || { 
-            x: position.x + w/2 - world.camera.x,
-            y: position.y + h/2 - world.camera.y
+            x: position.x + w/2,
+            y: position.y + h/2
         };
 
         if(angle === 0) {
-            context.drawImage(image, center.x - w/2, center.y - h/2, w, h);
+            context.drawImage(image, center.x - w/2 - world.camera.x, center.y - h/2 - world.camera.y, w, h);
             return;
         }
 
-        context.translate(center.x, center.y);
+        context.translate(center.x - world.camera.x, center.y - world.camera.y);
         context.rotate(-angle);
         context.drawImage(image, -w/2, -h/2, w, h);
         context.rotate(angle);
-        context.translate(-center.x, -center.y);
+        context.translate(-center.x + world.camera.x, -center.y + world.camera.y);
     }
 
     public static circleArc(world: World, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {

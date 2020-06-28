@@ -5,11 +5,13 @@ import { Color } from '../visuals/color';
 import { Keyboard } from './keyboard';
 import { Gamepads } from './gamepads';
 import { Sounds } from './sounds';
+import { Images } from './images';
 
 export class World {
     public readonly canvas: HTMLCanvasElement;
     public readonly context: CanvasRenderingContext2D;
 
+    public readonly images: Images;
     public readonly sounds: Sounds;
     public readonly camera: Camera;
     public readonly mouse: Mouse;
@@ -28,6 +30,8 @@ export class World {
     public paused: boolean = false;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
     public get millisecondsSinceStart(): number { return Date.now() - this.firstUpdateTimestamp; }
+    private _isFirstFrame: boolean = true;
+    public get isFirstFrame(): boolean { return this._isFirstFrame; }
     public firstUpdateTimestamp: number | null = null;
     public lastUpdateTimestamp: number = 0;
     public _delta: number = 0;
@@ -59,9 +63,10 @@ export class World {
         this.setCanvasSize(canvasWidth, canvasHeight);
         this.setCanvasResolution(canvasResolutionWidth, canvasResolutionHeight);
         
+        this.images = new Images();
         this.sounds = new Sounds();
-        this.camera = new Camera(this);
-        this.mouse = new Mouse(this);
+        this.camera = new Camera(this.canvas);
+        this.mouse = new Mouse(this.canvas, this.camera);
         this.keyboard = new Keyboard();
         this.gamepads = new Gamepads();
 
@@ -94,6 +99,8 @@ export class World {
         this.mouse.update();
         this.keyboard.update();
         this.gamepads.update();
+
+        this._isFirstFrame = false;
     }
 
     private updateDelta(): void {

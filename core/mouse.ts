@@ -1,7 +1,7 @@
-import { World } from './world';
 import { Point } from '../geometry/point';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
+import { Camera } from './camera';
 
 export enum MouseButton {
     Left = 0,
@@ -22,15 +22,15 @@ export class Mouse extends Point {
     // position relative to the screen, e.g. always (0, 0) whenever the mouse is on the top-left pixel
     public get screenPosition(): IPoint { return this; }
     // position in the world relative to the camera
-    public get worldPosition(): IPoint { return Geometry.Point.Add(this.world.camera, this); }
+    public get worldPosition(): IPoint { return Geometry.Point.Add(this.camera, this); }
 
-    constructor(public world: World) { super(); }
+    constructor(private readonly canvas: HTMLCanvasElement, private readonly camera: Camera) { super(); }
 
     public start(): void {
         const mouse = this;
-        this.world.canvas.addEventListener('mousemove', (mouseEvent: MouseEvent) => {
-            const canvasScale = mouse.world.camera.canvasScale;
-            const rect = mouse.world.canvas.getBoundingClientRect();
+        this.canvas.addEventListener('mousemove', (mouseEvent: MouseEvent) => {
+            const canvasScale = mouse.camera.canvasScale;
+            const rect = mouse.canvas.getBoundingClientRect();
             mouse.x = (mouseEvent.clientX - rect.left) * canvasScale.x;
             mouse.y = (mouseEvent.clientY - rect.top) * canvasScale.y;
         }, false);
@@ -60,9 +60,9 @@ export class Mouse extends Point {
                     break;
             }
         });
-        this.world.canvas.addEventListener ("mouseout", (mouseEvent: MouseEvent) => mouse.focus = false);
-        this.world.canvas.addEventListener ("mouseover", (mouseEvent: MouseEvent) => mouse.focus = true);
-        this.world.canvas.addEventListener('wheel', (wheelEvent: WheelEvent) => mouse.scroll.y = wheelEvent.deltaY);
+        this.canvas.addEventListener ("mouseout", (mouseEvent: MouseEvent) => mouse.focus = false);
+        this.canvas.addEventListener ("mouseover", (mouseEvent: MouseEvent) => mouse.focus = true);
+        this.canvas.addEventListener('wheel', (wheelEvent: WheelEvent) => mouse.scroll.y = wheelEvent.deltaY);
         this.update();
     };
 
@@ -80,8 +80,8 @@ export class Mouse extends Point {
             && this.x != null 
             && this.y != null 
             && this.x >= 0 
-            && this.x < this.world.camera.w 
-            && this.y >= 0 && this.y < this.world.camera.h;
+            && this.x < this.camera.w 
+            && this.y >= 0 && this.y < this.camera.h;
     }
 
     private leftMouseDownEvent(): void {

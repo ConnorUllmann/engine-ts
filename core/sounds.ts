@@ -13,8 +13,8 @@ interface SoundFamily {
 }
 
 export class Sounds {
-    private soundByName: { [soundName: string]: Sound } = {};
-    private familyByFamilyName: { [familyName: string]: SoundFamily } = {};
+    private readonly soundByName: { [soundName: string]: Sound } = {};
+    private readonly familyByFamilyName: { [familyName: string]: SoundFamily } = {};
 
     constructor() { }
 
