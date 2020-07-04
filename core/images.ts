@@ -3,11 +3,11 @@ export class Images {
     private readonly imageBySrc: { [src: string]: HTMLImageElement } = {}
 
     constructor() {}
-
+    
     public get(name: string): HTMLImageElement {
-        if(!(name in this.srcByName))
-            throw `Image with name '${name}' not found. Add image using world.images.add('${name}', src)`;
-        return this.getImageBySrc(this.srcByName[name]);
+        return name in this.srcByName
+            ? this.getImageBySrc(this.srcByName[name])
+            : null;
     }
 
     public add(name: string, src: string) {

@@ -97,6 +97,7 @@ declare global {
         clone(): T[];
         clear(): void;
         sorted(compare?: (a: T, b: T) => number): T[];
+        orderBy(getter: (a: T) => number): T[];
         distinct(valueGetter?: (o: T) => string | number): T[];
         distincted(valueGetter?: (o: T) => string | number): T[];
 
@@ -358,6 +359,12 @@ Array.prototype.sorted = function<T>(compare?: (a: T, b: T) => number): T[]
     this.sort(compare);
     return this;
 };
+
+Array.prototype.orderBy = function<T>(getter: (a: T) => number): T[]
+{
+    this.sort((a: T, b: T) => getter(a) - getter(b));
+    return this;
+}
 
 // Returns the existing list but after removing all elements whose values are not unique as determined by the mapping function "valueGetter"
 // (the first element with a given value is kept)

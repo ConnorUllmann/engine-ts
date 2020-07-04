@@ -12,7 +12,7 @@ export class PathMap<T> {
     constructor(private readonly grid: IGrid<T>, private readonly getSolid: (obj: T) => boolean, canMoveDiagonally=false) {
         this.gridPath = new Grid<PathTile<T>>(this.grid.w, this.grid.h, (position: IPoint) => new PathTile(this.grid, position));
         const compassDirectionGroup = canMoveDiagonally ? CompassDirectionGroup.ALL : CompassDirectionGroup.CARDINAL;
-        this.neighborsCallback = (position: IPoint) => this.gridPath.getCompassDirectionGroupNeighbors(position, compassDirectionGroup);
+        this.neighborsCallback = (position: IPoint) => this.gridPath.getCompassDirectionGroupNeighbors(position, compassDirectionGroup).map(o => o.tile);
     }
 
     public reset() {

@@ -8,29 +8,28 @@ export interface IGrid<T> {
     h: number;
     set: (position: IPoint, tile: T) => void;
     get: (position: IPoint) => T | null;
-    getNeighbors: (position: IPoint, relativePoints: IPoint[]) => (T | null)[]
-    getCompassDirectionNeighbors: (position: IPoint, compassDirections: CompassDirection[]) => (T | null)[]
-    getCompassDirectionGroupNeighbors: (position: IPoint, directionalNeighbors: CompassDirectionGroup) => (T | null)[]
+    getNeighbors: (position: IPoint, relativePoints: IPoint[]) => { position: IPoint, tile: T | null }[]
+    getCompassDirectionNeighbors: (position: IPoint, compassDirections: CompassDirection[]) => { position: IPoint, tile: T | null }[]
+    getCompassDirectionGroupNeighbors: (position: IPoint, directionalNeighbors: CompassDirectionGroup) => { position: IPoint, tile: T | null }[]
     isInside: (position: IPoint) => boolean;
     forEach: (tileCall: (tile: T, position?: IPoint) => void) => void;
     setEach: (tileGetter: (position: IPoint) => T) => void;
 }
 
 export class Grid<T> implements IGrid<T> {
-    public static GetNeighbors<T>(grid: IGrid<T>, position: IPoint, relativePoints: IPoint[]): (T | null)[] {
-        const positionTemp = new Point();
+    public static GetNeighbors<T>(grid: IGrid<T>, position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: T | null }[] {
         return relativePoints.map(o => {
-            positionTemp.setToXY(position.x + o.x, position.y + o.y);
-            return grid.get(positionTemp);
+            const positionTemp = { x: position.x + o.x, y: position.y + o.y };
+            return { position: positionTemp, tile: grid.get(positionTemp) };
         });
     };
 
-    public static GetCompassDirectionNeighbors<T>(grid: IGrid<T>, position: IPoint, compassDirections: CompassDirection[]): (T | null)[] {
+    public static GetCompassDirectionNeighbors<T>(grid: IGrid<T>, position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: T | null }[] {
         const compassDirectionPoints = compassDirections.map(direction => PointByCompassDirection[direction]);
         return Grid.GetNeighbors(grid, position, compassDirectionPoints);
     };
 
-    public static GetCompassDirectionGroupNeighbors<T>(grid: IGrid<T>, position: IPoint, group: CompassDirectionGroup): (T | null)[] {
+    public static GetCompassDirectionGroupNeighbors<T>(grid: IGrid<T>, position: IPoint, group: CompassDirectionGroup): { position: IPoint, tile: T | null }[] {
         const compassDirections = CompassDirectionsByGroup[group];
         return Grid.GetCompassDirectionNeighbors(grid, position, compassDirections);
     };
@@ -127,15 +126,15 @@ export class Grid<T> implements IGrid<T> {
         return this.isInside(position) ? this.tiles[position.y][position.x] : null;
     }
 
-    public getNeighbors(position: IPoint, relativePoints: IPoint[]): (T | null)[] {
+    public getNeighbors(position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: T | null }[] {
         return Grid.GetNeighbors(this, position, relativePoints);
     }
 
-    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): (T | null)[] {
+    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: T | null }[] {
         return Grid.GetCompassDirectionNeighbors(this, position, compassDirections);
     }
 
-    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): (T | null)[] {
+    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): { position: IPoint, tile: T | null }[] {
         return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
     }
 

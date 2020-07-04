@@ -107,15 +107,15 @@ export class PixelGrid implements IGrid<Color> {
         );
     };
 
-    public getNeighbors(position: IPoint, relativePoints: IPoint[]): (Color | null)[] {
+    public getNeighbors(position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: Color | null }[] {
         return Grid.GetNeighbors(this, position, relativePoints);
     }
 
-    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): (Color | null)[] {
+    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: Color | null }[] {
         return Grid.GetCompassDirectionNeighbors(this, position, compassDirections);
     }
 
-    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): (Color | null)[] {
+    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): { position: IPoint, tile: Color | null }[] {
         return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
     }
 
