@@ -24,7 +24,7 @@ export class Bone {
 }
 
 export class Skeleton extends Bone {
-    constructor(private readonly parentEntity: { position: IPoint } | null, public offset: IPoint=Geometry.Point.Zero, angleLocal: number=0) {
+    constructor(private readonly parentEntity: { position: IPoint } | null=null, public offset: IPoint=Geometry.Point.Zero, angleLocal: number=0) {
         super(null, 0, angleLocal);
     }
 

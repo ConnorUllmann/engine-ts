@@ -32,9 +32,9 @@ export class Draw {
         }
 
         context.translate(center.x - world.camera.x, center.y - world.camera.y);
-        context.rotate(-angle);
-        context.drawImage(image, -w/2, -h/2, w, h);
         context.rotate(angle);
+        context.drawImage(image, -w/2, -h/2, w, h);
+        context.rotate(-angle);
         context.translate(-center.x + world.camera.x, -center.y + world.camera.y);
     }
 

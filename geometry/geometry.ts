@@ -70,6 +70,7 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
     WindingNumber: (polygon: IPolygon, point: IPoint) => number,
     Rotate: (polygon: IPolygon, angle: number, center?: IPoint) => IPolygon
+    Translate: (polygon: IPolygon, position: IPoint) => IPolygon,
     // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
@@ -644,6 +645,7 @@ export class Geometry {
         Midpoint: (polygon: IPolygon): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
         Area: (polygon: IPolygon): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
         Rotate: (polygon: IPolygon, angle: number, center?: IPoint): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
+        Translate: (polygon: IPolygon, position: IPoint): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Add(o, position)) }),
         Hash: (polygon: IPolygon): string => Geometry.Points.Hash(polygon.vertices),
         WindingNumber: (polygon: IPolygon, point: IPoint) : number => {
             // https://twitter.com/FreyaHolmer/status/1232826293902888960

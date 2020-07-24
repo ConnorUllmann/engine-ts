@@ -25,6 +25,10 @@ export function millisecondsToExecute(call: () => any): number {
     return end - start;
 }
 
+export async function sleep(milliseconds: number) {
+    await new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
 export const tau: number = Math.PI * 2;
 
 // TODO: remove in favor of Geometry.distanceSq/distance
@@ -86,6 +90,7 @@ declare global {
         samples(count: number): T[];
         flattened(): T;
         any(boolCheck: (o: T) => boolean): boolean;
+        all(boolCheck: (o: T) => boolean): boolean;
         first(boolCheck?: ((o: T) => boolean) | null): T | null;
         last(boolCheck?: ((o: T) => boolean) | null): T | null;
         bestOf(boolCheck: (o: T) => boolean): T | null;
@@ -191,6 +196,11 @@ Array.prototype.flattened = function<T>(): T
 Array.prototype.any = function<T>(boolCheck: (o: T) => boolean): boolean
 {
     return this.some(boolCheck);
+};
+
+Array.prototype.all = function<T>(boolCheck: (o: T) => boolean): boolean
+{
+    return !this.some((o: T) => !boolCheck(o));
 };
 
 Array.prototype.first = function<T>(boolCheck: ((o: T) => boolean) | null=null): T | null
