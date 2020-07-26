@@ -16,7 +16,7 @@ export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
-    public static image(world: World, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint) {
+    public static image(world: World, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
         const w = scale.x * (image.width as number);
@@ -26,16 +26,20 @@ export class Draw {
             y: position.y + h/2
         };
 
+        const globalAlphaPrevious = context.globalAlpha;
+        context.globalAlpha = alpha;
+
         if(angle === 0) {
             context.drawImage(image, center.x - w/2 - world.camera.x, center.y - h/2 - world.camera.y, w, h);
-            return;
+        } else {
+            context.translate(center.x - world.camera.x, center.y - world.camera.y);
+            context.rotate(angle);
+            context.drawImage(image, -w/2, -h/2, w, h);
+            context.rotate(-angle);
+            context.translate(-center.x + world.camera.x, -center.y + world.camera.y);
         }
 
-        context.translate(center.x - world.camera.x, center.y - world.camera.y);
-        context.rotate(angle);
-        context.drawImage(image, -w/2, -h/2, w, h);
-        context.rotate(-angle);
-        context.translate(-center.x + world.camera.x, -center.y + world.camera.y);
+        context.globalAlpha = globalAlphaPrevious;
     }
 
     public static circleArc(world: World, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
@@ -47,6 +51,18 @@ export class Draw {
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
+    }
+
+    public static circleArcOutline(world: World, circle: ICircle, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(circle.radius <= 0)
+            return;
+        const context = world.context;
+        context.beginPath();
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, startAngle, endAngle);
+        if(strokeStyle)
+            context.strokeStyle = strokeStyle.toString();
+        context.lineWidth = lineWidth;
+        context.stroke();
     }
 
     public static circle(world: World, circle: ICircle, fillStyle: FillStyle=null) {
