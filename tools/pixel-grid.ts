@@ -9,6 +9,7 @@ import { CompassDirection, CompassDirectionGroup } from '@engine-ts/geometry/com
 export class PixelGrid implements IGrid<Color> {
     private context: CanvasRenderingContext2D;
     private imageData: ImageData;
+    public imageSmoothingEnabled: boolean = false;
 
     public get w(): number { return this.canvas.width; }
     public get h(): number { return this.canvas.height; }
@@ -73,7 +74,7 @@ export class PixelGrid implements IGrid<Color> {
 
     public draw(world: World, position: IPoint=Geometry.Point.Zero, scale: IPoint=Geometry.Point.One, section?: IRectangle) {
         const imageSmoothingEnabled = world.context.imageSmoothingEnabled;
-        world.context.imageSmoothingEnabled = false;
+        world.context.imageSmoothingEnabled = this.imageSmoothingEnabled;
         if(section != null)
             this.renderToContext(world.context, Geometry.Point.Subtract(position, world.camera), scale, section);
         else
