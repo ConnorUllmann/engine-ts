@@ -268,6 +268,54 @@ export class Draw {
         context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
     };
 
+    private static rectangleRoundedPath(world: World, rectangle: IRectangle, radius: number, angle: number=0, center?: IPoint) {
+        const context = world.context;
+        center = center || Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
+        context.translate(center.x, center.y);
+        context.rotate(-angle);
+
+        const xOffset = -world.camera.x - center.x;
+        const yOffset = -world.camera.y - center.y;
+        const xRightHor = rectangle.x + rectangle.w + xOffset;
+        const xRightVer = xRightHor - radius;
+        const xLeftHor = rectangle.x + xOffset;
+        const xLeftVer = xLeftHor + radius;
+        const yTopVer = rectangle.y + yOffset;
+        const yTopHor = yTopVer + radius;
+        const yBottomVer = rectangle.y + rectangle.h + yOffset;
+        const yBottomHor = yBottomVer - radius;
+        context.beginPath();
+        context.moveTo(xLeftVer, yTopVer);
+        context.lineTo(xRightVer, yTopVer);
+        context.quadraticCurveTo(xRightHor, yTopVer, xRightHor, yTopHor);
+        context.lineTo(xRightHor, yBottomHor);
+        context.quadraticCurveTo(xRightHor, yBottomVer, xRightVer, yBottomVer);
+        context.lineTo(xLeftVer, yBottomVer);
+        context.quadraticCurveTo(xLeftHor, yBottomVer, xLeftHor, yBottomHor);
+        context.lineTo(xLeftHor, yTopHor);
+        context.quadraticCurveTo(xLeftHor, yTopVer, xLeftVer, yTopVer);
+
+        context.rotate(angle);
+        context.translate(-center.x, -center.y);
+    }
+
+    public static rectangleRounded(world: World, rectangle: IRectangle, radius: number, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {
+        const context = world.context;
+        this.rectangleRoundedPath(world, rectangle, radius, angle, center);
+        if(fillStyle)
+            context.fillStyle = fillStyle.toString();
+        context.fill();
+    }
+
+    public static rectangleRoundedOutline(world: World, rectangle: IRectangle, radius: number, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number=0, center?: IPoint) {
+        const context = world.context;
+        this.rectangleRoundedPath(world, rectangle, radius, angle, center);
+        context.lineWidth = lineWidth;
+        if(strokeStyle)
+            context.strokeStyle = strokeStyle.toString();
+        context.stroke();
+    }
+
     public static line(world: World, line: ILine, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(lineWidth <= 0)
             return;
@@ -344,10 +392,15 @@ export class Draw {
         context.stroke();
     };
 
-    public static text(world: World, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top") {
+    public static text(world: World, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top", angle: number=0, center?: IPoint) {
         const context = world.context;
         Draw.textStyle(world, fillStyle, font, halign, valign);
-        context.fillText(text, position.x - world.camera.x, position.y - world.camera.y);
+        center = center || Geometry.Point.Subtract(position, world.camera);
+        context.translate(center.x, center.y);
+        context.rotate(-angle);
+        context.fillText(text, position.x - world.camera.x - center.x, position.y - world.camera.y - center.y);
+        context.rotate(angle);
+        context.translate(-center.x, -center.y);
     };
 
     public static textStyle(world: World, fillStyle: FillStyle=null, font: string | null=null, halign: HalignAll=null, valign: ValignAll=null) {
