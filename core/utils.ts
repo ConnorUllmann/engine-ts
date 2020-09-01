@@ -67,8 +67,6 @@ export function getRandomNumberGenerator(seed: number): () => number {
     };
 }
 
-// 42: 0.1314556990368807
-// AAAKQQJ43: 0.13392025651839679
 export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
