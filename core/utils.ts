@@ -89,6 +89,8 @@ declare global {
         reversed(): T[];
         sample(): T;
         samples(count: number): T[];
+        shuffle(): T[];
+        shuffled(): T[];
         flattened(): T;
         any(boolCheck: (o: T) => boolean): boolean;
         all(boolCheck: (o: T) => boolean): boolean;
@@ -188,6 +190,28 @@ Array.prototype.samples = function<T>(count: number): T[]
         tempList.removeAt(Math.floor(random() * tempList.length));
     return tempList;
 };
+
+// Fisher-Yates shuffle
+// https://bost.ocks.org/mike/shuffle/
+Array.prototype.shuffle = function<T>(): T[]
+{
+    let j = this.length;
+    let i = 0;
+    while (j > 0) {
+      i = Math.floor(random() * j);
+      j--;
+      this.swap(i, j);
+    }  
+    return this;
+}
+
+//Returns a new array that is a shuffled version of the given array
+Array.prototype.shuffled = function<T>(): T[]
+{
+    const list = this.clone();
+    list.shuffle();
+    return list;
+}
 
 Array.prototype.flattened = function<T>(): T
 {
