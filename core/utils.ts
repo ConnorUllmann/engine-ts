@@ -99,9 +99,11 @@ declare global {
         bestOf(boolCheck: (o: T) => boolean): T | null;
         minOf(valueGetter: (o: T) => number): T | null;
         maxOf(valueGetter: (o: T) => number): T | null;
+        sumOf(valueGetter: (o: T) => number): number | null;
         batchify(batchSize: number): T[][];
         mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
         mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
+        copy(other: T[]): void;
         clone(): T[];
         clear(): void;
         sorted(compare?: (a: T, b: T) => number): T[];
@@ -321,6 +323,13 @@ Array.prototype.maxOf = function<T>(valueGetter: (o: T) => number): T | null
         : null;
 };
 
+Array.prototype.sumOf = function<T>(valueGetter: (o: T) => number): number | null
+{
+    return this.length > 0
+        ? this.reduce((total: number, element: T) => total + valueGetter(element), 0)
+        : null;
+};
+
 Array.prototype.min = function(): number | null { return this.length > 0 ? this.minOf((o: number) => o) : null; }
 Array.prototype.max = function(): number | null { return this.length > 0 ? this.maxOf((o: number) => o) : null; }
 Array.prototype.sum = function(): number | null {
@@ -377,6 +386,11 @@ Array.prototype.mappedByUnique = function<T>(keyGetter: (o: T) => string): { [ke
     },
     {});
 };
+
+Array.prototype.copy = function<T>(other: T[])
+{
+    this.splice(0, this.length, ...other);
+}
 
 Array.prototype.clone = function<T>(): T[]
 {
