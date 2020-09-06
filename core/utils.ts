@@ -72,13 +72,6 @@ console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 export const randomSign = (): number => Math.sign(random() - 0.5);
 
-export function createCanvas(width: number, height: number): HTMLCanvasElement {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    return canvas;
-};
-
 declare global {
     interface Array<T> {
         swap(firstIndex: number, secondIndex: number): void;
