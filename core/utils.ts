@@ -1,3 +1,20 @@
+export function log(text: string, level = "info") {
+    let d = new Date();
+    let dateString = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2) + "." + ("00" + d.getMilliseconds()).slice(-3) + " UTC" + (d.getTimezoneOffset() > 0 ? "-" : "+") + Math.abs(d.getTimezoneOffset() / 60);
+    const textFinal = `[${level}][${dateString}] ${text}`;
+    switch(level) {
+        case 'error':
+            console.error(textFinal);
+            break;
+        case 'warn':
+            console.warn(textFinal);
+            break;
+        default:
+            console.log(textFinal);
+            break;
+    }
+};
+
 export enum Halign {
     LEFT = 'left',
     CENTER = 'center',
