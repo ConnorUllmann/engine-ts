@@ -77,6 +77,14 @@ export function moduloSafe(value: number, modulo: number) { return ((value % mod
 
 export function angleDifference(from: number, to: number) { return moduloSafe(to - from - Math.PI, tau) - Math.PI; };
 
+// https://stackoverflow.com/a/55365334
+export function getGuidPart(): string {
+    return (((1 + random()) * 0x10000) | 0).toString(16).substring(1);
+}
+export function getGuid(): string {
+    return `${getGuidPart()}${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}${getGuidPart()}${getGuidPart()}`;
+}
+
 export function getRandomNumberGenerator(seed: number): () => number {
     return () => { 
         seed = Math.sin(seed) * 10000;
