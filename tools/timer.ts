@@ -7,9 +7,7 @@ export class Timer {
     public started: boolean = false; // whether or not the timer has had its .update() method called at least once
     public paused: boolean = false;
 
-    protected clean(valueRaw: number): number { 
-        return clamp(valueRaw, 0, 1);
-    }
+    protected clean(valueRaw: number): number { return clamp(valueRaw, 0, 1); }
 
     public get finished(): boolean { return this.value >= 1; }
     public toRange(min: number, max: number) { return (max - min) * this.value + min; }
@@ -32,4 +30,9 @@ export class Timer {
         this.triggered = this.value >= 1 && valueLast < 1;
         this.started = true;
     }
+}
+
+export class LoopTimer extends Timer {
+    protected clean(valueRaw: number): number { return valueRaw % 1; }
+    public get finished(): boolean { return false; }
 }
