@@ -44,8 +44,6 @@ export class World {
     // create in ngOnInit and not in the component's constructor
     constructor(
         canvasId: string,
-        canvasWidth: number = 640,
-        canvasHeight: number = 480,
         canvasResolutionWidth: number = 1280,
         canvasResolutionHeight: number = 960,
         alpha: boolean=true,
@@ -60,7 +58,6 @@ export class World {
         this.context = this.canvas.getContext('2d', { alpha });
         this.canvas.oncontextmenu = () => false;
 
-        this.setCanvasSize(canvasWidth, canvasHeight);
         this.setCanvasResolution(canvasResolutionWidth, canvasResolutionHeight);
         
         this.images = new Images();
@@ -78,7 +75,7 @@ export class World {
         setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
     }
 
-    private setCanvasSize(width: number, height: number) {
+    public setCanvasSize(width: number, height: number) {
         this.canvas.style.width = `${width}px`;
         this.canvas.style.height = `${height}px`;
     }
