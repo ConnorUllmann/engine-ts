@@ -39,7 +39,7 @@ export class World {
     public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
     public get deltaNormal(): number { return this.delta / this.millisecondsPerFrame; }
 
-    public backgroundColor: Color = Color.lightGrey;
+    public backgroundColor: Color | (() => Color) = Color.lightGrey;
 
     // create in ngOnInit and not in the component's constructor
     constructor(
@@ -94,7 +94,7 @@ export class World {
             
         this.updateDelta();
         this.updateEntities();
-        this.clearCanvas(this.backgroundColor);
+        this.clearCanvas(this.backgroundColor instanceof Color ? this.backgroundColor : this.backgroundColor());
         this.drawEntities();
         this.mouse.update();
         this.keyboard.update();

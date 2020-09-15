@@ -932,6 +932,7 @@ export class Geometry {
 
 
     // given 3 colinear points, returns true if "b" and "c" are on the same side of "a"
+    // returns true when "b" or "c" is equal to "a"
     // i.e. used to check if a point has exceeded the endpoint of a PointPair
     //  a = endpoint of PointPair being checked
     //  b = other endpoint of the same PointPair
@@ -939,8 +940,8 @@ export class Geometry {
     // TODO: rename 
     private static isSameSideOfPoint = (a: IPoint, b: IPoint, c: IPoint) =>
         a.x === b.x
-            ? Math.sign(c.y - a.y) === Math.sign(b.y - a.y)
-            : Math.sign(c.x - a.x) === Math.sign(b.x - a.x);
+            ? (Math.sign(c.y - a.y) === Math.sign(b.y - a.y) || Math.sign(c.y - a.y) === 0 || Math.sign(b.y - a.y) === 0)
+            : (Math.sign(c.x - a.x) === Math.sign(b.x - a.x) || Math.sign(c.x - a.x) === 0 || Math.sign(b.x - a.x) === 0);
 
     // TODO:
     //  1. test what happens when the lines/rays/segments are directly atop one another
