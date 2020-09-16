@@ -29,10 +29,18 @@ export class Mouse extends Point {
     public start(): void {
         const mouse = this;
         this.canvas.addEventListener('mousemove', (mouseEvent: MouseEvent) => {
-            const canvasScale = mouse.camera.canvasScale;
             const rect = mouse.canvas.getBoundingClientRect();
-            mouse.x = (mouseEvent.clientX - rect.left) * canvasScale.x;
-            mouse.y = (mouseEvent.clientY - rect.top) * canvasScale.y;
+            const canvasScale = mouse.camera.canvasScale;
+            if(canvasScale.x == canvasScale.y) {
+                mouse.x = (mouseEvent.clientX - rect.left) * canvasScale.x;
+                mouse.y = (mouseEvent.clientY - rect.top) * canvasScale.y;
+            } else {
+                const clientScaledWidth = mouse.canvas.clientWidth / mouse.canvas.clientHeight * mouse.camera.h;
+                const marginsWidthTotal = clientScaledWidth - mouse.camera.w;
+                const xMouseShifted = (mouseEvent.clientX - rect.left) * canvasScale.y
+                mouse.x = xMouseShifted - marginsWidthTotal/2;
+                mouse.y = (mouseEvent.clientY - rect.top) * canvasScale.y;
+            }
         }, false);
 
         if(this.touchscreen) {
