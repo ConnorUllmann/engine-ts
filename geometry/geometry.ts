@@ -104,7 +104,7 @@ interface IPointStatic {
     Subtract: (a: IPoint, b: IPoint) => IPoint,
     Midpoint: (...points: IPoint[]) => IPoint | null,
     Angle: (point: IPoint) => number,
-    Scale: (point: IPoint, scalar: number | IPoint) => IPoint,
+    Scale: (point: IPoint, scalar: number | IPoint, from?: IPoint) => IPoint,
     LengthSq: (point: IPoint) => number,
     Length: (point: IPoint) => number,
     Dot: (a: IPoint, b: IPoint) => number,
@@ -189,10 +189,14 @@ export class Geometry {
             };
         },
         Angle: (point: IPoint): number => Math.atan2(point.y, point.x),
-        Scale: (point: IPoint, scalar: number | IPoint): IPoint => {
-            return typeof scalar === "number"
-                ? { x: point.x * scalar, y: point.y * scalar }
-                : { x: point.x * scalar.x, y: point.y * scalar.y }
+        Scale: (point: IPoint, scalar: number | IPoint, from?: IPoint): IPoint => {
+            return from != null
+                ? (typeof scalar === "number"
+                    ? { x: (point.x - from.x) * scalar + from.x, y: (point.y - from.y) * scalar + from.y }
+                    : { x: (point.x - from.x) * scalar.x + from.x, y: (point.y - from.y) * scalar.y + from.y })
+                : (typeof scalar === "number"
+                    ? { x: point.x * scalar, y: point.y * scalar }
+                    : { x: point.x * scalar.x, y: point.y * scalar.y })
         },
         LengthSq: (point: IPoint): number => point.x * point.x + point.y * point.y,
         Length: (point: IPoint): number => Math.sqrt(Geometry.Point.LengthSq(point)),
