@@ -447,16 +447,16 @@ export class Draw {
         context.globalCompositeOperation = blendModeOriginal;
     };
 
-    public static applyShadow({ context }: CameraContext, __shadowColor: FillStyle, __shadowBlur: number, shadowOffset: IPoint=Geometry.Point.Zero, drawCall: () => void) {
+    public static applyShadow({ context }: CameraContext, shadowColor: FillStyle, shadowBlur: number, shadowOffset: IPoint=Geometry.Point.Zero, drawCall: () => void) {
         const previousShadowColor = context.shadowColor;
         const previousShadowOffsetX = context.shadowOffsetX;
         const previousShadowOffsetY = context.shadowOffsetY;
         const previousShadowBlur = context.shadowBlur;
-        if(__shadowColor)
-            context.shadowColor = __shadowColor.toString();
+        if(shadowColor)
+            context.shadowColor = shadowColor.toString();
         context.shadowOffsetX = shadowOffset.x;
         context.shadowOffsetY = shadowOffset.y;
-        context.shadowBlur = __shadowBlur;
+        context.shadowBlur = shadowBlur;
         drawCall();
         context.shadowColor = previousShadowColor;
         context.shadowOffsetX = previousShadowOffsetX;
