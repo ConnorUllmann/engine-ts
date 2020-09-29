@@ -103,6 +103,7 @@ declare global {
         remove(item: T): number | null;
         removeAt(index: number): T;
         removeAtMultiple(...indices: number[]): T[];
+        removeFirstWhere(valueGetter: (o: T, i?: number) => boolean): T | null;
         removeWhere(valueGetter: (o: T, i?: number) => boolean): T[];
         reversed(): T[];
         sample(): T;
@@ -168,6 +169,16 @@ Array.prototype.removeAtMultiple = function<T>(...indices: number[]): T[]
         .sorted((a, b) => b - a)
         .map((index: number) => this.removeAt(index));
 };
+
+Array.prototype.removeFirstWhere = function<T>(valueGetter: (o: T, i?: number) => boolean): T | null
+{
+    for(let i = 0; i < this.length; i++) {
+        if(valueGetter(this[i])) {
+            return this.splice(i, 1).first();
+        }
+    }
+    return null;
+}
 
 Array.prototype.removeWhere = function<T>(valueGetter: (o: T, i?: number) => boolean): T[]
 {
