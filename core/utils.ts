@@ -100,8 +100,9 @@ export const randomSign = (): number => Math.sign(random() - 0.5);
 declare global {
     interface Array<T> {
         swap(firstIndex: number, secondIndex: number): void;
+        insert(index: number, item: T): void;
         remove(item: T): number | null;
-        removeAt(index: number): T;
+        removeAt(index: number): T | null;
         removeAtMultiple(...indices: number[]): T[];
         removeFirstWhere(valueGetter: (o: T, i?: number) => boolean): T | null;
         removeWhere(valueGetter: (o: T, i?: number) => boolean): T[];
@@ -113,7 +114,7 @@ declare global {
         flattened(): T;
         any(boolCheck: (o: T) => boolean): boolean;
         all(boolCheck: (o: T) => boolean): boolean;
-        first(boolCheck?: ((o: T) => boolean) | null): T | null;
+        first(boolCheck?: ((o: T, i?: number) => boolean) | null): T | null;
         last(boolCheck?: ((o: T) => boolean) | null): T | null;
         bestOf(boolCheck: (o: T) => boolean): T | null;
         minOf(valueGetter: (o: T) => number): T | null;
@@ -141,6 +142,10 @@ Array.prototype.swap = function(firstIndex: number, secondIndex: number): void
 {
     this[firstIndex] = this.splice(secondIndex, 1, this[firstIndex])[0];
 };
+
+Array.prototype.insert = function<T>(index: number, ...items: T[]): void {
+    this.splice(index, 0, ...items);
+}
 
 Array.prototype.remove = function<T>(item: T): number | null
 {
@@ -173,7 +178,7 @@ Array.prototype.removeAtMultiple = function<T>(...indices: number[]): T[]
 Array.prototype.removeFirstWhere = function<T>(valueGetter: (o: T, i?: number) => boolean): T | null
 {
     for(let i = 0; i < this.length; i++) {
-        if(valueGetter(this[i])) {
+        if(valueGetter(this[i], i)) {
             return this.splice(i, 1).first();
         }
     }
@@ -259,36 +264,31 @@ Array.prototype.all = function<T>(boolCheck: (o: T) => boolean): boolean
     return !this.some((o: T) => !boolCheck(o));
 };
 
-Array.prototype.first = function<T>(boolCheck: ((o: T) => boolean) | null=null): T | null
+Array.prototype.first = function<T>(boolCheck: ((o: T, i?: number) => boolean) | null=null): T | null
 {
-    if(boolCheck === null)
-    {
+    if(boolCheck === null) {
         return this.length <= 0
             ? null
             : this[0];
     }
 
-    for(let element of this)
-        if (boolCheck(element))
-            return element;
+    for(let i = 0; i < this.length; i++)
+        if (boolCheck(this[i], i))
+            return this[i];
     return null;
 };
 
-Array.prototype.last = function<T>(boolCheck: ((o: T) => boolean) | null=null): T | null
+Array.prototype.last = function<T>(boolCheck: ((o: T, i?: number) => boolean) | null=null): T | null
 {
-    if(boolCheck === null)
-    {
+    if(boolCheck === null) {
         return this.length <= 0
             ? null
             : this[this.length-1];
     }
 
     for(let i = this.length-1; i >= 0; i--)
-    {
-        const element = this[i];
-        if (boolCheck(element))
-            return element;
-    }
+        if (boolCheck(this[i], i))
+            return this[i];
     return null;
 };
 
