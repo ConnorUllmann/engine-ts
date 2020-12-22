@@ -117,10 +117,10 @@ declare global {
         shuffle(): T[];
         shuffled(): T[];
         flattened(): T;
-        any(boolCheck: (o: T) => boolean): boolean;
-        all(boolCheck: (o: T) => boolean): boolean;
-        first(boolCheck?: ((o: T, i?: number) => boolean) | null): T | null;
-        last(boolCheck?: ((o: T) => boolean) | null): T | null;
+        any(boolCheck: (o: T, i: number) => boolean): boolean;
+        all(boolCheck: (o: T, i: number) => boolean): boolean;
+        first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
+        last(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
         bestOf(boolCheck: (o: T) => boolean): T | null;
         minOf(valueGetter: (o: T) => number): T | null;
         maxOf(valueGetter: (o: T) => number): T | null;
@@ -259,17 +259,17 @@ Array.prototype.flattened = function<T>(): T
     return [].concat.apply([], this);
 };
 
-Array.prototype.any = function<T>(boolCheck: (o: T) => boolean): boolean
+Array.prototype.any = function<T>(boolCheck: (o: T, i: number) => boolean): boolean
 {
     return this.some(boolCheck);
 };
 
-Array.prototype.all = function<T>(boolCheck: (o: T) => boolean): boolean
+Array.prototype.all = function<T>(boolCheck: (o: T, i: number) => boolean): boolean
 {
-    return !this.some((o: T) => !boolCheck(o));
+    return !this.some((o: T, i: number) => !boolCheck(o, i));
 };
 
-Array.prototype.first = function<T>(boolCheck: ((o: T, i?: number) => boolean) | null=null): T | null
+Array.prototype.first = function<T>(boolCheck: ((o: T, i: number) => boolean) | null=null): T | null
 {
     if(boolCheck === null) {
         return this.length <= 0
@@ -277,13 +277,14 @@ Array.prototype.first = function<T>(boolCheck: ((o: T, i?: number) => boolean) |
             : this[0];
     }
 
-    for(let i = 0; i < this.length; i++)
+    for(let i = 0; i < this.length; i++) {
         if (boolCheck(this[i], i))
             return this[i];
+    }
     return null;
 };
 
-Array.prototype.last = function<T>(boolCheck: ((o: T, i?: number) => boolean) | null=null): T | null
+Array.prototype.last = function<T>(boolCheck: ((o: T, i: number) => boolean) | null=null): T | null
 {
     if(boolCheck === null) {
         return this.length <= 0
@@ -291,9 +292,10 @@ Array.prototype.last = function<T>(boolCheck: ((o: T, i?: number) => boolean) | 
             : this[this.length-1];
     }
 
-    for(let i = this.length-1; i >= 0; i--)
+    for(let i = this.length-1; i >= 0; i--) {
         if (boolCheck(this[i], i))
             return this[i];
+    }
     return null;
 };
 
@@ -379,7 +381,7 @@ Array.prototype.batchify = function<T>(batchSize: number): T[][]
         const last = batchList.last();
         if(last && last.length >= batchSize)
             batchList.push(new Array<T>(batchSize));
-        batchList.last().push(item);
+        batchList.last()!.push(item);
         return batchList;
     }, [[]]);
 };
