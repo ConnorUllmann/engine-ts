@@ -6,6 +6,7 @@ import { Keyboard } from './keyboard';
 import { Gamepads } from './gamepads';
 import { Sounds } from './sounds';
 import { Images } from './images';
+import { IComponent } from './component';
 
 export class World {
     public readonly canvas: HTMLCanvasElement;
@@ -133,13 +134,22 @@ export class World {
 
         this.sortEntitiesByUpdateOrder();
 
-        this.entities.forEach((o: Entity) => { if(o.active && !o.destroyed) o.update() });
+        this.entities.forEach((o: Entity) => {
+            if(o.active && !o.destroyed) {
+                o.update()
+                for(let _class in o.components)
+                    o.components[_class].forEach((c: IComponent) => { if(c.active && !c.removed && c.update) c.update(); });
+            }
+        });
+
+        // TODO remove
         this.entities.forEach((o: Entity) => { if(o.active && !o.destroyed) o.postUpdate() });
 
         for(const id in this.entityToRemoveById) {
             const entity = this.entityToRemoveById[id];
             delete this.entityToRemoveById[id];
 
+            entity.removeAllComponents();
             entity.remove();
             this.entities.remove(entity);
             delete this.entityById[entity.id];
@@ -152,9 +162,7 @@ export class World {
 
     private drawEntities() {
         this.sortEntitiesByUpdateOrder();
-
-        const entities = this.entities.filter(o => o.visible);
-        entities.forEach((o: Entity) => o.draw());
+        this.entities.forEach((o: Entity) => { if(o.visible && !o.destroyed) o.draw() });
     }
 
     // returns the id of the entity
@@ -193,22 +201,52 @@ export class World {
     };
 
     // not a clone of the list, but the actual World list itself!
-    public entitiesOfClassType<T extends new (...args: any[]) => U, U extends Entity>(_class: T): InstanceType<T>[] {
+    public entitiesOfClass<T extends new (...args: any[]) => U, U extends Entity>(_class: T): InstanceType<T>[] {
         return _class.name in this.entitiesByClass ? this.entitiesByClass[_class.name] as InstanceType<T>[] : [];
     }
 
-    // TODO: return the actual list of entities saved by the World instead of a copy
-    public entitiesOfClass<T extends Entity>(_class: string): T[] {
-        return _class in this.entitiesByClass ? this.entitiesByClass[_class].map(e => e as T) : [];
+    public forEachComponentOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T, forEach: (c: InstanceType<T>) => any) {
+        for(let i = 0; i < this.entities.length; i++) {
+            const entity = this.entities[i];
+            if(!entity.active)
+                continue;
+            
+            const components = entity.componentsOfClass(_class);
+            for(let j = 0; j < components.length; j++) {
+                const component = components[j];
+                if(!component.active)
+                    continue;
+                
+                forEach(component);
+            }
+        }
+        return null;
+    }
+
+    public firstComponentOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T, first: (c: InstanceType<T>) => boolean): InstanceType<T> | null {
+        for(let i = 0; i < this.entities.length; i++) {
+            const entity = this.entities[i];
+            if(!entity.active)
+                continue;
+            
+            const components = entity.componentsOfClass(_class);
+            for(let j = 0; j < components.length; j++) {
+                const component = components[j];
+                if(!component.active)
+                    continue;
+                
+                if(first(component))
+                    return component;
+            }
+        }
+        return null;
     }
 
     // gets the first entity of a class
     public singleton<T extends new (...args: any[]) => U, U extends Entity>(_class: T): InstanceType<T> | null {
         if(!(_class.name in this.entitiesByClass))
             return null;
-        const entity = this.entitiesByClass[_class.name].first()
-        if(entity == null)
-            return null;
-        return entity as InstanceType<T>;
+        const entity = this.entitiesByClass[_class.name].first();
+        return entity == null ? null : entity as InstanceType<T>;
     }
 }

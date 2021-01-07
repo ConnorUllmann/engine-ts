@@ -1,6 +1,9 @@
 import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient, Halign, Valign } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
+export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | (ISegment & { type: PointPairType.SEGMENT })
+export type Shape = BoundableShape | (IRay & { type: PointPairType.RAY }) | (ILine & { type: PointPairType.LINE })
+
 interface IPointListStatic<T> {
     Segments: (o: T) => ISegment[],
     Vertices: (o: T) => IPoint[],
@@ -128,6 +131,8 @@ interface IPointStatic {
     IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair) => number,
     IsLeftOf: (point: IPoint, pair: IPointPair) => boolean,
     IsColinearWith: (point: IPoint, pair: IPointPair) => boolean,
+    InsideSegmentIfColinear: (point: IPoint, pair: ISegment) => boolean,
+    InsideRayIfColinear: (point: IPoint, pair: IRay) => boolean,
     IsRightOf: (point: IPoint, pair: IPointPair) => boolean,
     // Returns a list of the velocity vectors a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
     // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
@@ -151,13 +156,14 @@ interface IRayStatic extends IPointPairStatic<IRay> {
     DefaultMaxDistance: number,
     AsSegment: (ray: IRay, length: number) => ISegment,
     PointAtDistance: (ray: IRay, length: number) => IPoint,
-    Cast: <T extends ISegment>(ray: IRay, segments: T[], maxDistance: number) => IRaycastResult<T> | null
+    Cast: <T extends ISegment>(ray: IRay, segments: T[], maxDistance: number) => IRaycastResult<T> | null,
 };
 
 interface ISegmentStatic extends IPointPairStatic<ISegment> {
     Midpoint: (segment: ISegment) => IPoint,
     PerpendicularBisector: (segment: ISegment) => ILine,
-    SharedVertex: (segmentA: ISegment, segmentB: ISegment) => IPoint | null
+    SharedVertex: (segmentA: ISegment, segmentB: ISegment) => IPoint | null,
+    Bounds: (segment: ISegment) => IRectangle,
 }
 
 export class Geometry {
@@ -261,6 +267,18 @@ export class Geometry {
         IsLeftCenterRightOf: (point: IPoint, { a, b }: IPointPair): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
         IsLeftOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
         IsColinearWith: (point: IPoint, pair: IPointPair): boolean => Geometry.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
+        InsideSegmentIfColinear: (point: IPoint, pair: ISegment): boolean => {
+            let ap = Geometry.Point.Subtract(point, pair.a);
+            let ab = Geometry.Point.Subtract(pair.b, pair.a);
+            let v = Geometry.Point.Dot(ap, ab);
+            return v >= 0 && v <= Geometry.Point.LengthSq(ab);
+        },
+        InsideRayIfColinear: (point: IPoint, pair: IRay): boolean => {
+            let ap = Geometry.Point.Subtract(point, pair.a);
+            let ab = Geometry.Point.Subtract(pair.b, pair.a);
+            let v = Geometry.Point.Dot(ap, ab);
+            return v >= 0;
+        },
         IsRightOf: (point: IPoint, pair: IPointPair): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
         // Returns a list of the velocity vectors a projectile would need in order to hit 'target' from 'start'
         // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
@@ -412,7 +430,14 @@ export class Geometry {
                 ? segmentA.a
                 : Geometry.Point.AreEqual(segmentA.b, segmentB.a) || Geometry.Point.AreEqual(segmentA.b, segmentB.b)
                     ? segmentA.b
-                    : null
+                    : null,
+        Bounds: (segment: ISegment): IRectangle => { 
+            const x = Math.min(segment.a.x, segment.b.x);
+            const y = Math.min(segment.a.y, segment.b.y);
+            const w = Math.max(segment.a.x, segment.b.x) - x;
+            const h = Math.max(segment.a.y, segment.b.y) - y;
+            return { x, y, w, h };
+        }
     };
 
     public static Triangle: ITriangleStatic = {
@@ -864,14 +889,60 @@ export class Geometry {
         }
     }
 
+    private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null; }
+    private static IsTriangle(o: any): o is ITriangle { return o.a != null && o.b != null && o.c != null; }
+    private static IsRectangle(o: any): o is IRectangle { return o.x != null && o.y != null && o.w != null && o.h != null; }
+    private static IsCircle(o: any): o is ICircle { return o.x != null && o.y != null && o.radius != null; }
+    private static IsPolygon(o: any): o is IPolygon { return o.vertices != null; }
+    private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && o.type == PointPairType.SEGMENT; }
+    private static IsRay(o: any): o is IRay { return o.a != null && o.b != null && o.type == PointPairType.RAY; }
+    private static IsLine(o: any): o is ILine { return o.a != null && o.b != null && o.type == PointPairType.LINE; }
+
+    public static Bounds(shape?: BoundableShape | null): IRectangle | null {
+        if(!shape)
+            null;
+        
+        if(Geometry.IsRectangle(shape)) {
+            return Geometry.Rectangle.Bounds(shape);
+        } else if(Geometry.IsCircle(shape)) {
+            return Geometry.Circle.Bounds(shape);
+        } else if(Geometry.IsTriangle(shape)) {
+            return Geometry.Triangle.Bounds(shape);
+        } else if(Geometry.IsPolygon(shape)) {
+            return Geometry.Polygon.Bounds(shape);
+        } else if(Geometry.IsSegment(shape)) {
+            return Geometry.Segment.Bounds(shape);
+        } else if(Geometry.IsPoint(shape)) {
+            return { x: shape.x, y: shape.y, w: 0, h: 0 };
+        } 
+        return null;
+    }
+
     // TODO:
-    //  1. include segments, rays, and lines vs. shapes
+    //  1. test all collisions (most ray/segment/line vs shape collisions are untested)
     //  2. create matching functions in Geometry.Intersection that actually returns intersection points, if any
     public static Collide = {
+        PointSegment: (a: IPoint, b: ISegment): boolean => Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideSegmentIfColinear(a, b),
+        TriangleSegment: (a: ITriangle, b: ISegment): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.SegmentSegment({ a: a.a, b: a.b }, b) || Geometry.Collide.SegmentSegment({ a: a.b, b: a.c }, b) || Geometry.Collide.SegmentSegment({ a: a.c, b: a.a }, b),
+        CircleSegment: (a: ICircle, b: ISegment): boolean => Geometry.Collide.CirclePoint(a, Geometry.Segment.ClosestPointTo(b, a)),
+        PolygonSegment: (a: IPolygon, b: ISegment): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.SegmentSegment(o, b)),
+        PointRay: (a: IPoint, b: IRay): boolean => Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideRayIfColinear(a, b),
+        TriangleRay: (a: ITriangle, b: IRay): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.RaySegment(b, { a: a.a, b: a.b }) || Geometry.Collide.RaySegment(b, { a: a.b, b: a.c }) || Geometry.Collide.RaySegment(b, { a: a.c, b: a.a }),
+        CircleRay: (a: ICircle, b: IRay): boolean => Geometry.Collide.CirclePoint(a, Geometry.Ray.ClosestPointTo(b, a)),
+        PolygonRay: (a: IPolygon, b: IRay): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.RaySegment(b, o)),
+        PointLine: (a: IPoint, b: ILine): boolean => Geometry.Point.IsColinearWith(a, b),
+        TriangleLine: (a: ITriangle, b: ILine): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.LineSegment(b, { a: a.a, b: a.b }) || Geometry.Collide.LineSegment(b, { a: a.b, b: a.c }) || Geometry.Collide.LineSegment(b, { a: a.c, b: a.a }),
+        CircleLine: (a: ICircle, b: ILine): boolean => Geometry.Collide.CirclePoint(a, Geometry.Line.ClosestPointTo(b, a)),
+        PolygonLine: (a: IPolygon, b: ILine): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.LineSegment(b, o)),
+        PointPoint: (a: IPoint, b: IPoint): boolean => Geometry.Point.AreEqual(a, b),
+        LineLine: (a: ILine, b: ILine): boolean => Geometry.Intersection.LineLine(a, b) != null,
+        LineRay: (a: ILine, b: IRay): boolean => Geometry.Intersection.LineRay(a, b) != null,
+        LineSegment: (a: ILine, b: ISegment): boolean => Geometry.Intersection.LineSegment(a, b) != null,
+        RayRay: (a: IRay, b: IRay): boolean => Geometry.Intersection.RayRay(a, b) != null,
+        RaySegment: (a: IRay, b: ISegment): boolean => Geometry.Intersection.RaySegment(a, b) != null,
+        SegmentSegment: (a: ISegment, b: ISegment): boolean => Geometry.Intersection.SegmentSegment(a, b) != null,
         SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[]): boolean =>
-            segmentsA.any(segmentA => 
-                segmentsB.any(segmentB => 
-                    Geometry.Intersection.SegmentSegment(segmentA, segmentB) != null)),
+            segmentsA.any(segmentA => segmentsB.any(segmentB => Geometry.Collide.SegmentSegment(segmentA, segmentB))),
         RectangleRectangle: (rectangleA: IRectangle, rectangleB: IRectangle): boolean =>
             rectangleA.x + rectangleA.w > rectangleB.x 
                 && rectangleA.y + rectangleA.h > rectangleB.y 
@@ -908,11 +979,11 @@ export class Geometry {
             || Geometry.Collide.PolygonPoint(polygon, rectangle)
             || Geometry.Collide.RectanglePoint(rectangle, polygon.vertices.first()),
         RectangleSegment: (rectangle: IRectangle, segment: ISegment): boolean =>
-            rectangle.w > 0 && rectangle.h > 0 && Geometry.Collide.RectanglePoint(rectangle, Geometry.Segment.ClosestPointTo(segment, Geometry.Rectangle.Center(rectangle))),
+            Geometry.Collide.RectanglePoint(rectangle, segment.a) || Geometry.Collide.RectanglePoint(rectangle, segment.b) || Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.SegmentSegment(s, segment)),
         RectangleLine: (rectangle: IRectangle, line: ILine): boolean =>
-            rectangle.w > 0 && rectangle.h > 0 && Geometry.Collide.RectanglePoint(rectangle, Geometry.Line.ClosestPointTo(line, Geometry.Rectangle.Center(rectangle))),
+            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.LineSegment(line, s)),
         RectangleRay: (rectangle: IRectangle, ray: IRay): boolean =>
-            rectangle.w > 0 && rectangle.h > 0 && Geometry.Collide.RectanglePoint(rectangle, Geometry.Ray.ClosestPointTo(ray, Geometry.Rectangle.Center(rectangle))),
+            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.RaySegment(ray, s)),
         RectanglePoint: (rectangle: IRectangle, point: IPoint): boolean =>
             point.x >= rectangle.x && point.y >= rectangle.y && point.x < rectangle.x + rectangle.w && point.y < rectangle.y + rectangle.h,
         CircleCircle: (circleA: ICircle, circleB: ICircle): boolean =>
@@ -952,7 +1023,181 @@ export class Geometry {
             || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first())
             || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first()),
         PolygonPoint: (polygon: IPolygon, point: IPoint): boolean =>
-            Geometry.Polygon.WindingNumber(polygon, point) != 0
+            Geometry.Polygon.WindingNumber(polygon, point) != 0,        
+        AnyAny: (a?: Shape | null, b?: Shape | null): boolean => {
+            if(a == null || b == null)
+                return false;
+                    
+            if(Geometry.IsRectangle(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleRectangle(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.RectangleCircle(a, b);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.RectangleTriangle(a, b);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.RectanglePolygon(a, b);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.RectangleSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.RectangleRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.RectangleLine(a, b);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.RectanglePoint(a, b);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+                    
+            if(Geometry.IsCircle(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleCircle(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CircleCircle(a, b);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.CircleTriangle(a, b);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.CirclePolygon(a, b);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.CircleSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.CircleRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.CircleLine(a, b);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.CirclePoint(a, b);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+                    
+            if(Geometry.IsTriangle(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleTriangle(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CircleTriangle(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TriangleTriangle(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.TrianglePolygon(a, b);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.TriangleSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.TriangleRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.TriangleLine(a, b);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.TrianglePoint(a, b);
+                } 
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+                    
+            if(Geometry.IsPolygon(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectanglePolygon(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CirclePolygon(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TrianglePolygon(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.PolygonPolygon(b, a);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.PolygonSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.PolygonRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.PolygonLine(a, b);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.PolygonPoint(a, b);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+            
+            if(Geometry.IsSegment(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleSegment(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CircleSegment(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TriangleSegment(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.PolygonSegment(b, a);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.SegmentSegment(b, a);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.RaySegment(b, a);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.LineSegment(b, a);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.PointSegment(b, a);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+            
+            if(Geometry.IsRay(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleRay(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CircleRay(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TriangleRay(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.PolygonRay(b, a);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.RaySegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.RayRay(b, a);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.LineRay(b, a);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.PointRay(b, a);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+            
+            if(Geometry.IsLine(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectangleLine(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CircleLine(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TriangleLine(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.PolygonLine(b, a);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.LineSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.LineRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.LineLine(b, a);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.PointLine(b, a);
+                } 
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+                    
+            if(Geometry.IsPoint(a)) {
+                if(Geometry.IsRectangle(b)) {
+                    return Geometry.Collide.RectanglePoint(b, a);
+                } else if(Geometry.IsCircle(b)) {
+                    return Geometry.Collide.CirclePoint(b, a);
+                } else if(Geometry.IsTriangle(b)) {
+                    return Geometry.Collide.TrianglePoint(b, a);
+                } else if(Geometry.IsPolygon(b)) {
+                    return Geometry.Collide.PolygonPoint(b, a);
+                } else if(Geometry.IsSegment(b)) {
+                    return Geometry.Collide.PointSegment(a, b);
+                } else if(Geometry.IsRay(b)) {
+                    return Geometry.Collide.PointRay(a, b);
+                } else if(Geometry.IsLine(b)) {
+                    return Geometry.Collide.PointLine(a, b);
+                } else if(Geometry.IsPoint(b)) {
+                    return Geometry.Collide.PointPoint(a, b);
+                }
+                throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
+            }
+
+            throw `Unfamiliar colliding shape a = ${JSON.stringify(a)}`;
+        }
     }
 
 
