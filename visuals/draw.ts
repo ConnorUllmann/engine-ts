@@ -6,7 +6,7 @@ import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon } from '@engine-ts/geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '@engine-ts/geometry/point';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { Geometry, Shape } from '@engine-ts/geometry/geometry';
 import { Images } from '@engine-ts/core/images';
 
 export type FillStyle = Color | string | null;
@@ -26,6 +26,9 @@ export interface ImagesCameraContext extends CameraContext {
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
+    // TODO: add generic shape-drawing function
+    // public static shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
+
     public static image(world: ImagesCameraContext, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);

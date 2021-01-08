@@ -18,9 +18,12 @@ export interface ITriangle {
     c: IPoint;
 }
 
+// omitting the "type" field will default to treating the IPointPair like a segmen
+// in ambiguous circumstances (i.e. when in use as the shape for a Collider)
 export interface IPointPair {
     a: IPoint,
-    b: IPoint
+    b: IPoint,
+    type?: PointPairType
 }
 export interface ILine extends IPointPair {}
 export interface IRay extends IPointPair {}
@@ -32,22 +35,7 @@ export interface IRaycastResult<T extends ISegment> {
 }
 
 export interface IPolygon {
-    vertices: IPoint[]; // counter-clockwise order
-    // segments: ISegment[];
-    // triangulation: ITriangle[];
-    // circumcircle: ICircle;
-    // bounds: IRectangle;
-    // area: number;
-
-    // // TODO:
-    // // collidesPolygon(polygon: IPolygon): boolean;
-    // // collidesRectangle(rectangle: IRectangle): boolean;
-    // // collidesTriangle(triangle: ITriangle): boolean;
-    // // collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean
-    // collidesPoint(point: IPoint): boolean;
-    // lineIntersections(line: ILine): IPoint[];
-    // rayIntersections(ray: IRay): IPoint[];
-    // segmentIntersections(segment: ISegment): IPoint[];    
+    vertices: IPoint[]; // counter-clockwise order  
 }
 
 export enum PointPairType {

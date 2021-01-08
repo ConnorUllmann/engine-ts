@@ -6,7 +6,7 @@ import { Collider } from './collider';
 import { BoundableShape } from '@engine-ts/geometry/geometry';
 
 export class Actor extends Entity {
-    public readonly collider: Collider;
+    public readonly collider: Collider<any>;
     public get bounds(): Readonly<IRectangle> { return this.collider.bounds; }
 
     public get w(): number { return this.collider.w; };
@@ -22,7 +22,7 @@ export class Actor extends Entity {
     public readonly velocity: Point = new Point();
     public readonly acceleration: Point = new Point();
 
-    constructor(world: World, position: IPoint, shape: BoundableShape, mask: number=1) {
+    constructor(world: World, position: IPoint, shape: BoundableShape, mask: number) {
         super(world, position);
         this.collider = new Collider(this, mask, shape);
         this.addComponent(this.collider);
@@ -62,7 +62,7 @@ export class Actor extends Entity {
         );
     }
 
-    public collide(collider: Collider): boolean {
-        return this.collider.collideCollider(collider);
+    public collide(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
+        return this.collider.collideCollider(collider, xOffset, yOffset);
     }
 }

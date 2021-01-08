@@ -15,7 +15,7 @@ export class Entity {
     public visible: boolean = true;
     public depth: number = 0;
 
-    public readonly components: { [_class: string]: IComponent[] } = {};
+    public readonly componentsByClass: { [_class: string]: IComponent[] } = {};
 
     public readonly position: Point = new Point();
 
@@ -34,9 +34,9 @@ export class Entity {
     }
 
     public addComponent(component: IComponent) {
-        if(!this.components[component.class])
-            this.components[component.class] = [];
-        this.components[component.class].push(component);
+        if(!this.componentsByClass[component.class])
+            this.componentsByClass[component.class] = [];
+        this.componentsByClass[component.class].push(component);
     }
 
     private _handleRemoveComponent(component: IComponent) {
@@ -51,23 +51,23 @@ export class Entity {
     public removeComponent(component: IComponent) {
         this._handleRemoveComponent(component);
 
-        const classComponents = this.components[component.class];
+        const classComponents = this.componentsByClass[component.class];
         classComponents.remove(component);
         if(classComponents.length <= 0)
-            delete this.components[component.class];
+            delete this.componentsByClass[component.class];
     }
 
     public removeAllComponents() {
-        for(let _class in this.components) {
-            const components = this.components[_class];
+        for(let _class in this.componentsByClass) {
+            const components = this.componentsByClass[_class];
             for(let i = components.length - 1; i >= 0; i--)
                 this._handleRemoveComponent(components[i]);
-            delete this.components[_class];
+            delete this.componentsByClass[_class];
         }
     }
     
-    public componentsOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T): InstanceType<T>[] {
-        return this.components[_class.name] as InstanceType<T>[];
+    public componentsOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T): InstanceType<T>[] | undefined {
+        return this.componentsByClass[_class.name] as InstanceType<T>[];
     }
 
     // sets this entity up to be removed from the World the next time
