@@ -137,8 +137,8 @@ export class World {
         this.entities.forEach((o: Entity) => {
             if(o.active && !o.destroyed) {
                 o.update()
-                for(let _class in o.components)
-                    o.components[_class].forEach((c: IComponent) => { if(c.active && !c.removed && c.update) c.update(); });
+                for(let _class in o.componentsByClass)
+                    o.componentsByClass[_class].forEach((c: IComponent) => { if(c.active && !c.removed && c.update) c.update(); });
             }
         });
 
@@ -212,12 +212,14 @@ export class World {
                 continue;
             
             const components = entity.componentsOfClass(_class);
-            for(let j = 0; j < components.length; j++) {
-                const component = components[j];
-                if(!component.active)
-                    continue;
-                
-                forEach(component);
+            if(components) {
+                for(let j = 0; j < components.length; j++) {
+                    const component = components[j];
+                    if(!component.active)
+                        continue;
+                    
+                    forEach(component);
+                }
             }
         }
         return null;
@@ -230,13 +232,15 @@ export class World {
                 continue;
             
             const components = entity.componentsOfClass(_class);
-            for(let j = 0; j < components.length; j++) {
-                const component = components[j];
-                if(!component.active)
-                    continue;
-                
-                if(first(component))
-                    return component;
+            if(components) {
+                for(let j = 0; j < components.length; j++) {
+                    const component = components[j];
+                    if(!component.active)
+                        continue;
+                    
+                    if(first(component))
+                        return component;
+                }
             }
         }
         return null;

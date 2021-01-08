@@ -4,14 +4,14 @@ import { IRectangle } from "@engine-ts/geometry/interfaces";
 import { Rectangle } from "@engine-ts/geometry/rectangle";
 import { Component } from "./component";
 
-export class Collider extends Component implements Readonly<IRectangle> {
+export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
     private readonly _boundsLocal: IRectangle;
     private readonly _bounds: Rectangle;
 
     constructor(
         entity: Entity,
         public mask: number,
-        private readonly shape?: BoundableShape
+        public readonly shape: T
     ) {
         super(entity);
         this._boundsLocal = Geometry.Bounds(shape);
@@ -30,21 +30,21 @@ export class Collider extends Component implements Readonly<IRectangle> {
         return this._bounds;
     }
 
-    public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider | null {
+    public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<any> | null {
         return this.entity.world.firstComponentOfClass(
             Collider,
             collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset)
         );
     }
 
-    public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider | null {
+    public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<any> | null {
         return this.entity.world.firstComponentOfClass(
             Collider,
             collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset)
         );
     }
 
-    public allBoundsCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider[] {
+    public allBoundsCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<any>[] {
         const results = [];
         this.entity.world.forEachComponentOfClass(
             Collider,
@@ -56,7 +56,7 @@ export class Collider extends Component implements Readonly<IRectangle> {
         return results;
     }
 
-    public allCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider[] {
+    public allCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<any>[] {
         const results = [];
         this.entity.world.forEachComponentOfClass(
             Collider,
@@ -77,7 +77,7 @@ export class Collider extends Component implements Readonly<IRectangle> {
     }
 
     // any inactive colliders/entities will result in false
-    public collideCollider(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
+    public collideCollider(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
         if(collider == this || !this.active || !collider.active || !this.entity.active || !collider.entity.active)
             return false;
         if(!this.collideBounds(collider, xOffset, yOffset))
@@ -86,7 +86,7 @@ export class Collider extends Component implements Readonly<IRectangle> {
     }
 
     // does not consider active/inactive status
-    public collideBounds(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
+    public collideBounds(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
         const rectangleAx = this._boundsLocal.x + this.entity.position.x + xOffset;
         const rectangleAy = this._boundsLocal.y + this.entity.position.y + yOffset;
         const rectangleAw = this._boundsLocal.w;
@@ -102,7 +102,7 @@ export class Collider extends Component implements Readonly<IRectangle> {
     }
 
     // does not consider active/inactive status
-    public collideShape(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
+    public collideShape(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
         return Geometry.Collide.AnyAny(this.shape, collider.shape, xOffset != 0 || yOffset != 0 ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset } : this.entity.position, collider.entity.position);
     }
 

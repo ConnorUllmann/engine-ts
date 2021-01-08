@@ -1,8 +1,8 @@
 import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient, Halign, Valign } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
-export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | (ISegment & { type: PointPairType.SEGMENT })
-export type Shape = BoundableShape | (IRay & { type: PointPairType.RAY }) | (ILine & { type: PointPairType.LINE })
+export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
+export type Shape = BoundableShape | IRay | ILine;
 
 interface IGeometryStatic<T> {
     Translate: (t: T, offset: IPoint) => T,
@@ -98,12 +98,12 @@ interface ICircleStatic extends IGeometryStatic<ICircle> {
 }
 
 interface IPointStatic extends IGeometryStatic<IPoint> {
-    readonly Zero: IPoint,
-    readonly One: IPoint,
-    readonly Up: IPoint,
-    readonly Down: IPoint,
-    readonly Left: IPoint,
-    readonly Right: IPoint,
+    readonly Zero: Readonly<IPoint>,
+    readonly One: Readonly<IPoint>,
+    readonly Up: Readonly<IPoint>,
+    readonly Down: Readonly<IPoint>,
+    readonly Left: Readonly<IPoint>,
+    readonly Right: Readonly<IPoint>,
     AreEqual: (a: IPoint, b: IPoint) => boolean,
     DistanceSq: (a: IPoint, b: IPoint) => number,
     Distance: (a: IPoint, b: IPoint) => number,
@@ -920,14 +920,15 @@ export class Geometry {
         }
     }
 
-    private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null; }
-    private static IsTriangle(o: any): o is ITriangle { return o.a != null && o.b != null && o.c != null; }
     private static IsRectangle(o: any): o is IRectangle { return o.x != null && o.y != null && o.w != null && o.h != null; }
     private static IsCircle(o: any): o is ICircle { return o.x != null && o.y != null && o.r != null; }
+    private static IsTriangle(o: any): o is ITriangle { return o.a != null && o.b != null && o.c != null; }
     private static IsPolygon(o: any): o is IPolygon { return o.vertices != null; }
-    private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && o.type == PointPairType.SEGMENT; }
-    private static IsRay(o: any): o is IRay { return o.a != null && o.b != null && o.type == PointPairType.RAY; }
     private static IsLine(o: any): o is ILine { return o.a != null && o.b != null && o.type == PointPairType.LINE; }
+    private static IsRay(o: any): o is IRay { return o.a != null && o.b != null && o.type == PointPairType.RAY; }
+    // if the "type" field is omitted from a PointPair, it is treated as a Segment by default
+    private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && (o.type == null || o.type == PointPairType.SEGMENT); }
+    private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null && o.w === undefined && o.r === undefined; }
 
     public static Bounds(shape?: BoundableShape | null): IRectangle | null {
         if(!shape)
@@ -1398,12 +1399,12 @@ export class Geometry {
             if(secondOffset && !Geometry.Point.AreEqual(secondOffset, Geometry.Point.Zero))
                 second = {
                     a: {
-                        x: second.a.x + firstOffset.x,
-                        y: second.a.y + firstOffset.y,
+                        x: second.a.x + secondOffset.x,
+                        y: second.a.y + secondOffset.y,
                     },
                     b: {
-                        x: second.b.x + firstOffset.x,
-                        y: second.b.y + firstOffset.y,
+                        x: second.b.x + secondOffset.x,
+                        y: second.b.y + secondOffset.y,
                     }
                 }
             const yFirstLineDiff = first.b.y - first.a.y;
