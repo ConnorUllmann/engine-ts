@@ -4,16 +4,21 @@ import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon,
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | (ISegment & { type: PointPairType.SEGMENT })
 export type Shape = BoundableShape | (IRay & { type: PointPairType.RAY }) | (ILine & { type: PointPairType.LINE })
 
-interface IPointListStatic<T> {
-    Segments: (o: T) => ISegment[],
-    Vertices: (o: T) => IPoint[],
-    Circumcircle: (o: T) => ICircle,
-    Supertriangle: (o: T) => ITriangle,
-    Triangulation: (o: T) => ITriangle[],
-    Bounds: (o: T) => IRectangle,
-    Hash: (o: T) => string
-    // TODO: make Translate a function on IPointListStatic
-    // TODO: make Rotate a function on IPointListStatic
+interface IGeometryStatic<T> {
+    Translate: (t: T, offset: IPoint) => T,
+    Hash: (t: T) => string,
+    // Can't add Rotate because a rectangle can't truly rotate (must be aligned with x/y axes)
+    //Rotate: (t: T, angle: number, center?: IPoint) => T,
+}
+
+interface IPointListStatic<T> extends IGeometryStatic<T> {
+    Segments: (t: T, offset?:IPoint) => ISegment[],
+    Vertices: (t: T, offset?:IPoint) => IPoint[],
+    Circumcircle: (t: T) => ICircle,
+    Supertriangle: (t: T) => ITriangle,
+    Triangulation: (t: T) => ITriangle[],
+    Bounds: (t: T) => IRectangle,
+    Hash: (t: T) => string
 }
 
 interface IPointsStatic extends IPointListStatic<IPoint[]> {
@@ -24,7 +29,7 @@ interface IPointsStatic extends IPointListStatic<IPoint[]> {
 
 interface IShapeStatic<T> extends IPointListStatic<T> {
     Midpoint: (o: T) => IPoint,
-    Area: (o: T) => number
+    Area: (o: T) => number,
 }
 
 interface ITriangleStatic extends IShapeStatic<ITriangle> {
@@ -50,7 +55,6 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
     PerpendicularBisectorAB: (triangle: ITriangle) => ILine,
     PerpendicularBisectorBC: (triangle: ITriangle) => ILine,
     PerpendicularBisectorCA: (triangle: ITriangle) => ILine,
-    Translate: (triangle: ITriangle, position: IPoint) => ITriangle,
     Rotate: (triangle: ITriangle, angle: number, center?: IPoint) => ITriangle
 }
 
@@ -77,26 +81,23 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
     WindingNumber: (polygon: IPolygon, point: IPoint) => number,
     Rotate: (polygon: IPolygon, angle: number, center?: IPoint) => IPolygon
-    Translate: (polygon: IPolygon, position: IPoint) => IPolygon,
     // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
-interface ICircleStatic {
+interface ICircleStatic extends IGeometryStatic<ICircle> {
     Circumcircle: (circle: ICircle) => ICircle,
     Supertriangle: (o: ICircle) => ITriangle,
     Midpoint: (o: ICircle) => IPoint,
     Area: (o: ICircle) => number,
     Circumference: (o: ICircle) => number,
     Bounds: (o: ICircle) => IRectangle,
-    Hash: (o: ICircle) => string,
     RandomPointInside: (circle: ICircle) => IPoint,
-    Translate: (circle: ICircle, translation: IPoint) => ICircle,
     Rotate: (circle: ICircle, angle: number, center?: IPoint) => ICircle,
     // returns the points on 'circle' that are tangent when they form a segment with 'point'
     TangentPoints: (circle: ICircle, point: IPoint) => { a: IPoint, b: IPoint } | null
 }
 
-interface IPointStatic {
+interface IPointStatic extends IGeometryStatic<IPoint> {
     readonly Zero: IPoint,
     readonly One: IPoint,
     readonly Up: IPoint,
@@ -104,7 +105,6 @@ interface IPointStatic {
     readonly Left: IPoint,
     readonly Right: IPoint,
     AreEqual: (a: IPoint, b: IPoint) => boolean,
-    Hash: (point: IPoint) => string,
     DistanceSq: (a: IPoint, b: IPoint) => number,
     Distance: (a: IPoint, b: IPoint) => number,
     Add: (a: IPoint, b: IPoint) => IPoint,
@@ -145,6 +145,7 @@ interface IPointPairStatic<T extends IPointPair> {
     XatY: (pair: T, y: number) => number,
     Slope: (pair: T) => number,
     Hash: (pair: T) => string,
+    Translate: (pair: T, offset: IPoint) => T,
     ClosestPointTo: (pair: T, point: IPoint) => IPoint
 }
 
@@ -175,6 +176,10 @@ export class Geometry {
         return Math.abs(a - b) < this.Tolerance;
     }
 
+    public static DistanceSq(ax: number, ay: number, bx: number, by: number): number {
+        return (ax - bx) * (ax - bx) + (ay - by) * (ay - by);
+    }
+
     public static Point: IPointStatic = {
         Zero: { x: 0, y: 0 },
         One: { x: 1, y: 1 },
@@ -184,9 +189,10 @@ export class Geometry {
         Right: { x: 1, y: 0 },
         AreEqual: (a: IPoint, b: IPoint) => Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
         Hash: (point: IPoint) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
-        DistanceSq: (a: IPoint, b: IPoint): number => (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y),
+        DistanceSq: (a: IPoint, b: IPoint): number => Geometry.DistanceSq(a.x, a.y, b.x, b.y),
         Distance: (a: IPoint, b: IPoint): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
         Add: (a: IPoint, b: IPoint): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
+        Translate: (a: IPoint, b: IPoint): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
         Subtract: (a: IPoint, b: IPoint): IPoint => ({ x: a.x - b.x, y: a.y - b.y }),
         Midpoint: (...points: IPoint[]): IPoint | null => {
             if(points.length <= 0)
@@ -343,6 +349,10 @@ export class Geometry {
         XatY: (line: ILine, y: number): number => Geometry.PointPair.XatY(line, y),
         Slope: (line: ILine): number => Geometry.PointPair.Slope(line),
         Hash: (line: ILine): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`,
+        Translate: (line: ILine, offset: IPoint) => ({
+                a: Geometry.Point.Add(line.a, offset),
+                b: Geometry.Point.Add(line.b, offset)
+            }),
         ClosestPointTo: (line: ILine, point: IPoint): IPoint =>
             Geometry.Point.Add(line.a,
                 Geometry.Point.Project(
@@ -380,6 +390,10 @@ export class Geometry {
                     segmentHit: segmentIntersection.segment
                 };
         },
+        Translate: (ray: IRay, offset: IPoint) => ({
+                a: Geometry.Point.Add(ray.a, offset),
+                b: Geometry.Point.Add(ray.b, offset)
+            }),
         ClosestPointTo: ({ a, b }: IRay, point: IPoint): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
             const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
@@ -402,6 +416,10 @@ export class Geometry {
                 : null,
         Slope: (segment: ISegment): number => Geometry.PointPair.Slope(segment),
         Hash: (segment: ISegment): string => Geometry.Points.Hash([segment.a, segment.b]),
+        Translate: (segment: ISegment, offset: IPoint) => ({
+                a: Geometry.Point.Add(segment.a, offset),
+                b: Geometry.Point.Add(segment.b, offset)
+            }),
         ClosestPointTo: ({ a, b }: ISegment, point: IPoint): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
             const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
@@ -441,8 +459,12 @@ export class Geometry {
     };
 
     public static Triangle: ITriangleStatic = {
-        Segments: (triangle: ITriangle): ISegment[] => Geometry.Points.Segments(Geometry.Triangle.Vertices(triangle)),
-        Vertices: (triangle: ITriangle): IPoint[] => [triangle.a, triangle.b, triangle.c],
+        Segments: (triangle: ITriangle, offset: IPoint=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Triangle.Vertices(triangle, offset)),
+        Vertices: (triangle: ITriangle, offset: IPoint=Geometry.Point.Zero): IPoint[] => [
+            { x: triangle.a.x + offset.x, y: triangle.a.y + offset.y },
+            { x: triangle.b.x + offset.x, y: triangle.b.y + offset.y },
+            { x: triangle.c.x + offset.x, y: triangle.c.y + offset.y },
+        ],
         Circumcircle: (triangle: ITriangle): ICircle => {
             const intersection = Geometry.Intersection.LineLine(
                 Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
@@ -454,7 +476,7 @@ export class Geometry {
             return {
                 x: intersection.x, 
                 y: intersection.y, 
-                radius: Geometry.Point.Distance(triangle.a, intersection)
+                r: Geometry.Point.Distance(triangle.a, intersection)
             };
         },
         Supertriangle: (triangle: ITriangle): ITriangle => triangle,
@@ -489,7 +511,7 @@ export class Geometry {
         InscribedCircle: (triangle: ITriangle): ICircle => {
             const { x, y } = Geometry.Triangle.Incenter(triangle);
             const radius = Geometry.Triangle.Inradius(triangle);
-            return { x, y, radius };
+            return { x, y, r: radius };
 		},
         AngleA: (triangle: ITriangle): number => {
             const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.b, triangle.a));
@@ -538,17 +560,17 @@ export class Geometry {
     };
 
     public static Rectangle: IRectangleStatic = {
-        Segments: (rectangle: IRectangle): ISegment[] => Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle)),
-        Vertices: (rectangle: IRectangle): IPoint[] => [
-            rectangle,
-            { x: rectangle.x + rectangle.w, y: rectangle.y },
-            { x: rectangle.x + rectangle.w, y: rectangle.y + rectangle.h },
-            { x: rectangle.x, y: rectangle.y + rectangle.h}
+        Segments: (rectangle: IRectangle, offset: IPoint=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle, offset)),
+        Vertices: (rectangle: IRectangle, offset: IPoint=Geometry.Point.Zero): IPoint[] => [
+            { x: rectangle.x + offset.x, y: rectangle.y + offset.y },
+            { x: rectangle.x + rectangle.w + offset.x, y: rectangle.y + offset.y },
+            { x: rectangle.x + rectangle.w + offset.x, y: rectangle.y + rectangle.h + offset.y },
+            { x: rectangle.x + offset.x, y: rectangle.y + rectangle.h + offset.y }
         ],
         Circumcircle: (rectangle: IRectangle): ICircle => ({
             x: rectangle.x + rectangle.w/2,
             y: rectangle.y + rectangle.h/2,
-            radius: Geometry.Point.Length({ x: rectangle.w/2, y: rectangle.h/2 })
+            r: Geometry.Point.Length({ x: rectangle.w/2, y: rectangle.h/2 })
         }),
         Supertriangle: (rectangle: IRectangle): ITriangle => Geometry.Points.Supertriangle(Geometry.Rectangle.Vertices(rectangle)),
         Triangulation: (rectangle: IRectangle): ITriangle[] => {
@@ -680,8 +702,8 @@ export class Geometry {
     }
 
     public static Polygon: IPolygonStatic = {
-        Segments: (polygon: IPolygon): ISegment[] => Geometry.Points.Segments(polygon.vertices),
-        Vertices: (polygon: IPolygon): IPoint[] => polygon.vertices.clone(),
+        Segments: (polygon: IPolygon, offset?: IPoint): ISegment[] => Geometry.Points.Segments(offset ? Geometry.Polygon.Vertices(polygon, offset) : polygon.vertices),
+        Vertices: (polygon: IPolygon, offset: IPoint=Geometry.Point.Zero): IPoint[] => polygon.vertices.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
         Circumcircle: (polygon: IPolygon): ICircle => Geometry.Points.Circumcircle(polygon.vertices),
         Supertriangle: (polygon: IPolygon): ITriangle => Geometry.Points.Supertriangle(polygon.vertices),
         Triangulation: (polygon: IPolygon): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
@@ -694,7 +716,6 @@ export class Geometry {
         WindingNumber: (polygon: IPolygon, point: IPoint) : number => {
             // https://twitter.com/FreyaHolmer/status/1232826293902888960
             // http://geomalgorithms.com/a03-_inclusion.html
-    
             let windingNumber = 0;
             for(let i = 0; i < polygon.vertices.length; i++) {
                 const currentVertex = polygon.vertices[i];
@@ -721,61 +742,70 @@ export class Geometry {
     public static Circle: ICircleStatic = {
         Circumcircle: (circle: ICircle): ICircle => circle,
         Supertriangle: (circle: ICircle): ITriangle => ({
-            a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, circle.radius * 2), circle),
-            b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), circle.radius * 2), circle),
-            c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), circle.radius * 2), circle)
+            a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, circle.r * 2), circle),
+            b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), circle.r * 2), circle),
+            c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), circle.r * 2), circle)
         }),
         Bounds: (circle: ICircle): IRectangle => ({
-            x: circle.x - circle.radius,
-            y: circle.y - circle.radius,
-            w: circle.radius * 2,
-            h: circle.radius * 2
+            x: circle.x - circle.r,
+            y: circle.y - circle.r,
+            w: circle.r * 2,
+            h: circle.r * 2
         }),
         Midpoint: (circle: ICircle): IPoint => circle,
-        Area: (circle: ICircle): number => Math.PI * circle.radius * circle.radius,
-        Circumference: (circle: ICircle): number => tau * circle.radius,
-        Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.radius.toFixed(Geometry.HashDecimalDigits)}`,
-        RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius * random(), tau * random())),
-        Translate: (circle: ICircle, translation: IPoint): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, radius: circle.radius }),
+        Area: (circle: ICircle): number => Math.PI * circle.r * circle.r,
+        Circumference: (circle: ICircle): number => tau * circle.r,
+        Hash: (circle: ICircle): string => `${Geometry.Point.Hash(circle)},${circle.r.toFixed(Geometry.HashDecimalDigits)}`,
+        RandomPointInside: (circle: ICircle): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r * random(), tau * random())),
+        Translate: (circle: ICircle, translation: IPoint): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, r: circle.r }),
         Rotate: (circle: ICircle, angle: number, center?: IPoint): ICircle => ({
             ...Geometry.Point.Rotate(circle, angle, center),
-            radius: circle.radius
+            r: circle.r
         }),
         TangentPoints: (circle: ICircle, point: IPoint): { a: IPoint, b: IPoint } | null => {
             const distanceSq = Geometry.Point.DistanceSq(circle, point);
-            if(distanceSq <= 0 || circle.radius <= 0 || distanceSq < circle.radius * circle.radius)
+            if(distanceSq <= 0 || circle.r <= 0 || distanceSq < circle.r * circle.r)
                 return null;
             const angle = Geometry.Point.Angle(Geometry.Point.Subtract(point, circle));
-            const angleDiff = Math.acos(circle.radius / Math.sqrt(distanceSq));
+            const angleDiff = Math.acos(circle.r / Math.sqrt(distanceSq));
             return {
-                a: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, angle + angleDiff)),
-                b: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.radius, angle - angleDiff))
+                a: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r, angle + angleDiff)),
+                b: Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r, angle - angleDiff))
             }
         }
     }
 
     public static Points: IPointsStatic = {
-        Segments: (points: IPoint[], closed: boolean=true): ISegment[] => { 
+        Segments: (points: IPoint[], offset: IPoint=Geometry.Point.Zero, closed: boolean=true): ISegment[] => { 
             const segments = [];
             for(let i = 0; i < points.length; i++) {
                 if(i == points.length-1 && !closed)
                     break;
                 const j = (i + 1) % points.length;
-                segments.push({ a: points[i], b: points[j] });
+                segments.push({
+                    a: {
+                        x: points[i].x + offset.x,
+                        y: points[i].y + offset.y
+                    },
+                    b: {
+                        x: points[j].x + offset.x,
+                        y: points[j].y + offset.y
+                    }
+                });
             }
             return segments;
         },
-        Vertices: (points: IPoint[]): IPoint[] => points.clone(),
+        Vertices: (points: IPoint[], offset: IPoint=Geometry.Point.Zero): IPoint[] => points.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
         Circumcircle: (points: IPoint[]): ICircle => {
             // Doesn't necessarily fit tightly, but is guaranteed to contain all the points
             const center = Geometry.Point.Midpoint(...points);
             const furthest = points.maxOf(o => Geometry.Point.DistanceSq(center, o));
             const radius = Geometry.Point.Distance(furthest, center);
-            return { x: center.x, y: center.y, radius };
+            return { x: center.x, y: center.y, r: radius };
         },
         Supertriangle: (points: IPoint[]): ITriangle => {
             const circumcircle = Geometry.Points.Circumcircle(points);
-            const diameter = circumcircle.radius * 2;
+            const diameter = circumcircle.r * 2;
             return {
                 a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, diameter), circumcircle),
                 b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), diameter), circumcircle),
@@ -853,6 +883,7 @@ export class Geometry {
             .sorted((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
             .map(o => Geometry.Point.Hash(o))
             .join(';'),
+        Translate: (points: IPoint[], offset: IPoint): IPoint[] => points.map(o => Geometry.Point.Translate(o, offset)),
         Sum: (points: IPoint[]): IPoint => {
             const sum = { x: 0, y: 0 };
             points.forEach(point => {
@@ -892,7 +923,7 @@ export class Geometry {
     private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null; }
     private static IsTriangle(o: any): o is ITriangle { return o.a != null && o.b != null && o.c != null; }
     private static IsRectangle(o: any): o is IRectangle { return o.x != null && o.y != null && o.w != null && o.h != null; }
-    private static IsCircle(o: any): o is ICircle { return o.x != null && o.y != null && o.radius != null; }
+    private static IsCircle(o: any): o is ICircle { return o.x != null && o.y != null && o.r != null; }
     private static IsPolygon(o: any): o is IPolygon { return o.vertices != null; }
     private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && o.type == PointPairType.SEGMENT; }
     private static IsRay(o: any): o is IRay { return o.a != null && o.b != null && o.type == PointPairType.RAY; }
@@ -922,45 +953,79 @@ export class Geometry {
     //  1. test all collisions (most ray/segment/line vs shape collisions are untested)
     //  2. create matching functions in Geometry.Intersection that actually returns intersection points, if any
     public static Collide = {
-        PointSegment: (a: IPoint, b: ISegment): boolean => Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideSegmentIfColinear(a, b),
-        TriangleSegment: (a: ITriangle, b: ISegment): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.SegmentSegment({ a: a.a, b: a.b }, b) || Geometry.Collide.SegmentSegment({ a: a.b, b: a.c }, b) || Geometry.Collide.SegmentSegment({ a: a.c, b: a.a }, b),
-        CircleSegment: (a: ICircle, b: ISegment): boolean => Geometry.Collide.CirclePoint(a, Geometry.Segment.ClosestPointTo(b, a)),
-        PolygonSegment: (a: IPolygon, b: ISegment): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.SegmentSegment(o, b)),
-        PointRay: (a: IPoint, b: IRay): boolean => Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideRayIfColinear(a, b),
-        TriangleRay: (a: ITriangle, b: IRay): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.RaySegment(b, { a: a.a, b: a.b }) || Geometry.Collide.RaySegment(b, { a: a.b, b: a.c }) || Geometry.Collide.RaySegment(b, { a: a.c, b: a.a }),
-        CircleRay: (a: ICircle, b: IRay): boolean => Geometry.Collide.CirclePoint(a, Geometry.Ray.ClosestPointTo(b, a)),
-        PolygonRay: (a: IPolygon, b: IRay): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.RaySegment(b, o)),
-        PointLine: (a: IPoint, b: ILine): boolean => Geometry.Point.IsColinearWith(a, b),
-        TriangleLine: (a: ITriangle, b: ILine): boolean => Geometry.Collide.TrianglePoint(a, b.a) || Geometry.Collide.LineSegment(b, { a: a.a, b: a.b }) || Geometry.Collide.LineSegment(b, { a: a.b, b: a.c }) || Geometry.Collide.LineSegment(b, { a: a.c, b: a.a }),
-        CircleLine: (a: ICircle, b: ILine): boolean => Geometry.Collide.CirclePoint(a, Geometry.Line.ClosestPointTo(b, a)),
-        PolygonLine: (a: IPolygon, b: ILine): boolean => Geometry.Collide.PolygonPoint(a, b.a) || Geometry.Polygon.Segments(a).any(o => Geometry.Collide.LineSegment(b, o)),
-        PointPoint: (a: IPoint, b: IPoint): boolean => Geometry.Point.AreEqual(a, b),
-        LineLine: (a: ILine, b: ILine): boolean => Geometry.Intersection.LineLine(a, b) != null,
-        LineRay: (a: ILine, b: IRay): boolean => Geometry.Intersection.LineRay(a, b) != null,
-        LineSegment: (a: ILine, b: ISegment): boolean => Geometry.Intersection.LineSegment(a, b) != null,
-        RayRay: (a: IRay, b: IRay): boolean => Geometry.Intersection.RayRay(a, b) != null,
-        RaySegment: (a: IRay, b: ISegment): boolean => Geometry.Intersection.RaySegment(a, b) != null,
-        SegmentSegment: (a: ISegment, b: ISegment): boolean => Geometry.Intersection.SegmentSegment(a, b) != null,
+        PointSegment: (a: IPoint, b: ISegment, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Point.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Segment.Translate(b, bOffset);
+            return Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideSegmentIfColinear(a, b)
+        },
+        TriangleSegment: (a: ITriangle, b: ISegment, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
+        CircleSegment: (a: ICircle, b: ISegment, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Segment.Translate(b, bOffset);
+            return Geometry.Collide.CirclePoint(a, Geometry.Segment.ClosestPointTo(b, a))
+        },
+        PolygonSegment: (a: IPolygon, b: ISegment, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
+        PointRay: (a: IPoint, b: IRay, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Point.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Ray.Translate(b, bOffset);
+            return Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideRayIfColinear(a, b)
+        },
+        TriangleRay: (a: ITriangle, b: IRay, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
+        CircleRay: (a: ICircle, b: IRay, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Ray.Translate(b, bOffset);
+            return Geometry.Collide.CirclePoint(a, Geometry.Ray.ClosestPointTo(b, a))
+        },
+        PolygonRay: (a: IPolygon, b: IRay, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
+        PointLine: (a: IPoint, b: ILine, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Point.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Line.Translate(b, bOffset);
+            return Geometry.Point.IsColinearWith(a, b)
+        },
+        TriangleLine: (a: ITriangle, b: ILine, aOffset?: IPoint, bOffset?: IPoint): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
+        CircleLine: (a: ICircle, b: ILine, aOffset?: IPoint, bOffset?: IPoint): boolean => {
+            if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
+            if(bOffset) b = Geometry.Line.Translate(b, bOffset);
+            return Geometry.Collide.CirclePoint(a, Geometry.Line.ClosestPointTo(b, a))
+        },
+        PolygonLine: (a: IPolygon, b: ILine, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
+        PointPoint: (a: IPoint, b: IPoint, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Point.AreEqual(Geometry.Point.Add(a, aOffset), Geometry.Point.Add(b, bOffset)),
+        LineLine: (a: ILine, b: ILine, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.LineLine(a, b, aOffset, bOffset) != null,
+        LineRay: (a: ILine, b: IRay, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.LineRay(a, b, aOffset, bOffset) != null,
+        LineSegment: (a: ILine, b: ISegment, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.LineSegment(a, b, aOffset, bOffset) != null,
+        RayRay: (a: IRay, b: IRay, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.RayRay(a, b, aOffset, bOffset) != null,
+        RaySegment: (a: IRay, b: ISegment, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.RaySegment(a, b, aOffset, bOffset) != null,
+        SegmentSegment: (a: ISegment, b: ISegment, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => Geometry.Intersection.SegmentSegment(a, b, aOffset, bOffset) != null,
         SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[]): boolean =>
             segmentsA.any(segmentA => segmentsB.any(segmentB => Geometry.Collide.SegmentSegment(segmentA, segmentB))),
-        RectangleRectangle: (rectangleA: IRectangle, rectangleB: IRectangle): boolean =>
-            rectangleA.x + rectangleA.w > rectangleB.x 
-                && rectangleA.y + rectangleA.h > rectangleB.y 
-                && rectangleA.x < rectangleB.x + rectangleB.w 
-                && rectangleA.y < rectangleB.y + rectangleB.h,
-        RectangleCircle: (rectangle: IRectangle, circle: ICircle, rectangleAngle: number=0): boolean => {
+        RectangleRectangle: (rectangleA: IRectangle, rectangleB: IRectangle, rectangleAOffset: IPoint=Geometry.Point.Zero, rectangleBOffset: IPoint=Geometry.Point.Zero): boolean => {
+            const ax = rectangleA.x + rectangleAOffset.x;
+            const ay = rectangleA.y + rectangleAOffset.y;
+            const bx = rectangleB.x + rectangleBOffset.x;
+            const by = rectangleB.y + rectangleBOffset.y;
+            return ax + rectangleA.w > rectangleB.x 
+                && ay + rectangleA.h > rectangleB.y 
+                && ax < bx + rectangleB.w 
+                && ay < by + rectangleB.h
+        },
+        RectangleCircle: (rectangle: IRectangle, circle: ICircle, rectangleOffset: IPoint=Geometry.Point.Zero, circleOffset: IPoint=Geometry.Point.Zero, rectangleAngle: number=0): boolean => {
             // The rectangle's (x, y) position is its top-left corner if it were not rotated,
             // however the rectangle still rotates about its center (by "rectangleAngle" radians)
             //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
             const halfW = rectangle.w/2;
             const halfH = rectangle.h/2;
-            const circlePosition = rectangleAngle === 0
-                ? circle
-                : Geometry.Point.Rotate(circle, -rectangleAngle, { x: rectangle.x + halfW, y: rectangle.y + halfH });
-            const xCircleDistance = Math.abs(circlePosition.x - (rectangle.x + halfW));
-            const yCircleDistance = Math.abs(circlePosition.y - (rectangle.y + halfH));
+            const rx = rectangle.x + rectangleOffset.x;
+            const ry = rectangle.y + rectangleOffset.y;
+            let circlePosition = {
+                x: circle.x + circleOffset.x,
+                y: circle.y + circleOffset.y
+            };
+            if(rectangleAngle != 0) 
+                circlePosition = Geometry.Point.Rotate(circlePosition, -rectangleAngle, { x: rx + halfW, y: ry + halfH });
+            const xCircleDistance = Math.abs(circlePosition.x - (rx + halfW));
+            const yCircleDistance = Math.abs(circlePosition.y - (ry + halfH));
     
-            if (xCircleDistance > halfW + circle.radius || yCircleDistance > halfH + circle.radius)
+            if (xCircleDistance > halfW + circle.r || yCircleDistance > halfH + circle.r)
                 return false;
             if (xCircleDistance <= halfW || yCircleDistance <= halfH)
                 return true;
@@ -968,230 +1033,247 @@ export class Geometry {
             const cornerDistanceSq =
                 (xCircleDistance - halfW) * (xCircleDistance - halfW) +
                 (yCircleDistance - halfH) * (yCircleDistance - halfH);
-            return cornerDistanceSq <= (circle.radius * circle.radius);
+            return cornerDistanceSq <= (circle.r * circle.r);
         },
-        RectangleTriangle: (rectangle: IRectangle, triangle: ITriangle): boolean =>
-            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangle), Geometry.Rectangle.Segments(rectangle))
+        RectangleTriangle: (rectangle: IRectangle, triangle: ITriangle, rectangleOffset: IPoint=Geometry.Point.Zero, triangleOffset: IPoint=Geometry.Point.Zero): boolean => 
+            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangle, triangleOffset), Geometry.Rectangle.Segments(rectangle, rectangleOffset))
             || Geometry.Collide.TrianglePoint(triangle, rectangle)
             || Geometry.Collide.RectanglePoint(rectangle, triangle.a),
-        RectanglePolygon: (rectangle: IRectangle, polygon: IPolygon): boolean => 
-            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon), Geometry.Rectangle.Segments(rectangle))
+        RectanglePolygon: (rectangle: IRectangle, polygon: IPolygon, rectangleOffset: IPoint=Geometry.Point.Zero, polygonOffset?: IPoint): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Rectangle.Segments(rectangle, rectangleOffset))
             || Geometry.Collide.PolygonPoint(polygon, rectangle)
             || Geometry.Collide.RectanglePoint(rectangle, polygon.vertices.first()),
-        RectangleSegment: (rectangle: IRectangle, segment: ISegment): boolean =>
-            Geometry.Collide.RectanglePoint(rectangle, segment.a) || Geometry.Collide.RectanglePoint(rectangle, segment.b) || Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.SegmentSegment(s, segment)),
-        RectangleLine: (rectangle: IRectangle, line: ILine): boolean =>
-            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.LineSegment(line, s)),
-        RectangleRay: (rectangle: IRectangle, ray: IRay): boolean =>
-            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.RaySegment(ray, s)),
-        RectanglePoint: (rectangle: IRectangle, point: IPoint): boolean =>
-            point.x >= rectangle.x && point.y >= rectangle.y && point.x < rectangle.x + rectangle.w && point.y < rectangle.y + rectangle.h,
-        CircleCircle: (circleA: ICircle, circleB: ICircle): boolean =>
-            Geometry.Point.DistanceSq(circleA, circleB) <= (circleA.radius + circleB.radius) * (circleA.radius + circleB.radius),
-        CircleTriangle: (circle: ICircle, triangle: ITriangle): boolean => 
-            Geometry.Triangle.Segments(triangle).any(segment => Geometry.Intersection.CircleSegment(circle, segment).length > 0)
+        RectangleSegment: (rectangle: IRectangle, segment: ISegment, rectangleOffset: IPoint=Geometry.Point.Zero, segmentOffset: IPoint=Geometry.Point.Zero): boolean => {
+            return Geometry.Collide.RectanglePoint(rectangle, segment.a, rectangleOffset, segmentOffset) || Geometry.Collide.RectanglePoint(rectangle, segment.b, rectangleOffset, segmentOffset) || Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.SegmentSegment(s, segment, rectangleOffset, segmentOffset))
+        },
+        RectangleLine: (rectangle: IRectangle, line: ILine, rectangleOffset: IPoint=Geometry.Point.Zero, lineOffset: IPoint=Geometry.Point.Zero): boolean =>
+            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.LineSegment(line, s, lineOffset, rectangleOffset)),
+        RectangleRay: (rectangle: IRectangle, ray: IRay, rectangleOffset: IPoint=Geometry.Point.Zero, rayOffset: IPoint=Geometry.Point.Zero): boolean =>
+            Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.RaySegment(ray, s, rayOffset, rectangleOffset)),
+        RectanglePoint: (rectangle: IRectangle, point: IPoint, rectangleOffset: IPoint=Geometry.Point.Zero, pointOffset: IPoint=Geometry.Point.Zero): boolean =>
+            point.x + pointOffset.x >= rectangle.x + rectangleOffset.x
+             && point.y + pointOffset.y >= rectangle.y + rectangleOffset.y
+             && point.x + pointOffset.x < rectangle.x + rectangleOffset.x + rectangle.w
+             && point.y + pointOffset.y < rectangle.y + rectangleOffset.y + rectangle.h,
+        CircleCircle: (circleA: ICircle, circleB: ICircle, circleAOffset: IPoint=Geometry.Point.Zero, circleBOffset: IPoint=Geometry.Point.Zero): boolean =>
+            Geometry.DistanceSq(circleA.x + circleAOffset.x, circleA.y + circleAOffset.y, circleB.x + circleBOffset.x, circleB.y + circleBOffset.y) <= (circleA.r + circleB.r) * (circleA.r + circleB.r),
+        CircleTriangle: (circle: ICircle, triangle: ITriangle, circleOffset: IPoint=Geometry.Point.Zero, triangleOffset: IPoint=Geometry.Point.Zero): boolean => 
+            Geometry.Triangle.Segments(triangle).any(segment => Geometry.Intersection.CircleSegment(circle, segment, circleOffset, triangleOffset).length > 0)
             || Geometry.Collide.TrianglePoint(triangle, circle)
             || Geometry.Collide.CirclePoint(circle, triangle.a),
-        CirclePolygon: (circle: ICircle, polygon: IPolygon): boolean => 
-            Geometry.Polygon.Segments(polygon).any(segment => Geometry.Intersection.CircleSegment(circle, segment).length > 0)
-            || Geometry.Collide.PolygonPoint(polygon, circle)
-            || Geometry.Collide.CirclePoint(circle, polygon.vertices.first()),
-        CirclePoint: (circle: ICircle, point: IPoint): boolean =>
-            Geometry.Point.DistanceSq(point, circle) <= circle.radius * circle.radius,
-        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle): boolean => 
-            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangleA), Geometry.Triangle.Segments(triangleB))
-            || Geometry.Collide.TrianglePoint(triangleA, triangleB.a)
-            || Geometry.Collide.TrianglePoint(triangleB, triangleA.a),
-        TrianglePolygon: (triangle: ITriangle, polygon: IPolygon): boolean =>
-            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon), Geometry.Triangle.Segments(triangle))
-            || Geometry.Collide.PolygonPoint(polygon, triangle.a)
-            || Geometry.Collide.TrianglePoint(triangle, polygon.vertices.first()),
-        TrianglePoint: (triangle: ITriangle, point: IPoint): boolean => { 
+        CirclePolygon: (circle: ICircle, polygon: IPolygon, circleOffset: IPoint=Geometry.Point.Zero, polygonOffset: IPoint=Geometry.Point.Zero): boolean => 
+            Geometry.Polygon.Segments(polygon).any(segment => Geometry.Intersection.CircleSegment(circle, segment, circleOffset, polygonOffset).length > 0)
+            || Geometry.Collide.PolygonPoint(polygon, circle, polygonOffset, circleOffset)
+            || Geometry.Collide.CirclePoint(circle, polygon.vertices.first(), circleOffset, polygonOffset),
+        CirclePoint: (circle: ICircle, point: IPoint, circleOffset: IPoint=Geometry.Point.Zero, pointOffset: IPoint=Geometry.Point.Zero): boolean =>
+            Geometry.DistanceSq(point.x + pointOffset.x, point.y + pointOffset.y, circle.x + circleOffset.x, circle.y + circleOffset.y) <= circle.r * circle.r,
+        TriangleTriangle: (triangleA: ITriangle, triangleB: ITriangle, triangleAOffset: IPoint=Geometry.Point.Zero, triangleBOffset: IPoint=Geometry.Point.Zero): boolean => 
+            Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangleA, triangleAOffset), Geometry.Triangle.Segments(triangleB, triangleBOffset))
+            || Geometry.Collide.TrianglePoint(triangleA, triangleB.a, triangleAOffset, triangleBOffset)
+            || Geometry.Collide.TrianglePoint(triangleB, triangleA.a, triangleBOffset, triangleAOffset),
+        TrianglePolygon: (triangle: ITriangle, polygon: IPolygon, triangleOffset: IPoint=Geometry.Point.Zero, polygonOffset: IPoint=Geometry.Point.Zero): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Triangle.Segments(triangle, triangleOffset))
+            || Geometry.Collide.PolygonPoint(polygon, triangle.a, polygonOffset, triangleOffset)
+            || Geometry.Collide.TrianglePoint(triangle, polygon.vertices.first(), triangleOffset, polygonOffset),
+        TrianglePoint: (triangle: ITriangle, point: IPoint, triangleOffset: IPoint=Geometry.Point.Zero, pointOffset: IPoint=Geometry.Point.Zero): boolean => {
+            const triangleAx = triangle.a.x + triangleOffset.x;
+            const triangleAy = triangle.a.y + triangleOffset.y;
+            const triangleBx = triangle.b.x + triangleOffset.x;
+            const triangleBy = triangle.b.y + triangleOffset.y;
+            const triangleCx = triangle.c.x + triangleOffset.x;
+            const triangleCy = triangle.c.y + triangleOffset.y;
+            const pointX = point.x + pointOffset.x;
+            const pointY = point.y + pointOffset.y;
             // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
             const areaSigned2xInverse =  1 / (
-                -triangle.b.y * triangle.c.x 
-                + triangle.a.y * (-triangle.b.x + triangle.c.x) 
-                + triangle.a.x * (triangle.b.y - triangle.c.y) 
-                + triangle.b.x * triangle.c.y
+                -triangleBy * triangleCx 
+                + triangleAy * (-triangleBx + triangleCx) 
+                + triangleAx * (triangleBy - triangleCy) 
+                + triangleBx * triangleCy
             );
-            const s = areaSigned2xInverse*(triangle.a.y*triangle.c.x - triangle.a.x*triangle.c.y + (triangle.c.y - triangle.a.y)*point.x + (triangle.a.x - triangle.c.x)*point.y);
-            const t = areaSigned2xInverse*(triangle.a.x*triangle.b.y - triangle.a.y*triangle.b.x + (triangle.a.y - triangle.b.y)*point.x + (triangle.b.x - triangle.a.x)*point.y);
+            const s = areaSigned2xInverse*(triangleAy*triangleCx - triangleAx*triangleCy + (triangleCy - triangleAy)*pointX + (triangleAx - triangleCx)*pointY);
+            const t = areaSigned2xInverse*(triangleAx*triangleBy - triangleAy*triangleBx + (triangleAy - triangleBy)*pointX + (triangleBx - triangleAx)*pointY);
             return s > 0 && t > 0 && 1 - s - t > 0;
         },
-        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon): boolean =>
-            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygonA), Geometry.Polygon.Segments(polygonB))
-            || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first())
-            || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first()),
-        PolygonPoint: (polygon: IPolygon, point: IPoint): boolean =>
-            Geometry.Polygon.WindingNumber(polygon, point) != 0,        
-        AnyAny: (a?: Shape | null, b?: Shape | null): boolean => {
+        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon, polygonAOffset?: IPoint, polygonBOffset?: IPoint): boolean =>
+            Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset))
+            || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first(), polygonAOffset ?? Geometry.Point.Zero, polygonBOffset ?? Geometry.Point.Zero)
+            || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first(), polygonBOffset ?? Geometry.Point.Zero, polygonAOffset ?? Geometry.Point.Zero),
+        PolygonPoint: (polygon: IPolygon, point: IPoint, polygonOffset: IPoint=Geometry.Point.Zero, pointOffset: IPoint=Geometry.Point.Zero): boolean => {            
+            point = {
+                x: point.x + pointOffset.x - polygonOffset.x,
+                y: point.y + pointOffset.y - polygonOffset.y
+            }
+            return Geometry.Polygon.WindingNumber(polygon, point) != 0
+        },
+        AnyAny: (a?: Shape, b?: Shape, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero): boolean => {
             if(a == null || b == null)
                 return false;
                     
             if(Geometry.IsRectangle(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleRectangle(b, a);
+                    return Geometry.Collide.RectangleRectangle(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.RectangleCircle(a, b);
+                    return Geometry.Collide.RectangleCircle(a, b, aOffset, bOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.RectangleTriangle(a, b);
+                    return Geometry.Collide.RectangleTriangle(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.RectanglePolygon(a, b);
+                    return Geometry.Collide.RectanglePolygon(a, b, aOffset, bOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.RectangleSegment(a, b);
+                    return Geometry.Collide.RectangleSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.RectangleRay(a, b);
+                    return Geometry.Collide.RectangleRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.RectangleLine(a, b);
+                    return Geometry.Collide.RectangleLine(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.RectanglePoint(a, b);
+                    return Geometry.Collide.RectanglePoint(a, b, aOffset, bOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
                     
             if(Geometry.IsCircle(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleCircle(b, a);
+                    return Geometry.Collide.RectangleCircle(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CircleCircle(a, b);
+                    return Geometry.Collide.CircleCircle(a, b, aOffset, bOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.CircleTriangle(a, b);
+                    return Geometry.Collide.CircleTriangle(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.CirclePolygon(a, b);
+                    return Geometry.Collide.CirclePolygon(a, b, aOffset, bOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.CircleSegment(a, b);
+                    return Geometry.Collide.CircleSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.CircleRay(a, b);
+                    return Geometry.Collide.CircleRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.CircleLine(a, b);
+                    return Geometry.Collide.CircleLine(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.CirclePoint(a, b);
+                    return Geometry.Collide.CirclePoint(a, b, aOffset, bOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
                     
             if(Geometry.IsTriangle(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleTriangle(b, a);
+                    return Geometry.Collide.RectangleTriangle(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CircleTriangle(b, a);
+                    return Geometry.Collide.CircleTriangle(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TriangleTriangle(b, a);
+                    return Geometry.Collide.TriangleTriangle(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.TrianglePolygon(a, b);
+                    return Geometry.Collide.TrianglePolygon(a, b, aOffset, bOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.TriangleSegment(a, b);
+                    return Geometry.Collide.TriangleSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.TriangleRay(a, b);
+                    return Geometry.Collide.TriangleRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.TriangleLine(a, b);
+                    return Geometry.Collide.TriangleLine(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.TrianglePoint(a, b);
+                    return Geometry.Collide.TrianglePoint(a, b, aOffset, bOffset);
                 } 
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
                     
             if(Geometry.IsPolygon(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectanglePolygon(b, a);
+                    return Geometry.Collide.RectanglePolygon(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CirclePolygon(b, a);
+                    return Geometry.Collide.CirclePolygon(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TrianglePolygon(b, a);
+                    return Geometry.Collide.TrianglePolygon(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.PolygonPolygon(b, a);
+                    return Geometry.Collide.PolygonPolygon(b, a, bOffset, aOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.PolygonSegment(a, b);
+                    return Geometry.Collide.PolygonSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.PolygonRay(a, b);
+                    return Geometry.Collide.PolygonRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.PolygonLine(a, b);
+                    return Geometry.Collide.PolygonLine(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.PolygonPoint(a, b);
+                    return Geometry.Collide.PolygonPoint(a, b, aOffset, bOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
             
             if(Geometry.IsSegment(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleSegment(b, a);
+                    return Geometry.Collide.RectangleSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CircleSegment(b, a);
+                    return Geometry.Collide.CircleSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TriangleSegment(b, a);
+                    return Geometry.Collide.TriangleSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.PolygonSegment(b, a);
+                    return Geometry.Collide.PolygonSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.SegmentSegment(b, a);
+                    return Geometry.Collide.SegmentSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.RaySegment(b, a);
+                    return Geometry.Collide.RaySegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.LineSegment(b, a);
+                    return Geometry.Collide.LineSegment(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.PointSegment(b, a);
+                    return Geometry.Collide.PointSegment(b, a, bOffset, aOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
             
             if(Geometry.IsRay(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleRay(b, a);
+                    return Geometry.Collide.RectangleRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CircleRay(b, a);
+                    return Geometry.Collide.CircleRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TriangleRay(b, a);
+                    return Geometry.Collide.TriangleRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.PolygonRay(b, a);
+                    return Geometry.Collide.PolygonRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.RaySegment(a, b);
+                    return Geometry.Collide.RaySegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.RayRay(b, a);
+                    return Geometry.Collide.RayRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.LineRay(b, a);
+                    return Geometry.Collide.LineRay(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.PointRay(b, a);
+                    return Geometry.Collide.PointRay(b, a, bOffset, aOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
             
             if(Geometry.IsLine(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectangleLine(b, a);
+                    return Geometry.Collide.RectangleLine(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CircleLine(b, a);
+                    return Geometry.Collide.CircleLine(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TriangleLine(b, a);
+                    return Geometry.Collide.TriangleLine(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.PolygonLine(b, a);
+                    return Geometry.Collide.PolygonLine(b, a, bOffset, aOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.LineSegment(a, b);
+                    return Geometry.Collide.LineSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.LineRay(a, b);
+                    return Geometry.Collide.LineRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.LineLine(b, a);
+                    return Geometry.Collide.LineLine(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.PointLine(b, a);
+                    return Geometry.Collide.PointLine(b, a, bOffset, aOffset);
                 } 
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
                     
             if(Geometry.IsPoint(a)) {
                 if(Geometry.IsRectangle(b)) {
-                    return Geometry.Collide.RectanglePoint(b, a);
+                    return Geometry.Collide.RectanglePoint(b, a, bOffset, aOffset);
                 } else if(Geometry.IsCircle(b)) {
-                    return Geometry.Collide.CirclePoint(b, a);
+                    return Geometry.Collide.CirclePoint(b, a, bOffset, aOffset);
                 } else if(Geometry.IsTriangle(b)) {
-                    return Geometry.Collide.TrianglePoint(b, a);
+                    return Geometry.Collide.TrianglePoint(b, a, bOffset, aOffset);
                 } else if(Geometry.IsPolygon(b)) {
-                    return Geometry.Collide.PolygonPoint(b, a);
+                    return Geometry.Collide.PolygonPoint(b, a, bOffset, aOffset);
                 } else if(Geometry.IsSegment(b)) {
-                    return Geometry.Collide.PointSegment(a, b);
+                    return Geometry.Collide.PointSegment(a, b, aOffset, bOffset);
                 } else if(Geometry.IsRay(b)) {
-                    return Geometry.Collide.PointRay(a, b);
+                    return Geometry.Collide.PointRay(a, b, aOffset, bOffset);
                 } else if(Geometry.IsLine(b)) {
-                    return Geometry.Collide.PointLine(a, b);
+                    return Geometry.Collide.PointLine(a, b, aOffset, bOffset);
                 } else if(Geometry.IsPoint(b)) {
-                    return Geometry.Collide.PointPoint(a, b);
+                    return Geometry.Collide.PointPoint(a, b, aOffset, bOffset);
                 }
                 throw `Unfamiliar colliding shape b = ${JSON.stringify(b)}`;
             }
@@ -1208,21 +1290,41 @@ export class Geometry {
     //  b = other endpoint of the same PointPair
     //  c = point being checked against the PointPair)
     // TODO: rename 
-    private static isSameSideOfPoint = (a: IPoint, b: IPoint, c: IPoint) =>
-        Geometry.IsWithinToleranceOf(a.x, b.x)
-            ? (Math.sign(c.y - a.y) === Math.sign(b.y - a.y) || Geometry.IsWithinToleranceOf(a.y, c.y) || Geometry.IsWithinToleranceOf(a.y, b.y))
-            : (Math.sign(c.x - a.x) === Math.sign(b.x - a.x) || Geometry.IsWithinToleranceOf(a.x, c.x) || Geometry.IsWithinToleranceOf(a.x, b.x));
+    private static isSameSideOfPoint = (a: IPoint, b: IPoint, c: IPoint, aOffset: IPoint=Geometry.Point.Zero, bOffset: IPoint=Geometry.Point.Zero, cOffset: IPoint=Geometry.Point.Zero) => {
+        const ax = a.x + aOffset.x;
+        const ay = a.y + aOffset.y;
+        const bx = b.x + bOffset.x;
+        const by = b.y + bOffset.y;
+        const cx = c.x + cOffset.x;
+        const cy = c.y + cOffset.y;
+        return Geometry.IsWithinToleranceOf(ax, bx)
+            ? (Math.sign(cy - ay) === Math.sign(by - ay) || Geometry.IsWithinToleranceOf(ay, cy) || Geometry.IsWithinToleranceOf(ay, by))
+            : (Math.sign(cx - ax) === Math.sign(bx - ax) || Geometry.IsWithinToleranceOf(ax, cx) || Geometry.IsWithinToleranceOf(ax, bx));
+    }
 
     // TODO:
     //  1. test what happens when the lines/rays/segments are directly atop one another
     //  2. add shape vs. shape intersections as well
     public static Intersection = {
-        CirclePointPair: (circle: ICircle, pair: IPointPair): IPoint[] => {
+        CirclePointPair: (circle: ICircle, pair: IPointPair, circleOffset: IPoint=Geometry.Point.Zero, pairOffset?: IPoint): IPoint[] => {
+            if(pairOffset)
+                pair = {
+                    a: {
+                        x: pair.a.x + pairOffset.x,
+                        y: pair.a.y + pairOffset.y,
+                    },
+                    b: {
+                        x: pair.b.x + pairOffset.x,
+                        y: pair.b.y + pairOffset.y,
+                    }
+                };
+            const cx = circle.x + circleOffset.x;
+            const cy = circle.y + circleOffset.y;
             const b = Geometry.Line.Yintercept(pair);
             const m = Geometry.Line.Slope(pair);
             const t = 1 + m * m;
-            const u = 2 * b * m - 2 * circle.y * m - 2 * circle.x;
-            const v = circle.x * circle.x + b * b + circle.y * circle.y - circle.radius * circle.radius - 2 * b * circle.y;
+            const u = 2 * b * m - 2 * cy * m - 2 * cx;
+            const v = cx * cx + b * b + cy * cy - circle.r * circle.r - 2 * b * cy;
 
             const sq = u * u - 4 * t * v;
             if(sq < 0)
@@ -1244,41 +1346,65 @@ export class Geometry {
                 { x: x2, y: y2 }
             ];
         },
-        CircleLine: (circle: ICircle, line: ILine): IPoint[] =>
-            Geometry.Intersection.CirclePointPair(circle, line),
-        CircleRay: (circle: ICircle, ray: IRay): IPoint[] =>
-            Geometry.Intersection.CirclePointPair(circle, ray)
-                .filter(o => Geometry.isSameSideOfPoint(ray.a, ray.b, o)),
-        CircleSegment: (circle: ICircle, segment: ISegment): IPoint[] =>
-            Geometry.Intersection.CirclePointPair(circle, segment)
+        CircleLine: (circle: ICircle, line: ILine, circleOffset: IPoint=Geometry.Point.Zero, lineOffset?: IPoint): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, line, circleOffset, lineOffset),
+        CircleRay: (circle: ICircle, ray: IRay, circleOffset: IPoint=Geometry.Point.Zero, rayOffset?: IPoint): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, ray, circleOffset, rayOffset)
+                .filter(o => Geometry.isSameSideOfPoint(ray.a, ray.b, o, rayOffset ?? Geometry.Point.Zero, rayOffset ?? Geometry.Point.Zero, circleOffset)),
+        CircleSegment: (circle: ICircle, segment: ISegment, circleOffset: IPoint=Geometry.Point.Zero, segmentOffset?: IPoint): IPoint[] =>
+            Geometry.Intersection.CirclePointPair(circle, segment, circleOffset, segmentOffset)
                 .filter(o =>
-                    Geometry.isSameSideOfPoint(segment.a, segment.b, o) && 
-                    Geometry.isSameSideOfPoint(segment.b, segment.a, o)
+                    Geometry.isSameSideOfPoint(segment.a, segment.b, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset) && 
+                    Geometry.isSameSideOfPoint(segment.b, segment.a, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset)
                 ),
-        LineLine: (lineA: ILine, lineB: ILine): IPoint | null =>
-            Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE),
-        LineRay: (line: ILine, ray: IRay): IPoint | null =>
-            Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY),
-        LineSegment: (line: ILine, segment: ISegment): IPoint | null =>
-            Geometry.Intersection.PointPair(line, PointPairType.LINE, segment, PointPairType.SEGMENT),
-        RayRay: (rayA: IRay, rayB: IRay): IPoint | null =>
-            Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY),
-        RaySegment: (ray: IRay, segment: ISegment): IPoint | null =>
-            Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT),
-        SegmentSegment: (segmentA: ISegment, segmentB: ISegment): IPoint | null =>
-            Geometry.Intersection.PointPair(segmentA, PointPairType.SEGMENT, segmentB, PointPairType.SEGMENT),
-        SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[]): IPoint[] =>
+        LineLine: (lineA: ILine, lineB: ILine, lineAOffset: IPoint=Geometry.Point.Zero, lineBOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE, lineAOffset, lineBOffset),
+        LineRay: (line: ILine, ray: IRay, lineOffset: IPoint=Geometry.Point.Zero, rayOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY, lineOffset, rayOffset),
+        LineSegment: (line: ILine, segment: ISegment, lineOffset: IPoint=Geometry.Point.Zero, segmentOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(line, PointPairType.LINE, segment, PointPairType.SEGMENT, lineOffset, segmentOffset),
+        RayRay: (rayA: IRay, rayB: IRay, rayAOffset: IPoint=Geometry.Point.Zero, rayBOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY, rayAOffset, rayBOffset),
+        RaySegment: (ray: IRay, segment: ISegment, rayOffset: IPoint=Geometry.Point.Zero, segmentOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT, rayOffset, segmentOffset),
+        SegmentSegment: (segmentA: ISegment, segmentB: ISegment, segmentAOffset: IPoint=Geometry.Point.Zero, segmentBOffset: IPoint=Geometry.Point.Zero): IPoint | null =>
+            Geometry.Intersection.PointPair(segmentA, PointPairType.SEGMENT, segmentB, PointPairType.SEGMENT, segmentAOffset, segmentBOffset),
+        SegmentsSegments: (segmentsA: ISegment[], segmentsB: ISegment[], segmentsAOffset: IPoint=Geometry.Point.Zero, segmentsBOffset: IPoint=Geometry.Point.Zero): IPoint[] =>
             segmentsA.map(segmentA => 
                 segmentsB.map(segmentB => 
-                    Geometry.Intersection.SegmentSegment(segmentA, segmentB)
+                    Geometry.Intersection.SegmentSegment(segmentA, segmentB, segmentsAOffset, segmentsBOffset)
                 ).filter(o => o != null)
             ).flattened(),
-        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon): IPoint[] =>
-            Geometry.Intersection.SegmentsSegments(Geometry.Polygon.Segments(polygonA), Geometry.Polygon.Segments(polygonB)),
+        PolygonPolygon: (polygonA: IPolygon, polygonB: IPolygon, polygonAOffset?: IPoint, polygonBOffset?: IPoint): IPoint[] =>
+            Geometry.Intersection.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset)),
         PointPair: (
             first: IPointPair, firstType: PointPairType, 
-            second: IPointPair, secondType: PointPairType
+            second: IPointPair, secondType: PointPairType,
+            firstOffset: IPoint=Geometry.Point.Zero,
+            secondOffset: IPoint=Geometry.Point.Zero
         ): IPoint | null => {
+            if(firstOffset && !Geometry.Point.AreEqual(firstOffset, Geometry.Point.Zero))
+                first = {
+                    a: {
+                        x: first.a.x + firstOffset.x,
+                        y: first.a.y + firstOffset.y,
+                    },
+                    b: {
+                        x: first.b.x + firstOffset.x,
+                        y: first.b.y + firstOffset.y,
+                    }
+                }
+            if(secondOffset && !Geometry.Point.AreEqual(secondOffset, Geometry.Point.Zero))
+                second = {
+                    a: {
+                        x: second.a.x + firstOffset.x,
+                        y: second.a.y + firstOffset.y,
+                    },
+                    b: {
+                        x: second.b.x + firstOffset.x,
+                        y: second.b.y + firstOffset.y,
+                    }
+                }
             const yFirstLineDiff = first.b.y - first.a.y;
             const xFirstLineDiff = first.a.x - first.b.x;
             const cFirst = first.b.x * first.a.y - first.a.x * first.b.y;

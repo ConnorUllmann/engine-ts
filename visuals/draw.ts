@@ -82,22 +82,22 @@ export class Draw {
     }
 
     public static circleArc(world: CameraContext, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
-        if(circle.radius <= 0)
+        if(circle.r <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, startAngle, endAngle);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         if(fillStyle)
             context.fillStyle = fillStyle.toString();
         context.fill();
     }
 
     public static circleArcOutline(world: CameraContext, circle: ICircle, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(circle.radius <= 0)
+        if(circle.r <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, startAngle, endAngle);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
         context.lineWidth = lineWidth;
@@ -109,11 +109,11 @@ export class Draw {
     };
 
     public static circleOutline(world: CameraContext, circle: ICircle, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(circle.radius <= 0 || lineWidth <= 0)
+        if(circle.r <= 0 || lineWidth <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, 0, tau);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, 0, tau);
         context.lineWidth = lineWidth;
         if(strokeStyle)
             context.strokeStyle = strokeStyle.toString();
@@ -126,7 +126,7 @@ export class Draw {
             return;
         const lineWidth = outerRadius - innerRadius;
         const radius = (outerRadius + innerRadius) / 2;
-        Draw.circleOutline(world, { x: position.x, y: position.y, radius }, strokeStyle, lineWidth);
+        Draw.circleOutline(world, { x: position.x, y: position.y, r: radius }, strokeStyle, lineWidth);
     };
 
     public static ovalArc(world: CameraContext, position: IPoint, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0) {
@@ -310,11 +310,11 @@ export class Draw {
     public static circleArcGradient(world: CameraContext, circle: ICircle, colorStopArray: ColorStopArray, startAngle: number=0, endAngle: number=tau) {
         const context = world.context;
         const diff = new Point(circle.x, circle.y).subtract(world.camera);
-        const gradient = context.createRadialGradient(diff.x, diff.y, 0, diff.x, diff.y, circle.radius);
+        const gradient = context.createRadialGradient(diff.x, diff.y, 0, diff.x, diff.y, circle.r);
         colorStopArray.applyToGradient(gradient);
         context.fillStyle = gradient;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.radius, startAngle, endAngle);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         context.fill();
     };
 

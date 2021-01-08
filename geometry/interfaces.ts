@@ -4,7 +4,7 @@ export interface IPoint {
 }
 
 export interface ICircle extends IPoint {
-    radius: number
+    r: number
 }
 
 export interface IRectangle extends IPoint {
