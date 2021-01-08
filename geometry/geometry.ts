@@ -951,7 +951,8 @@ export class Geometry {
 
     // TODO:
     //  1. test all collisions (most ray/segment/line vs shape collisions are untested)
-    //  2. create matching functions in Geometry.Intersection that actually returns intersection points, if any
+    //  2. add matching collision functions which operate only on number arguments and use them here
+    //  3. create matching functions in Geometry.Intersection that actually returns intersection points, if any
     public static Collide = {
         PointSegment: (a: IPoint, b: ISegment, aOffset?: IPoint, bOffset?: IPoint): boolean => {
             if(aOffset) a = Geometry.Point.Translate(a, aOffset);
