@@ -61,7 +61,7 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
     public offset(other: IPoint): Rectangle { return new Rectangle(this.x + other.x, this.y + other.y, this.w, this.h); }
     public collidesPoint(point: IPoint): boolean { return Geometry.Collide.RectanglePoint(this, point); }
     public collidesRectangle(rectangle: IRectangle): boolean { return Geometry.Collide.RectangleRectangle(this, rectangle); }
-    public collidesCircle(circle: ICircle, rectangleAngle: number=0): boolean { return Geometry.Collide.RectangleCircle(this, circle, rectangleAngle); }
+    public collidesCircle(circle: ICircle, aOffset?: IPoint, bOffset?: IPoint, rectangleAngle: number=0): boolean { return Geometry.Collide.RectangleCircle(this, circle, aOffset, bOffset, rectangleAngle); }
     
     public lineIntersections(line: ILine): Point[] { return Rectangle.intersections(this, line, PointPairType.LINE); }
     public rayIntersections(ray: IRay): Point[] { return Rectangle.intersections(this, ray, PointPairType.RAY); }

@@ -18,30 +18,16 @@ export class Collider extends Component implements Readonly<IRectangle> {
         this._bounds = new Rectangle();
     }
 
-    public get boundsLocal(): Readonly<IRectangle> | null {
+    public get boundsLocal(): Readonly<IRectangle> {
         return this._boundsLocal;
     }
 
-    public get bounds(): Readonly<IRectangle> | null {
+    public get bounds(): Readonly<IRectangle> {
         this._bounds.x = this._boundsLocal.x + this.entity.position.x;
         this._bounds.y = this._boundsLocal.y + this.entity.position.y;
         this._bounds.w = this._boundsLocal.w;
         this._bounds.h = this._boundsLocal.h;
         return this._bounds;
-    }
-
-    public firstCollision(mask: number): Collider | null {
-        return this.entity.world.firstComponentOfClass(
-            Collider,
-            collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider) && this.collideShape(collider)
-        );
-    }
-
-    public firstShapeCollision(mask: number): Collider | null {
-        return this.entity.world.firstComponentOfClass(
-            Collider,
-            collider => collider != this && (collider.mask & mask) == mask && this.collideShape(collider)
-        );
     }
 
     public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider | null {
@@ -51,16 +37,11 @@ export class Collider extends Component implements Readonly<IRectangle> {
         );
     }
 
-    public allShapeCollisions(mask: number): Collider[] {
-        const results = [];
-        this.entity.world.forEachComponentOfClass(
+    public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider | null {
+        return this.entity.world.firstComponentOfClass(
             Collider,
-            collider => {
-                if(collider != this && (collider.mask & mask) == mask && this.collideShape(collider))
-                    results.push(collider);
-            }
+            collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset)
         );
-        return results;
     }
 
     public allBoundsCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider[] {
@@ -75,18 +56,36 @@ export class Collider extends Component implements Readonly<IRectangle> {
         return results;
     }
 
+    public allCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider[] {
+        const results = [];
+        this.entity.world.forEachComponentOfClass(
+            Collider,
+            collider => {
+                if(collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset))
+                    results.push(collider);
+            }
+        );
+        return results;
+    }
+
     public collideBoundsMask(mask: number, xOffset: number=0, yOffset: number=0): boolean {
         return this.firstBoundsCollision(mask, xOffset, yOffset) != null;
     }
 
-    public collideCollider(collider: Collider): boolean {
-        if(collider == this || !this.active || !collider.active || !this.entity.active || !collider.entity.active)
-            return false;
-        if(!this.collideBounds(collider))
-            return false;
-        return this.collideShape(collider);
+    public collideMask(mask: number, xOffset: number=0, yOffset: number=0): boolean {
+        return this.firstCollision(mask, xOffset, yOffset) != null;
     }
 
+    // any inactive colliders/entities will result in false
+    public collideCollider(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
+        if(collider == this || !this.active || !collider.active || !this.entity.active || !collider.entity.active)
+            return false;
+        if(!this.collideBounds(collider, xOffset, yOffset))
+            return false;
+        return this.collideShape(collider, xOffset, yOffset);
+    }
+
+    // does not consider active/inactive status
     public collideBounds(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
         const rectangleAx = this._boundsLocal.x + this.entity.position.x + xOffset;
         const rectangleAy = this._boundsLocal.y + this.entity.position.y + yOffset;
@@ -102,16 +101,15 @@ export class Collider extends Component implements Readonly<IRectangle> {
             && rectangleAy < rectangleBy + rectangleBh;
     }
 
-    public collideShape(collider: Collider): boolean {
-        return Geometry.Collide.AnyAny(this.shape, collider.shape);
+    // does not consider active/inactive status
+    public collideShape(collider: Collider, xOffset: number=0, yOffset: number=0): boolean {
+        return Geometry.Collide.AnyAny(this.shape, collider.shape, xOffset != 0 || yOffset != 0 ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset } : this.entity.position, collider.entity.position);
     }
 
-    public get w(): number { return this._boundsLocal.w; };
-    public set w(w: number) { this._boundsLocal.w = w; }
-    public get h(): number { return this._boundsLocal.h; }
-    public set h(h: number) { this._boundsLocal.h = h; }
     public get x(): number { return this._boundsLocal.x + this.entity.position.x; }
     public get y(): number { return this._boundsLocal.y + this.entity.position.y; }
+    public get w(): number { return this._boundsLocal.w; };
+    public get h(): number { return this._boundsLocal.h; }
     public get xLeft(): number { return this._boundsLocal.x + this.entity.position.x; }
     public get xCenter(): number { return this.xLeft + this.w/2; }
     public get xRight(): number { return this._boundsLocal.x + this._boundsLocal.w + this.entity.position.x; }
