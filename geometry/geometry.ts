@@ -950,6 +950,15 @@ export class Geometry {
         return null;
     }
 
+    public static CollideExplicit = {
+        RectangleRectangle: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number,): boolean => {
+            return ax + aw > bx 
+                && ay + ah > by 
+                && ax < bx + bw 
+                && ay < by + bh
+        },
+    }
+
     // TODO:
     //  1. test all collisions (most ray/segment/line vs shape collisions are untested)
     //  2. add matching collision functions which operate only on number arguments and use them here
