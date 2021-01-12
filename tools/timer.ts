@@ -11,6 +11,8 @@ export class Timer {
     public get finished(): boolean { return this.value >= 1; }
     public toRange(min: number, max: number) { return (max - min) * this.value + min; }
     
+    public get milliseconds(): number { return this.seconds * 1000; }
+    
     constructor(public seconds: number=1) {}
 
     public reset(seconds: number=this.seconds): void {
