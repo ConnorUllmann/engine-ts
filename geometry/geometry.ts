@@ -176,8 +176,11 @@ export class Geometry {
         return Math.abs(a - b) < this.Tolerance;
     }
 
-    public static DistanceSq(ax: number, ay: number, bx: number, by: number): number {
+    public static DistanceSq(ax: number, ay: number, bx: number=0, by: number=0): number {
         return (ax - bx) * (ax - bx) + (ay - by) * (ay - by);
+    }
+    public static Distance(ax: number, ay: number, bx: number=0, by: number=0): number {
+        return Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
     }
 
     public static Point: IPointStatic = {
