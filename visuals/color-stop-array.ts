@@ -59,8 +59,8 @@ export class ColorStopArray {
             return this.colorStops.last().color;
         for(let j = 0; j < this.colorStops.length-1; j++)
         {
-            const colorStop = this[j];
-            const colorStopNext = this[j+1];
+            const colorStop = this.colorStops[j];
+            const colorStopNext = this.colorStops[j+1];
             if(normal >= colorStop.stop && normal <= colorStopNext.stop)
             {
                 const colorStopNormal = clamp((normal - colorStop.stop) / (colorStopNext.stop - colorStop.stop), 0, 1);
