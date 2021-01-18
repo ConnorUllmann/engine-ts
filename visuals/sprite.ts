@@ -44,6 +44,13 @@ export class SpriteAnimation {
     }
 
     get currentIndices(): IPoint | null {
+        const frameIndex = this.currentFrameIndex;
+        return frameIndex != null
+            ? this.frames[frameIndex].indices
+            : null;
+    }
+
+    get currentFrameIndex(): number | null {
         if(this.frames.length <= 0)
             return null;
         
@@ -51,11 +58,11 @@ export class SpriteAnimation {
         for(let i = 0; i < this.frames.length; i++) {
             const frame = this.frames[i];
             if(i == this.frames.length - 1)
-                return frame.indices;
+                return i;
 
             timeWeight += frame.timeWeight;
             if(this.timer.value <= timeWeight / this.timeWeightTotal)
-                return frame.indices;
+                return i;
         }
     }
 }
@@ -78,6 +85,11 @@ export class Sprite {
     public set currentAnimationSpeed(speed: number) { 
         if(this._currentAnimationName in this.animationByName)
             this.animationByName[this._currentAnimationName].speed = speed;
+    }
+    public get currentAnimationFrameIndex(): number | null {
+        if(this._currentAnimationName in this.animationByName)
+            return this.animationByName[this._currentAnimationName].currentFrameIndex;
+        return null;
     }
 
     constructor(
