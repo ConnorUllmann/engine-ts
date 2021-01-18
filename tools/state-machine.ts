@@ -1,31 +1,38 @@
-export interface State {
+export interface StateGeneric<T extends any[]> {
     name: string,
+    start?: (...args: T) => any,
+    update?: (...args: T) => any,
+    finish?: (...args: T) => any
+}
+export interface State extends StateGeneric<[]> {
     start?: () => any,
     update?: () => any,
     finish?: () => any
 }
 
-export class StateMachine
-{
-    constructor() {};
+export class StateMachineGeneric<T extends any[]> {
+    private readonly args: T;
+    constructor(...args: T) {
+        this.args = args;
+    };
 
-    private readonly states: { [name: string]: State } = {};
+    private readonly states: { [name: string]: StateGeneric<T> } = {};
     public currentStateName: string | null = null;
 
     public reset(): this {
         const state = this.currentState;
         if(state.finish)
-            state.finish();
+            state.finish(...this.args);
         this.currentStateName = null;
         return this;
     };
     
-    public addState(state: State): this {
+    public addState(state: StateGeneric<T>): this {
         this.states[state.name] = state;
         return this;
     };
     
-    private get currentState(): State {
+    private get currentState(): StateGeneric<T> {
         return this.states[this.currentStateName];
     };
     
@@ -39,10 +46,10 @@ export class StateMachine
         const statePrev = this.currentState;
         const stateNext = this.states[stateName];
         if(statePrev && statePrev.finish)
-            statePrev.finish();
+            statePrev.finish(...this.args);
         this.currentStateName = stateName;
         if(stateNext && stateNext.start)
-            stateNext.start();
+            stateNext.start(...this.args);
         return this;
     };
     
@@ -55,7 +62,8 @@ export class StateMachine
     public update(): this {
         const state = this.currentState;
         if(state && state.update)
-            state.update();
+            state.update(...this.args);
         return this;
     };
 }
+export class StateMachine extends StateMachineGeneric<[]> {}
