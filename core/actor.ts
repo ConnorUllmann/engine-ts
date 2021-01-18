@@ -29,8 +29,7 @@ export class Actor extends Entity {
     }
 
     update() {
-        this.updateVelocity();
-        this.updatePosition();
+        this.updatePhysics();
     }
 
     protected updateVelocity() {
@@ -42,6 +41,11 @@ export class Actor extends Entity {
     protected updatePosition() {
         this.position
             .add(this.frameVelocity);
+    }
+
+    protected updatePhysics() {
+        this.updateVelocity();
+        this.updatePosition();
     }
 
     private _frameVelocity: Point = new Point();
