@@ -3,6 +3,7 @@ import { World } from '@engine-ts/core/world';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { LoopTimer, Timer } from '@engine-ts/tools/timer';
+import { WeightRange } from '@engine-ts/tools/weight-range';
 import { Draw, ImagesCameraContext } from './draw';
 
 export interface ISpriteFrame {
@@ -11,60 +12,31 @@ export interface ISpriteFrame {
 }
 
 export class SpriteAnimation {
+    private weightRange: WeightRange<IPoint>;
     private readonly timer: Timer;
-    private readonly timeWeightTotal: number;
     public speed: number = 1; // must be >= 0
-    public get seconds(): number { return this.timer.seconds; }
-    public get completion(): number { return this.timer.value; }
-    public set completion(value: number) { this.timer.value = clamp(value, 0, 1);}
+
+    get seconds(): number { return this.timer.seconds; }
+    get completion(): number { return this.timer.value; }
+    set completion(value: number) { this.timer.value = clamp(value, 0, 1);}
+    get finished(): boolean { return this.timer.finished; }
+    get currentIndices(): IPoint | null { return this.weightRange.value(this.timer.value); }
+    get currentFrameIndex(): number | null { return this.weightRange.index(this.timer.value); }
 
     constructor(
-        private readonly frames: ISpriteFrame[],
+        frames: ISpriteFrame[],
         seconds: number,
         loop: boolean=true,
         completion: number=0,
     ) {
         this.timer = loop ? new LoopTimer(seconds) : new Timer(seconds);
         this.completion = completion;
-        this.timeWeightTotal = this.frames.sumOf(o => o.timeWeight);
+        this.weightRange = new WeightRange<IPoint>(...frames.map(o => ({ value: o.indices, weight: o.timeWeight })))
     }
 
-    public get finished(): boolean { return this.timer.finished; }
-
-    update(deltaMs: number) {
-        this.timer.update(deltaMs * this.speed);
-    }
-
-    reset() {
-        this.timer.reset();
-    }
-
-    randomize() {
-        this.timer.value = random();
-    }
-
-    get currentIndices(): IPoint | null {
-        const frameIndex = this.currentFrameIndex;
-        return frameIndex != null
-            ? this.frames[frameIndex].indices
-            : null;
-    }
-
-    get currentFrameIndex(): number | null {
-        if(this.frames.length <= 0)
-            return null;
-        
-        let timeWeight = 0;
-        for(let i = 0; i < this.frames.length; i++) {
-            const frame = this.frames[i];
-            if(i == this.frames.length - 1)
-                return i;
-
-            timeWeight += frame.timeWeight;
-            if(this.timer.value <= timeWeight / this.timeWeightTotal)
-                return i;
-        }
-    }
+    update(deltaMs: number) { this.timer.update(deltaMs * this.speed); }
+    reset() { this.timer.reset(); }
+    randomize() { this.timer.value = random(); }
 }
 
 export class Sprite {
