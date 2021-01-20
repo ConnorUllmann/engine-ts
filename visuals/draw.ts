@@ -29,9 +29,7 @@ export class Draw {
     // TODO: add generic shape-drawing function
     // public static shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
 
-    // center is the position within the image (normalized to its dimensions) around which to rotate
-    // e.g. to rotate around the bottom-left corner of a 30x20 image, enter {x:0,y:1} no matter what scale or position
-    public static image(world: ImagesCameraContext, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, rotateCenter?:IPoint, alpha:number=1) {
+    public static image(world: ImagesCameraContext, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
         if(!image) {
@@ -44,24 +42,22 @@ export class Draw {
         const globalAlphaPrevious = context.globalAlpha;
         context.globalAlpha = alpha;
 
-        const cx = rotateCenter != null ? w*rotateCenter.x-w/2 : 0;
-        const cy = rotateCenter != null ? h*rotateCenter.y-h/2 : 0;
+        const cx = (center?.x ?? (position.x + w/2)) - world.camera.x;
+        const cy = (center?.y ?? (position.y + h/2)) - world.camera.y;
         const px = position.x + w/2 - world.camera.x;
         const py = position.y + h/2 - world.camera.y;
-        context.translate(cx + px, cy + py);
+        context.translate(cx, cy);
         if(angle !== 0)
-            context.rotate(angle);
+            context.rotate(-angle);
         context.scale(Math.sign(scale.x), Math.sign(scale.y));
-        context.translate(-cx, -cy);
+        context.translate(px - cx, py - cy);
         context.drawImage(image, -w/2, -h/2, w, h);
         context.resetTransform();
 
         context.globalAlpha = globalAlphaPrevious;
     }
     
-    // center is the position within the image (normalized to its dimensions) around which to rotate
-    // e.g. to rotate around the bottom-left corner of a 30x20 image, enter {x:0,y:1} no matter what scale or position
-    public static imagePart(world: ImagesCameraContext, imageName: string, position: IPoint, sx: number, sy: number, sw: number, sh: number, scale: IPoint=Geometry.Point.One, angle: number=0, rotateCenter?:IPoint, alpha:number=1) {
+    public static imagePart(world: ImagesCameraContext, imageName: string, position: IPoint, sx: number, sy: number, sw: number, sh: number, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
         if(!image) {
@@ -73,15 +69,15 @@ export class Draw {
         const globalAlphaPrevious = context.globalAlpha;
         context.globalAlpha = alpha;
 
-        const cx = rotateCenter != null ? w*rotateCenter.x-w/2 : 0;
-        const cy = rotateCenter != null ? h*rotateCenter.y-h/2 : 0;
+        const cx = (center?.x ?? (position.x + w/2)) - world.camera.x;
+        const cy = (center?.y ?? (position.y + h/2)) - world.camera.y;
         const px = position.x + w/2 - world.camera.x;
         const py = position.y + h/2 - world.camera.y;
-        context.translate(cx + px, cy + py);
+        context.translate(cx, cy);
         if(angle !== 0)
-            context.rotate(angle);
+            context.rotate(-angle);
         context.scale(Math.sign(scale.x), Math.sign(scale.y));
-        context.translate(-cx, -cy);
+        context.translate(px - cx, py - cy);
         context.drawImage(image, sx, sy, sw, sh, -w/2, -h/2, w, h);
         context.resetTransform();
 
