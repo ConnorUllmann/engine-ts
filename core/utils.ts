@@ -109,6 +109,14 @@ export const randomSign = (): number => random() >= 0.5 ? 1 : -1;
 // inclusive of lower bound, exclusive of upper bound
 export const randomRange = (min: number, max: number): number => random() * (max - min) + min
 
+export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
+    const array = [];
+    for(let i = 0; i < count; i++) {
+        array.push(get(i, count));
+    }
+    return array;
+}
+
 declare global {
     interface Array<T> {
         swap(firstIndex: number, secondIndex: number): void;

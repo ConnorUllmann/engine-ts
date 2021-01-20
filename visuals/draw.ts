@@ -29,6 +29,9 @@ export class Draw {
     // TODO: add generic shape-drawing function
     // public static shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
 
+
+    // "position" refers to the top-left corner of the image in world space
+    // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
     public static image(world: ImagesCameraContext, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
@@ -48,7 +51,7 @@ export class Draw {
         const py = position.y + h/2 - world.camera.y;
         context.translate(cx, cy);
         if(angle !== 0)
-            context.rotate(-angle);
+            context.rotate(angle);
         context.scale(Math.sign(scale.x), Math.sign(scale.y));
         context.translate(px - cx, py - cy);
         context.drawImage(image, -w/2, -h/2, w, h);
@@ -57,6 +60,8 @@ export class Draw {
         context.globalAlpha = globalAlphaPrevious;
     }
     
+    // "position" refers to the top-left corner of the image in world space
+    // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
     public static imagePart(world: ImagesCameraContext, imageName: string, position: IPoint, sx: number, sy: number, sw: number, sh: number, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
@@ -75,7 +80,7 @@ export class Draw {
         const py = position.y + h/2 - world.camera.y;
         context.translate(cx, cy);
         if(angle !== 0)
-            context.rotate(-angle);
+            context.rotate(angle);
         context.scale(Math.sign(scale.x), Math.sign(scale.y));
         context.translate(px - cx, py - cy);
         context.drawImage(image, sx, sy, sw, sh, -w/2, -h/2, w, h);
