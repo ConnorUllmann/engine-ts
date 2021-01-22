@@ -18,6 +18,9 @@ export class Actor extends Entity {
     public get yCenter(): number { return this.collider.yCenter; }
     public get yBottom(): number { return this.collider.yBottom }
 
+    // TODO add the rest of them
+    public set yBottom(y: number) { this.position.y = y - (this.collider.yBottom - this.position.y); }
+
     public friction: number = 0.01;
     public readonly velocity: Point = new Point();
     public readonly acceleration: Point = new Point();
