@@ -1,3 +1,5 @@
+import { IPoint } from "@engine-ts/geometry/interfaces";
+
 export function log(text: string, level = "info") {
     let d = new Date();
     let dateString = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2) + "." + ("00" + d.getMilliseconds()).slice(-3) + " UTC" + (d.getTimezoneOffset() > 0 ? "-" : "+") + Math.abs(d.getTimezoneOffset() / 60);
@@ -71,6 +73,29 @@ export function binomialCoefficient(n: number, k: number) {
     for(let i = 1; i <= k; i++)
         result /= i;
     return result;
+}
+
+// gives the x,y indices of a spiral along a tiled grid where n is the number of steps along the spiral
+// n = 0 is (0, 0), n = 1 is (0, -1), then proceeds clockwise
+export function spiral(n: number): IPoint {
+    n++
+    
+    const k = Math.ceil((Math.sqrt(n) - 1) / 2);
+    let t = 2 * k + 1;
+    let m = t * t;
+    t--;
+
+    if (n >= m - t)
+        return { y: -m + n + k, x: -k };
+    m -= t;
+    
+    if (n >= m - t)
+        return { y: -k, x: m - n - k };
+    m -= t;
+    
+    if (n >= m - t)
+        return { y: m - k - n, x: k };
+    return { y: k, x: -m + n + k + t };
 }
 
 
