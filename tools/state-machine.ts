@@ -2,12 +2,12 @@ export interface StateGeneric<T extends any[]> {
     name: string,
     start?: (...args: T) => any,
     update?: (...args: T) => any,
-    finish?: (...args: T) => any
+    finish?: (...args: T) => any, // do not call .changeState() inside a finish function
 }
 export interface State extends StateGeneric<[]> {
     start?: () => any,
     update?: () => any,
-    finish?: () => any
+    finish?: () => any, // do not call .changeState() inside a finish function
 }
 
 export class StateMachineGeneric<T extends any[]> {
@@ -44,10 +44,10 @@ export class StateMachineGeneric<T extends any[]> {
             throw `Cannot change a StateMachine to a state ('${stateName}') that has not been added to it! Available states are: ${Object.keys(this.states).length <= 0 ? 'n/a' : Object.keys(this.states).join(', ')}`
     
         const statePrev = this.currentState;
+        this.currentStateName = stateName;
         const stateNext = this.states[stateName];
         if(statePrev && statePrev.finish)
             statePrev.finish(...this.args);
-        this.currentStateName = stateName;
         if(stateNext && stateNext.start)
             stateNext.start(...this.args);
         return this;

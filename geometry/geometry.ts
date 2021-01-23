@@ -1,4 +1,4 @@
-import { tau, random, clamp, angleDifference, moduloSafe, binomialCoefficient, Halign, Valign } from '@engine-ts/core/utils';
+import { tau, random, clamp, moduloSafe, binomialCoefficient, Halign, Valign } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
@@ -181,6 +181,12 @@ export class Geometry {
     }
     public static Distance(ax: number, ay: number, bx: number=0, by: number=0): number {
         return Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+    }
+    public static Angle(x: number, y: number): number {
+        return Math.atan2(y, x);
+    }
+    public static AngleDifference(to: number, from: number): number {
+        return moduloSafe(to - from - Math.PI, tau) - Math.PI;
     }
 
     public static Point: IPointStatic = {
@@ -538,7 +544,7 @@ export class Geometry {
         AngleBisector: (bisectionVertex: IPoint, previousVertex: IPoint, nextVertex: IPoint): IRay => {
             const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(nextVertex, bisectionVertex));
             const angleAC = Geometry.Point.Angle(Geometry.Point.Subtract(previousVertex, bisectionVertex));
-            const angleBisector = moduloSafe(angleDifference(angleAB, angleAC) / 2 + angleAB, tau);
+            const angleBisector = moduloSafe(Geometry.AngleDifference(angleAC, angleAB) / 2 + angleAB, tau);
             return { 
                 a: bisectionVertex,
                 b: Geometry.Point.Add(bisectionVertex, Geometry.Point.Vector(1, angleBisector))
