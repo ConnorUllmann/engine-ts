@@ -3,7 +3,7 @@ import { random } from "@engine-ts/core/utils";
 // TODO use bounds function to get index
 export class WeightRange<T> {
     private readonly weightTotal: number;
-    private readonly range: { value: T, weight: number }[];
+    public readonly range: ReadonlyArray<{ value: T, weight: Readonly<number> }>;
 
     constructor(...range: { value: T, weight: number }[]) {
         this.weightTotal = range.sumOf(o => o.weight);
