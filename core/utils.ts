@@ -143,6 +143,7 @@ export const repeat = function<T>(count: number, get: (i: number, count: number)
     return array;
 }
 
+// TODO apply as many of these as possible to ReadonlyArray as well
 declare global {
     interface Array<T> {
         swap(firstIndex: number, secondIndex: number): void;
