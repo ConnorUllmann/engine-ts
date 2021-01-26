@@ -1,12 +1,19 @@
 import { random } from "@engine-ts/core/utils";
 
+interface Weightable<T> {
+    value: T,
+    weight: number,
+}
+
+export type WeightRangeConstructorParameters<T> = Weightable<T>[];
+
 // TODO use bounds function to get index
 export class WeightRange<T> {
     private weightTotal: number;
-    private readonly _range: { value: T, weight: number }[];
-    public get range(): ReadonlyArray<{ value: T, readonly weight: number }> { return this._range; }
+    private readonly _range: Weightable<T>[];
+    public get range(): ReadonlyArray<Weightable<T> & { readonly weight: number }> { return this._range; }
 
-    constructor(...range: { value: T, weight: number }[]) {
+    constructor(...range: WeightRangeConstructorParameters<T>) {
         this._range = range;
         this.resetWeightTotal();
     }
