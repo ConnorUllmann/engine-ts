@@ -52,7 +52,7 @@ export class Sounds {
     public play(soundName: string, stopIfPlaying:boolean=true) {
         const sound = this.soundByName[soundName];
         if(!sound)
-            throw `No sound known by the name (${soundName})`;
+            console.error(`No sound known by the name (${soundName})`);
         if(stopIfPlaying)
             sound.stop();
         sound.play();
