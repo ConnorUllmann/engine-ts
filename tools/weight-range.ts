@@ -50,13 +50,25 @@ export class WeightRange<T> {
             return null;
         if(normal > 1)
             return this._range.length-1;        
-        let timeWeight = 0;
+        let weight = 0;
         for(let i = 0; i < this._range.length; i++) {
-            timeWeight += this._range[i].weight;
-            if(normal <= timeWeight / this.weightTotal)
+            weight += this._range[i].weight;
+            if(normal <= weight / this.weightTotal)
                 return i;
         }
         return this._range.length-1;
+    }
+
+    // the weight (normalized) at which the given index ends
+    // roughly inverse operation of WeightRange.index
+    public normal(index: number) {       
+        let weight = 0;
+        for(let i = 0; i < this._range.length; i++) {
+            weight += this._range[i].weight;
+            if(i == index)
+                return weight / this.weightTotal;
+        }
+        return 1;
     }
 
     public value(normal: number): T | null {

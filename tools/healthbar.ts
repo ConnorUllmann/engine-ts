@@ -4,6 +4,10 @@ export class Healthbar {
     public get normal(): number { return clamp(this.health / this.healthMax, 0, 1); }
     public get isDead(): boolean { return this.health <= 0; }
     public get health(): number { return this._health; }
+    public set health(_health: number) {
+        this._health = _health;
+        this.capHealth();
+    }
     public get healthMax(): number { return this._healthMax; }
     public set healthMax(_healthMax: number) {
         this._healthMax = _healthMax;
