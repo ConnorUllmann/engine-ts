@@ -22,6 +22,8 @@ export class SpriteAnimation {
     get finished(): boolean { return this.timer.finished; }
     get currentIndices(): IPoint | null { return this.weightRange.value(this.timer.value); }
     get currentFrameIndex(): number | null { return this.weightRange.index(this.timer.value); }
+    set currentFrameIndex(frameIndex: number) { this.timer.value = this.weightRange.normal(frameIndex); }
+    get frameCount(): number { return this.weightRange.range.length; }
 
     constructor(
         frames: ISpriteFrame[],
@@ -61,6 +63,15 @@ export class Sprite {
     public get currentAnimationFrameIndex(): number | null {
         if(this._currentAnimationName in this.animationByName)
             return this.animationByName[this._currentAnimationName].currentFrameIndex;
+        return null;
+    }
+    public set currentAnimationFrameIndex(frameIndex: number) {
+        if(this._currentAnimationName in this.animationByName)
+            this.animationByName[this._currentAnimationName].currentFrameIndex = frameIndex % this.animationByName[this._currentAnimationName].frameCount;
+    }
+    public get currentAnimationFrameCount(): number | null {
+        if(this._currentAnimationName in this.animationByName)
+            return this.animationByName[this._currentAnimationName].frameCount;
         return null;
     }
 
