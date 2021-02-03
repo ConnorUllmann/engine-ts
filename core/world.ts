@@ -43,6 +43,8 @@ export class World {
 
     public backgroundColor: Color | (() => Color) = Color.lightGrey;
 
+    private interval: any | null = null;
+
     // create in ngOnInit and not in the component's constructor
     constructor(
         canvasId: string,
@@ -72,14 +74,29 @@ export class World {
         this.mouse.start();
         this.keyboard.start();
 
-        // default _delta to the value at the given fps
-        this._delta = this.millisecondsPerFrame;
         // const update = () => {
         //     this.updateFrame();
         //     requestAnimationFrame(update);
         // }
         // requestAnimationFrame(update)
-        setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
+        this.startLoop();
+    }
+
+    public startLoop() {
+        if(this.interval)
+            return;
+        
+        // default _delta to the value at the given fps
+        this._delta = this.millisecondsPerFrame;
+        this.interval = setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
+    }
+
+    public stopLoop() {
+        if(!this.interval)
+            return;
+        
+        clearInterval(this.interval);
+        this.interval = null;
     }
 
     public setCanvasSize(width: number, height: number) {
