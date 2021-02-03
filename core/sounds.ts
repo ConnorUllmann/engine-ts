@@ -55,7 +55,7 @@ export class Sounds {
             console.error(`No sound known by the name (${soundName})`);
         if(stopIfPlaying)
             sound.stop();
-        sound.play();
+        //sound.play();
     }
 
     public stop(soundName: string) {
