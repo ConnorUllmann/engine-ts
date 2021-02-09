@@ -136,7 +136,7 @@ export const randomRange = (min: number, max: number): number => random() * (max
 export const randomChoice = <T>(...options: T[]): T => options.sample();
 
 export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
-    const array = [];
+    const array: T[] = [];
     for(let i = 0; i < count; i++) {
         array.push(get(i, count));
     }
@@ -160,6 +160,7 @@ declare global {
         shuffled(): T[];
         flattened(): T;
         unflattened(width: number): T[][];
+        batchify(batchSize: number): T[][];
         any(boolCheck: (o: T, i: number) => boolean): boolean;
         all(boolCheck: (o: T, i: number) => boolean): boolean;
         first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
@@ -168,7 +169,6 @@ declare global {
         minOf(valueGetter: (o: T) => number): T | null;
         maxOf(valueGetter: (o: T) => number): T | null;
         sumOf(valueGetter: (o: T) => number): number | null;
-        batchify(batchSize: number): T[][];
         mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
         mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
         copy(other: T[]): void;
@@ -302,15 +302,17 @@ Array.prototype.flattened = function<T>(): T
     return [].concat.apply([], this);
 };
 
+// Opposite of flattening an array; takes a one-dimensional array and cuts it into count-sized chunks, returning an array of arrays
 Array.prototype.unflattened = function<T>(width: number): T[][]
 {
     if(width <= 0)
         throw `Cannot unflatten array using width ${width}`;
-    const result = [];
+    const result: T[][] = [];
     for(let i = 0; i < this.length; i += width)
         result.push(this.slice(i, i+width));
     return result;
 }
+Array.prototype.batchify = Array.prototype.unflattened;
 
 Array.prototype.any = function<T>(boolCheck: (o: T, i: number) => boolean): boolean
 {
@@ -425,18 +427,6 @@ Array.prototype.sum = function(): number | null {
     return this.length > 0
         ? this.reduce((total, increment) => total + increment)
         : null;
-};
-
-// Opposite of flattening an array; takes a one-dimensional array and cuts it into count-sized chunks, returning an array of arrays
-Array.prototype.batchify = function<T>(batchSize: number): T[][]
-{
-    return this.reduce((batchList: Array<Array<T>>, item: T) => {
-        const last = batchList.last();
-        if(last && last.length >= batchSize)
-            batchList.push(new Array<T>(batchSize));
-        batchList.last()!.push(item);
-        return batchList;
-    }, [[]]);
 };
 
 // Example:
