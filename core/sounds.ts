@@ -15,6 +15,15 @@ interface SoundFamily {
 export class Sounds {
     private readonly soundByName: { [soundName: string]: Sound } = {};
     private readonly familyByFamilyName: { [familyName: string]: SoundFamily } = {};
+    public muted: boolean = false;
+
+    public toggleMuted() {
+        this.muted = !this.muted;
+        for(let soundName in this.soundByName) {
+            const element = this.soundByName[soundName].element;
+            element.muted = this.muted;
+        }
+    }
 
     constructor() { }
 
