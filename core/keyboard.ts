@@ -1,4 +1,4 @@
-import { Key, CharactersByKeyCode, KeysByKeyCode } from './keys';
+import { Key, KeysByKeyCode } from './keys';
 
 export class Keyboard {
     public readonly down: { [id: string]: boolean } = {};
