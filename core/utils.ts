@@ -159,6 +159,7 @@ declare global {
         shuffle(): T[];
         shuffled(): T[];
         flattened(): T;
+        unflattened(width: number): T[][];
         any(boolCheck: (o: T, i: number) => boolean): boolean;
         all(boolCheck: (o: T, i: number) => boolean): boolean;
         first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
@@ -300,6 +301,16 @@ Array.prototype.flattened = function<T>(): T
 {
     return [].concat.apply([], this);
 };
+
+Array.prototype.unflattened = function<T>(width: number): T[][]
+{
+    if(width <= 0)
+        throw `Cannot unflatten array using width ${width}`;
+    const result = [];
+    for(let i = 0; i < this.length; i += width)
+        result.push(this.slice(i, i+width));
+    return result;
+}
 
 Array.prototype.any = function<T>(boolCheck: (o: T, i: number) => boolean): boolean
 {
