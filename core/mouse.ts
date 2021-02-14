@@ -15,6 +15,7 @@ export class Mouse extends Point {
     public rightPressed: boolean = false;
     public leftDown: boolean = false;
     public rightDown: boolean = false;
+    public moved: boolean = false;
     public focus: boolean = false;
     public scroll: Point = new Point();
     public get touchscreen(): boolean { return 'ontouchstart' in document.documentElement; }
@@ -41,6 +42,7 @@ export class Mouse extends Point {
                 mouse.x = xMouseShifted - marginsWidthTotal/2;
                 mouse.y = (mouseEvent.clientY - rect.top) * canvasScale.y;
             }
+            this.moved = true;
         }, false);
 
         if(this.touchscreen) {
@@ -81,6 +83,7 @@ export class Mouse extends Point {
         this.rightPressed = false;
         this.scroll.x = 0;
         this.scroll.y = 0;
+        this.moved = false;
     }
 
     public onCanvas(): boolean {
