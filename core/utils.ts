@@ -100,7 +100,7 @@ export function spiral(n: number): { x: number, y: number } | null {
 }
 
 
-// calculates "value % modulo" but wraps negative numbers so the result is always in the range [0, module)
+// calculates "value % modulo" but wraps negative numbers so the result is always in the range [0, modulo)
 //
 // -270 % 360 = -270
 // moduloSafe(-270, 360) = 90
