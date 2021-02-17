@@ -15,7 +15,7 @@ export function Voronoi(points: IPoint[]): VoronoiCell[] {
                 .any(vertex => Geometry.Point.AreEqual(vertex, point)));
         const neighborCircumcircles = neighborTriangles
             .map(triangle => Geometry.Triangle.Circumcircle(triangle))
-            .sorted((a: ICircle, b: ICircle) => 
+            .sort((a: ICircle, b: ICircle) => 
                 moduloSafe(Geometry.Point.Angle(Geometry.Point.Subtract(a, point)), tau) - 
                 moduloSafe(Geometry.Point.Angle(Geometry.Point.Subtract(b, point)), tau)
             );

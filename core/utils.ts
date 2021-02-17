@@ -172,7 +172,6 @@ declare global {
         copy(other: T[]): void;
         clone(): T[];
         clear(): void;
-        sorted(compare?: (a: T, b: T) => number): T[];
         orderBy(getter: (a: T) => number): T[];
         distinct(valueGetter?: (o: T) => string | number): T[];
         distincted(valueGetter?: (o: T) => string | number): T[];
@@ -213,7 +212,7 @@ Array.prototype.removeAt = function<T>(index: number): T | null
 Array.prototype.removeAtMultiple = function<T>(...indices: number[]): T[]
 {
     return indices
-        .sorted((a, b) => b - a)
+        .sort((a, b) => b - a)
         .map((index: number) => this.removeAt(index));
 };
 
@@ -463,13 +462,6 @@ Array.prototype.clone = function<T>(): T[]
 Array.prototype.clear = function<T>(): void
 {
     this.length = 0;
-};
-
-// Chainable sort (modifies existing array)
-Array.prototype.sorted = function<T>(compare?: (a: T, b: T) => number): T[]
-{
-    this.sort(compare);
-    return this;
 };
 
 Array.prototype.orderBy = function<T>(getter: (a: T) => number): T[]
