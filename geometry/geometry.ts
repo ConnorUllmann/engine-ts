@@ -897,7 +897,7 @@ export class Geometry {
             return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
         },
         Hash: (points: IPoint[]): string => points
-            .sorted((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
+            .sort((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
             .map(o => Geometry.Point.Hash(o))
             .join(';'),
         Translate: (points: IPoint[], offset: IPoint): IPoint[] => points.map(o => Geometry.Point.Translate(o, offset)),
