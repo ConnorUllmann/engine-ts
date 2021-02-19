@@ -80,6 +80,14 @@ export class Color {
         return `rgba(${this.red},${this.green},${this.blue},${this.alpha})`;
     }
 
+    public toInt(): number {
+        return (this.alpha << 24) | (this.red << 16) | (this.green << 8) | this.blue;
+    }
+
+    public static FromInt(value: number): Color {
+        return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF, (value >> 24) & 0xFF);
+    }
+
     public lerp(other: Color, amount: number): Color {
         if(amount <= 0) return this.clone();
         if(amount >= 1) return other.clone();
