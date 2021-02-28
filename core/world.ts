@@ -99,9 +99,11 @@ export class World {
         this.interval = null;
     }
 
-    public setCanvasSize(width: number, height: number) {
-        this.canvas.style.width = `${width}px`;
-        this.canvas.style.height = `${height}px`;
+    public setCanvasSize(width?: number, height?: number) {
+        if(width != null)
+            this.canvas.style.width = `${width}px`;
+        if(height != null)
+            this.canvas.style.height = `${height}px`;
     }
 
     private setCanvasResolution(width: number, height: number) {
