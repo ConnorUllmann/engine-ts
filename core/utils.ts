@@ -124,7 +124,7 @@ export function getRandomNumberGenerator(seed: number): () => number {
     };
 }
 
-export const randomSeed = Math.random();
+export const randomSeed = 0.9249802147333896;//Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 
@@ -141,6 +141,43 @@ export const repeat = function<T>(count: number, get: (i: number, count: number)
         array.push(get(i, count));
     }
     return array;
+}
+
+declare global {
+    interface Set<T> {
+        union(other: Set<T>): this,
+        difference(other: Set<T>): this,
+        intersection(other: Set<T>): this,
+        any(boolCheck: (o: T, i: number) => boolean): boolean,
+    }
+}
+
+Set.prototype.union = function<T>(other: Set<T>): Set<T> {
+    for(let o of other)
+        this.add(o);
+    return this;
+}
+
+Set.prototype.difference = function<T>(other: Set<T>): Set<T> {
+    for(let o of other)
+        this.delete(o);
+    return this;
+}
+
+Set.prototype.intersection = function<T>(other: Set<T>): Set<T> {
+    for(let o of this)
+        if(!other.has(o))
+            this.delete(o);
+    return this;
+}
+
+Set.prototype.any = function<T>(boolCheck: (t: T, i: number) => boolean): boolean {
+    let count = 0;
+    for(let t of this) {
+        if(boolCheck(t, count++))
+            return true;
+    }
+    return false;
 }
 
 // TODO apply as many of these as possible to ReadonlyArray as well
