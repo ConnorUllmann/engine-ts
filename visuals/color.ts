@@ -104,10 +104,18 @@ export class Color {
     }
 
     public isEqualTo(color:Color): boolean {
-        return this.red === color.red
-            && this.green === color.green
-            && this.blue === color.blue
-            && this.alpha === color.alpha;
+        return Color.AreEqual(this, color);
+    }
+
+    public static AreEqual(a: Color | null | undefined, b: Color | null | undefined): boolean {
+        if(a == null && b == null)
+            return true;
+        if(a == null || b == null)
+            return false;
+        return a.red === b.red
+            && a.green === b.green
+            && a.blue === b.blue
+            && a.alpha === b.alpha;
     }
 }
 

@@ -57,7 +57,7 @@ export class PixelGrid implements IGrid<Color> {
     // Note: it's slower than .applyFilter()
     public applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color) {
         const pixelGridTemp = new PixelGrid(this.canvas);
-        pixelGridTemp.setEach((position) => filter(position, (position) => this.get(position)));
+        pixelGridTemp.setEach((position) => filter(position, (p) => this.get(p)));
         this.setEach((position) => pixelGridTemp.get(position));
         this.putImageData();
     };
@@ -128,6 +128,15 @@ export class PixelGrid implements IGrid<Color> {
             this.set(position, getColor(position));
         }
     };
+
+    public forEachWithGetter(pixelCall: (position: IPoint, getColor: (position: IPoint) => Color) => void) {
+        const position = new Point();
+        for(let y = 0; y < this.h; y++)
+        for(let x = 0; x < this.w; x++) {
+            position.setToXY(x, y);
+            pixelCall(position, (p) => this.get(p));
+        }
+    }
 
     public forEach(pixelCall: (color: Color, position: IPoint) => void): void {
         const position = new Point();
