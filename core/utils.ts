@@ -124,7 +124,7 @@ export function getRandomNumberGenerator(seed: number): () => number {
     };
 }
 
-export const randomSeed = 0.9249802147333896;//Math.random();
+export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 
