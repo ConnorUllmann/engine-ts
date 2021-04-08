@@ -1,4 +1,3 @@
-import { Entity } from "@engine-ts/core/entity";
 import { Geometry, BoundableShape } from "@engine-ts/geometry/geometry";
 import { IRectangle } from "@engine-ts/geometry/interfaces";
 import { Rectangle } from "@engine-ts/geometry/rectangle";
@@ -9,11 +8,10 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     private readonly _bounds: Rectangle;
 
     constructor(
-        entity: Entity,
         public mask: number,
         public readonly shape: T
     ) {
-        super(entity);
+        super();
         this._boundsLocal = Geometry.Bounds(shape);
         this._bounds = new Rectangle();
     }

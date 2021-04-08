@@ -149,6 +149,8 @@ declare global {
         difference(other: Set<T>): this,
         intersection(other: Set<T>): this,
         any(boolCheck: (o: T, i: number) => boolean): boolean,
+        all(boolCheck: (o: T, i: number) => boolean): boolean,
+        first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null,
     }
 }
 
@@ -179,6 +181,25 @@ Set.prototype.any = function<T>(boolCheck: (t: T, i: number) => boolean): boolea
     }
     return false;
 }
+
+Set.prototype.all = function<T>(boolCheck: (t: T, i: number) => boolean): boolean {
+    let count = 0;
+    for(let t of this) {
+        if(!boolCheck(t, count++))
+            return false;
+    }
+    return true;
+}
+
+Set.prototype.first = function<T>(boolCheck: ((o: T, i: number) => boolean) | null=null): T | null
+{
+    let count = 0;
+    for(let t of this) {
+        if(!boolCheck || boolCheck(t, count++))
+            return t;
+    }
+    return null;
+};
 
 // TODO apply as many of these as possible to ReadonlyArray as well
 declare global {
@@ -362,7 +383,7 @@ Array.prototype.all = function<T>(boolCheck: (o: T, i: number) => boolean): bool
 
 Array.prototype.first = function<T>(boolCheck: ((o: T, i: number) => boolean) | null=null): T | null
 {
-    if(boolCheck === null) {
+    if(boolCheck == null) {
         return this.length <= 0
             ? null
             : this[0];
@@ -377,7 +398,7 @@ Array.prototype.first = function<T>(boolCheck: ((o: T, i: number) => boolean) | 
 
 Array.prototype.last = function<T>(boolCheck: ((o: T, i: number) => boolean) | null=null): T | null
 {
-    if(boolCheck === null) {
+    if(boolCheck == null) {
         return this.length <= 0
             ? null
             : this[this.length-1];

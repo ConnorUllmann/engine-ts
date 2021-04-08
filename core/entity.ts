@@ -15,7 +15,7 @@ export class Entity {
     public visible: boolean = true;
     public depth: number = 0;
 
-    public readonly componentsByClass: { [_class: string]: IComponent[] } = {};
+    public readonly componentsByClass: { [_class: string]: Set<IComponent> } = {};
 
     public readonly position: Point = new Point();
 
@@ -34,40 +34,38 @@ export class Entity {
     }
 
     public addComponent(component: IComponent) {
+        component.entity = this;
+        component.removed = false;
+
         if(!this.componentsByClass[component.class])
-            this.componentsByClass[component.class] = [];
-        this.componentsByClass[component.class].push(component);
+            this.componentsByClass[component.class] = new Set();
+        this.componentsByClass[component.class].add(component);
     }
 
-    private _handleRemoveComponent(component: IComponent) {
+    public removeComponent(component: IComponent) {
         if(component.entity != this || component.removed)
             return;
         if(component.remove)
             component.remove();
         component.removed = true;
         component.entity = null;
-    }
-
-    public removeComponent(component: IComponent) {
-        this._handleRemoveComponent(component);
 
         const classComponents = this.componentsByClass[component.class];
-        classComponents.remove(component);
-        if(classComponents.length <= 0)
+        classComponents.delete(component);
+        if(classComponents.size <= 0)
             delete this.componentsByClass[component.class];
     }
 
     public removeAllComponents() {
         for(let _class in this.componentsByClass) {
             const components = this.componentsByClass[_class];
-            for(let i = components.length - 1; i >= 0; i--)
-                this._handleRemoveComponent(components[i]);
-            delete this.componentsByClass[_class];
+            for(let component of components)
+                this.removeComponent(component);
         }
     }
     
-    public componentsOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T): InstanceType<T>[] | undefined {
-        return this.componentsByClass[_class.name] as InstanceType<T>[];
+    public componentsOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T): Set<InstanceType<T>> | undefined {
+        return this.componentsByClass[_class.name] as Set<InstanceType<T>>;
     }
 
     // sets this entity up to be removed from the World the next time
