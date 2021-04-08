@@ -232,8 +232,7 @@ export class World {
             
             const components = entity.componentsOfClass(_class);
             if(components) {
-                for(let j = 0; j < components.length; j++) {
-                    const component = components[j];
+                for(let component of components) {
                     if(!component.active)
                         continue;
                     
@@ -252,8 +251,7 @@ export class World {
             
             const components = entity.componentsOfClass(_class);
             if(components) {
-                for(let j = 0; j < components.length; j++) {
-                    const component = components[j];
+                for(let component of components) {
                     if(!component.active)
                         continue;
                     

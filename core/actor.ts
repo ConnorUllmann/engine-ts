@@ -27,7 +27,7 @@ export class Actor extends Entity {
 
     constructor(world: World, position: IPoint, shape: BoundableShape, mask: number) {
         super(world, position);
-        this.collider = new Collider(this, mask, shape);
+        this.collider = new Collider(mask, shape);
         this.addComponent(this.collider);
     }
 
