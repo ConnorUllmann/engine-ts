@@ -1,9 +1,9 @@
-export class IdSet<U> extends Set<U> implements Iterable<U>, Set<U> {
+export class IdSet<U> /*ES6: extends Set<U>*/ implements Iterable<U>, Set<U> {
     private dict: Record<string | number, U> = {} as Record<string | number, U>;
 
     // if keepFirstAdded is true, subsequent adds for the same id will not overwrite the current entry
     constructor(private readonly getId: ((u: U) => string) | ((u: U) => number), public keepFirstAdded: boolean=true) {
-        super(null);
+        /*ES6: super(null);*/
     }
 
     add(obj: U): this {
@@ -61,6 +61,13 @@ export class IdSet<U> extends Set<U> implements Iterable<U>, Set<U> {
     get [Symbol.toStringTag]() {
         return 'IdSet';
     }
+
+    union(other: Set<U>): this { return Set.prototype.union.call(this, other); }
+    difference(other: Set<U>): this { return Set.prototype.difference.call(this, other); }
+    intersection(other: Set<U>): this { return Set.prototype.intersection.call(this, other); }
+    any(boolCheck: (u: U, i: number) => boolean): boolean { return Set.prototype.any.call(this, boolCheck); }
+    all(boolCheck: (u: U, i: number) => boolean): boolean { return Set.prototype.all.call(this, boolCheck); }
+    first(boolCheck: ((u: U, i: number) => boolean) | null=null): U | null { return Set.prototype.first.call(this, boolCheck); }
 }
 
 class IdSetIterator<T extends string | number, U> implements IterableIterator<U> {

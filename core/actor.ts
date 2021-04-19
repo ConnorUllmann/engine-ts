@@ -8,6 +8,7 @@ import { BoundableShape } from '@engine-ts/geometry/geometry';
 export class Actor extends Entity {
     public readonly collider: Collider<any>;
     public get bounds(): Readonly<IRectangle> { return this.collider.bounds; }
+    public get boundsLocal(): Readonly<IRectangle> { return this.collider.boundsLocal; }
 
     public get w(): number { return this.collider.w; };
     public get h(): number { return this.collider.h; }
