@@ -9,7 +9,7 @@ export class PathMap<T> {
     private readonly gridPath: IGrid<PathTile<T>>;
     private readonly neighborsCallback: (position: IPoint) => (PathTile<T> | null)[];
 
-    constructor(private readonly grid: IGrid<T>, private readonly getSolid: (obj: T) => boolean, canMoveDiagonally=false) {
+    constructor(private readonly grid: IGrid<T>, private readonly getSolid: (tile: T, position: Readonly<IPoint>) => boolean, canMoveDiagonally=false) {
         this.gridPath = new Grid<PathTile<T>>(this.grid.w, this.grid.h, (position: IPoint) => new PathTile(this.grid, position));
         const compassDirectionGroup = canMoveDiagonally ? CompassDirectionGroup.ALL : CompassDirectionGroup.CARDINAL;
         this.neighborsCallback = (position: IPoint) => this.gridPath.getCompassDirectionGroupNeighbors(position, compassDirectionGroup).map(o => o.tile);
@@ -45,18 +45,18 @@ export class PathMap<T> {
             x: clamp(start.x, 0, this.gridPath.w-1),
             y: clamp(start.y, 0, this.gridPath.h-1)
         });
-        if(this.getSolid(last.tile))
+        if(this.getSolid(last.tile, last.position))
             return [];
 
         let first = this.gridPath.get({
             x: clamp(target.x, 0, this.gridPath.w-1),
             y: clamp(target.y, 0, this.gridPath.h-1)
         });
-        if(this.getSolid(first.tile)) {
+        if(this.getSolid(first.tile, first.position)) {
             if (!useClosestNonSolidTileIfTargetIsSolid)
                 return [];
             // find the tile in the region I have access to which is closest to the target and find a path to it instead
-            first = Grid.GetRegion(this.gridPath, start, o => !this.getSolid(o.tile))
+            first = Grid.GetRegion(this.gridPath, start, o => !this.getSolid(o.tile, o.position))
                 .minOf(o => Geometry.Point.DistanceSq(o.position, target));
             if(first === null)
                 return [];
@@ -83,13 +83,13 @@ export class PathMap<T> {
                             current = neighbor;
                     if(current === first) {
                         path.push(current);
-                        return path.map(o => ({ position: o.position, tile: o.gridObject }));
+                        return path.map(o => ({ position: o.position, tile: o.tile }));
                     }
                 }
             }
             const neighbors = this.neighborsCallback(current.position);
             for(const neighbor of neighbors) {
-                if(neighbor == null || closed.has(neighbor.hash) || this.getSolid(neighbor.tile))
+                if(neighbor == null || closed.has(neighbor.hash) || this.getSolid(neighbor.tile, neighbor.position))
                     continue;
 
                 const neighborSteps = current.steps + this.distance(current, neighbor);
@@ -115,8 +115,10 @@ class PathTile<T> {
     public steps: number | null;
     public targetDistance: number | null;
     public readonly hash: number;
+    public readonly position: IPoint;
 
-    constructor(private readonly grid: IGrid<T>, public readonly position: IPoint) {
+    constructor(private readonly grid: IGrid<T>, position: IPoint) {
+        this.position = { x: position.x, y: position.y }
         this.hash = this.position.x + this.position.y * this.grid.w;
         this.refreshTileReference();
         this.resetHeuristics();
