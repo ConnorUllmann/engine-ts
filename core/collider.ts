@@ -3,17 +3,23 @@ import { IRectangle } from "@engine-ts/geometry/interfaces";
 import { Rectangle } from "@engine-ts/geometry/rectangle";
 import { Component } from "./component";
 
+// TODO: add "shape" property which translates shapeLocal to the position of the entity
 export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
     private readonly _boundsLocal: IRectangle;
     private readonly _bounds: Rectangle;
 
     constructor(
         public mask: number,
-        public readonly shape: T
+        private readonly _shapeLocal: T
     ) {
         super();
-        this._boundsLocal = Geometry.Bounds(shape);
+        this._boundsLocal = Geometry.Bounds(_shapeLocal);
         this._bounds = new Rectangle();
+    }
+
+    // TODO: make Readonly<T>
+    public get shapeLocal(): T {
+        return this._shapeLocal;
     }
 
     public get boundsLocal(): Readonly<IRectangle> {
@@ -101,7 +107,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
 
     // does not consider active/inactive status
     public collideShape(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
-        return Geometry.Collide.AnyAny(this.shape, collider.shape, xOffset != 0 || yOffset != 0 ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset } : this.entity.position, collider.entity.position);
+        return Geometry.Collide.AnyAny(this.shapeLocal, collider.shapeLocal, xOffset != 0 || yOffset != 0 ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset } : this.entity.position, collider.entity.position);
     }
 
     public get x(): number { return this._boundsLocal.x + this.entity.position.x; }

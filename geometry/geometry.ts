@@ -4,6 +4,8 @@ import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon,
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
 export type Shape = BoundableShape | IRay | ILine;
 
+// TODO: change most references from X to Readonly<X> to indicate that an argument will not be modified and allow Collider.shapeLocal to be used with these functions
+
 interface IGeometryStatic<T> {
     Translate: (t: T, offset: IPoint) => T,
     Hash: (t: T) => string,
