@@ -143,6 +143,8 @@ export const repeat = function<T>(count: number, get: (i: number, count: number)
     return array;
 }
 
+export type ReadonlyKV<T> = { readonly [K in keyof T]: Readonly<T[K]> };
+
 declare global {
     interface Set<T> {
         union(other: Set<T>): this,
@@ -234,6 +236,34 @@ declare global {
         clear(): void;
         orderBy(getter: (a: T) => number): T[];
         distinct(valueGetter?: (o: T) => string | number): T[];
+        distincted(valueGetter?: (o: T) => string | number): T[];
+
+        // number only
+        min(this: Array<number>): number | null;
+        max(this: Array<number>): number | null;
+        sum(this: Array<number>): number | null;
+    }
+
+    interface ReadonlyArray<T> {
+        reversed(): T[];
+        sample(): T;
+        samples(count: number): T[];
+        shuffled(): T[];
+        flattened(): T;
+        unflattened(width: number): T[][];
+        batchify(batchSize: number): T[][];
+        any(boolCheck: (o: T, i: number) => boolean): boolean;
+        all(boolCheck: (o: T, i: number) => boolean): boolean;
+        first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
+        last(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
+        bestOf(boolCheck: (o: T) => boolean): T | null;
+        minOf(valueGetter: (o: T) => number): T | null;
+        maxOf(valueGetter: (o: T) => number): T | null;
+        sumOf(valueGetter: (o: T) => number): number | null;
+        mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
+        mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
+        copy(other: T[]): void;
+        clone(): T[];
         distincted(valueGetter?: (o: T) => string | number): T[];
 
         // number only

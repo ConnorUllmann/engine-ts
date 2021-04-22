@@ -2,6 +2,7 @@ import { Geometry, BoundableShape } from "@engine-ts/geometry/geometry";
 import { IRectangle } from "@engine-ts/geometry/interfaces";
 import { Rectangle } from "@engine-ts/geometry/rectangle";
 import { Component } from "./component";
+import { ReadonlyKV } from "./utils";
 
 // TODO: add "shape" property which translates shapeLocal to the position of the entity
 export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
@@ -17,8 +18,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         this._bounds = new Rectangle();
     }
 
-    // TODO: make Readonly<T>
-    public get shapeLocal(): T {
+    public get shapeLocal(): ReadonlyKV<T> {
         return this._shapeLocal;
     }
 
@@ -106,8 +106,11 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // does not consider active/inactive status
-    public collideShape(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
-        return Geometry.Collide.AnyAny(this.shapeLocal, collider.shapeLocal, xOffset != 0 || yOffset != 0 ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset } : this.entity.position, collider.entity.position);
+    public collideShape<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): boolean {
+        const aOffset = xOffset != 0 || yOffset != 0
+            ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset }
+            : this.entity.position;
+        return Geometry.Collide.AnyAny(this.shapeLocal as ReadonlyKV<BoundableShape>, collider.shapeLocal as ReadonlyKV<BoundableShape>, aOffset, collider.entity.position);
     }
 
     public get x(): number { return this._boundsLocal.x + this.entity.position.x; }
@@ -120,4 +123,4 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     public get yTop(): number { return this._boundsLocal.y + this.entity.position.y; }
     public get yCenter(): number { return this.yTop + this.h/2; }
     public get yBottom(): number { return this._boundsLocal.y + this._boundsLocal.h + this.entity.position.y; }
-}
+} 
