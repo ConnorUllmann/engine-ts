@@ -1,4 +1,4 @@
-import { tau, random, clamp, moduloSafe, binomialCoefficient, Halign, Valign, ReadonlyKV } from '@engine-ts/core/utils';
+import { tau, random, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
@@ -7,170 +7,170 @@ export type Shape = BoundableShape | IRay | ILine;
 // TODO: change most references from X to ReadonlyKV<X> to indicate that an argument will not be modified and allow Collider.shapeLocal to be used with these functions
 
 interface IGeometryStatic<T> {
-    Translate: (t: ReadonlyKV<T>, offset: ReadonlyKV<IPoint>) => T,
-    Hash: (t: ReadonlyKV<T>) => string,
+    Translate: (t: DeepReadonly<T>, offset: DeepReadonly<IPoint>) => T,
+    Hash: (t: DeepReadonly<T>) => string,
     // Can't add Rotate because a rectangle can't truly rotate (must be aligned with x/y axes)
     //Rotate: (t: T, angle: number, center?: ReadonlyKV<IPoint>) => T,
 }
 
 interface IPointListStatic<T> extends IGeometryStatic<T> {
-    Segments: (t: ReadonlyKV<T>, offset?:ReadonlyKV<IPoint>) => ISegment[],
-    Vertices: (t: ReadonlyKV<T>, offset?:ReadonlyKV<IPoint>) => IPoint[],
-    Circumcircle: (t: ReadonlyKV<T>) => ICircle,
-    Supertriangle: (t: ReadonlyKV<T>) => ITriangle,
-    Triangulation: (t: ReadonlyKV<T>) => ITriangle[],
-    Bounds: (t: ReadonlyKV<T>) => IRectangle,
-    Hash: (t: ReadonlyKV<T>) => string
+    Segments: (t: DeepReadonly<T>, offset?:DeepReadonly<IPoint>) => ISegment[],
+    Vertices: (t: DeepReadonly<T>, offset?:DeepReadonly<IPoint>) => IPoint[],
+    Circumcircle: (t: DeepReadonly<T>) => ICircle,
+    Supertriangle: (t: DeepReadonly<T>) => ITriangle,
+    Triangulation: (t: DeepReadonly<T>) => ITriangle[],
+    Bounds: (t: DeepReadonly<T>) => IRectangle,
+    Hash: (t: DeepReadonly<T>) => string
 }
 
 interface IPointsStatic extends IPointListStatic<IPoint[]> {
-    Sum: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>) => IPoint,
-    BezierPoint: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, t: number) => IPoint,
-    Bezier: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, count: number) => IPoint[]
+    Sum: (points: DeepReadonly<DeepReadonly<IPoint>[]>) => IPoint,
+    BezierPoint: (points: DeepReadonly<DeepReadonly<IPoint>[]>, t: number) => IPoint,
+    Bezier: (points: DeepReadonly<DeepReadonly<IPoint>[]>, count: number) => IPoint[]
 }
 
 interface IShapeStatic<T> extends IPointListStatic<T> {
-    Midpoint: (o: ReadonlyKV<T>) => IPoint,
-    Area: (o: ReadonlyKV<T>) => number,
+    Midpoint: (o: DeepReadonly<T>) => IPoint,
+    Area: (o: DeepReadonly<T>) => number,
 }
 
 interface ITriangleStatic extends IShapeStatic<ITriangle> {
-    AreaSigned: (triangle: ReadonlyKV<ITriangle>) => number,
+    AreaSigned: (triangle: DeepReadonly<ITriangle>) => number,
     
     // TODO: add these to IShapeStatic<T>
-    Perimeter: (triangle: ReadonlyKV<ITriangle>) => number,
-    Semiperimeter: (triangle: ReadonlyKV<ITriangle>) => number,
+    Perimeter: (triangle: DeepReadonly<ITriangle>) => number,
+    Semiperimeter: (triangle: DeepReadonly<ITriangle>) => number,
 
-    Incenter: (triangle: ReadonlyKV<ITriangle>) => IPoint,
-    Inradius: (triangle: ReadonlyKV<ITriangle>) => number,
-    InscribedCircle: (triangle: ReadonlyKV<ITriangle>) => ICircle,
-    AngleA: (triangle: ReadonlyKV<ITriangle>) => number,
-    AngleB: (triangle: ReadonlyKV<ITriangle>) => number,
-    AngleC: (triangle: ReadonlyKV<ITriangle>) => number,
-    LengthAB: (triangle: ReadonlyKV<ITriangle>) => number,
-    LengthBC: (triangle: ReadonlyKV<ITriangle>) => number,
-    LengthCA: (triangle: ReadonlyKV<ITriangle>) => number,
-    AngleBisector: (bisectionVertex: ReadonlyKV<IPoint>, previousVertex: ReadonlyKV<IPoint>, nextVertex: ReadonlyKV<IPoint>)=> IRay,
-    AngleBisectorA: (triangle: ReadonlyKV<ITriangle>) => IRay,
-    AngleBisectorB: (triangle: ReadonlyKV<ITriangle>) => IRay,
-    AngleBisectorC: (triangle: ReadonlyKV<ITriangle>) => IRay,
-    PerpendicularBisectorAB: (triangle: ReadonlyKV<ITriangle>) => ILine,
-    PerpendicularBisectorBC: (triangle: ReadonlyKV<ITriangle>) => ILine,
-    PerpendicularBisectorCA: (triangle: ReadonlyKV<ITriangle>) => ILine,
-    Rotate: (triangle: ReadonlyKV<ITriangle>, angle: number, center?: ReadonlyKV<IPoint>) => ITriangle
+    Incenter: (triangle: DeepReadonly<ITriangle>) => IPoint,
+    Inradius: (triangle: DeepReadonly<ITriangle>) => number,
+    InscribedCircle: (triangle: DeepReadonly<ITriangle>) => ICircle,
+    AngleA: (triangle: DeepReadonly<ITriangle>) => number,
+    AngleB: (triangle: DeepReadonly<ITriangle>) => number,
+    AngleC: (triangle: DeepReadonly<ITriangle>) => number,
+    LengthAB: (triangle: DeepReadonly<ITriangle>) => number,
+    LengthBC: (triangle: DeepReadonly<ITriangle>) => number,
+    LengthCA: (triangle: DeepReadonly<ITriangle>) => number,
+    AngleBisector: (bisectionVertex: DeepReadonly<IPoint>, previousVertex: DeepReadonly<IPoint>, nextVertex: DeepReadonly<IPoint>)=> IRay,
+    AngleBisectorA: (triangle: DeepReadonly<ITriangle>) => IRay,
+    AngleBisectorB: (triangle: DeepReadonly<ITriangle>) => IRay,
+    AngleBisectorC: (triangle: DeepReadonly<ITriangle>) => IRay,
+    PerpendicularBisectorAB: (triangle: DeepReadonly<ITriangle>) => ILine,
+    PerpendicularBisectorBC: (triangle: DeepReadonly<ITriangle>) => ILine,
+    PerpendicularBisectorCA: (triangle: DeepReadonly<ITriangle>) => ILine,
+    Rotate: (triangle: DeepReadonly<ITriangle>, angle: number, center?: DeepReadonly<IPoint>) => ITriangle
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
-    BoundsRectangles: (rectangles: ReadonlyKV<ReadonlyKV<IRectangle>[]>) => IRectangle,
-    Scale: (rectangle: ReadonlyKV<IRectangle>, scalar: number | ReadonlyKV<IPoint>, center?: ReadonlyKV<IPoint>) => IRectangle,
+    BoundsRectangles: (rectangles: DeepReadonly<DeepReadonly<IRectangle>[]>) => IRectangle,
+    Scale: (rectangle: DeepReadonly<IRectangle>, scalar: number | DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
-    Expand: (rectangle: ReadonlyKV<IRectangle>, wAmount: number, hAmount?: number) => IRectangle,
-    RandomPointInside: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    Square: (center: ReadonlyKV<IPoint>, sideLength: number) => IRectangle,
-    Translate: (rectangle: ReadonlyKV<IRectangle>, translation: ReadonlyKV<IPoint>) => IRectangle,
-    Align: (rectangle: ReadonlyKV<IRectangle>, halign: Halign, valign: Valign) => IRectangle,
-    Center: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    TopLeft: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    TopRight: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    BottomLeft: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    BottomRight: (rectangle: ReadonlyKV<IRectangle>) => IPoint,
-    xLeft: (rectangle: ReadonlyKV<IRectangle>) => number,
-    xRight: (rectangle: ReadonlyKV<IRectangle>) => number,
-    yTop: (rectangle: ReadonlyKV<IRectangle>) => number,
-    yBottom: (rectangle: ReadonlyKV<IRectangle>) => number,
+    Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount?: number) => IRectangle,
+    RandomPointInside: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    Square: (center: DeepReadonly<IPoint>, sideLength: number) => IRectangle,
+    Translate: (rectangle: DeepReadonly<IRectangle>, translation: DeepReadonly<IPoint>) => IRectangle,
+    Align: (rectangle: DeepReadonly<IRectangle>, halign: Halign, valign: Valign) => IRectangle,
+    Center: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    TopLeft: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    TopRight: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    BottomLeft: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    BottomRight: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    xLeft: (rectangle: DeepReadonly<IRectangle>) => number,
+    xRight: (rectangle: DeepReadonly<IRectangle>) => number,
+    yTop: (rectangle: DeepReadonly<IRectangle>) => number,
+    yBottom: (rectangle: DeepReadonly<IRectangle>) => number,
 }
 
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
-    WindingNumber: (polygon: ReadonlyKV<IPolygon>, point: ReadonlyKV<IPoint>) => number,
-    Rotate: (polygon: ReadonlyKV<IPolygon>, angle: number, center?: ReadonlyKV<IPoint>) => IPolygon
+    WindingNumber: (polygon: DeepReadonly<IPolygon>, point: DeepReadonly<IPoint>) => number,
+    Rotate: (polygon: DeepReadonly<IPolygon>, angle: number, center?: DeepReadonly<IPoint>) => IPolygon
     // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
 interface ICircleStatic extends IGeometryStatic<ICircle> {
-    Circumcircle: (circle: ReadonlyKV<ICircle>) => ICircle,
-    Supertriangle: (o: ReadonlyKV<ICircle>) => ITriangle,
-    Midpoint: (o: ReadonlyKV<ICircle>) => IPoint,
-    Area: (o: ReadonlyKV<ICircle>) => number,
-    Circumference: (o: ReadonlyKV<ICircle>) => number,
-    Bounds: (o: ReadonlyKV<ICircle>) => IRectangle,
-    RandomPointInside: (circle: ReadonlyKV<ICircle>) => IPoint,
-    Rotate: (circle: ReadonlyKV<ICircle>, angle: number, center?: ReadonlyKV<IPoint>) => ICircle,
+    Circumcircle: (circle: DeepReadonly<ICircle>) => ICircle,
+    Supertriangle: (o: DeepReadonly<ICircle>) => ITriangle,
+    Midpoint: (o: DeepReadonly<ICircle>) => IPoint,
+    Area: (o: DeepReadonly<ICircle>) => number,
+    Circumference: (o: DeepReadonly<ICircle>) => number,
+    Bounds: (o: DeepReadonly<ICircle>) => IRectangle,
+    RandomPointInside: (circle: DeepReadonly<ICircle>) => IPoint,
+    Rotate: (circle: DeepReadonly<ICircle>, angle: number, center?: DeepReadonly<IPoint>) => ICircle,
     // returns the points on 'circle' that are tangent when they form a segment with 'point'
-    TangentPoints: (circle: ReadonlyKV<ICircle>, point: ReadonlyKV<IPoint>) => { a: IPoint, b: IPoint } | null
+    TangentPoints: (circle: DeepReadonly<ICircle>, point: DeepReadonly<IPoint>) => { a: IPoint, b: IPoint } | null
 }
 
 interface IPointStatic extends IGeometryStatic<IPoint> {
-    readonly Zero: ReadonlyKV<IPoint>,
-    readonly One: ReadonlyKV<IPoint>,
-    readonly Up: ReadonlyKV<IPoint>,
-    readonly Down: ReadonlyKV<IPoint>,
-    readonly Left: ReadonlyKV<IPoint>,
-    readonly Right: ReadonlyKV<IPoint>,
-    readonly UpRight: ReadonlyKV<IPoint>,
-    readonly UpLeft: ReadonlyKV<IPoint>,
-    readonly DownRight: ReadonlyKV<IPoint>,
-    readonly DownLeft: ReadonlyKV<IPoint>,
-    AreEqual: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => boolean,
-    DistanceSq: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => number,
-    Distance: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => number,
-    Add: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => IPoint,
-    Subtract: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => IPoint,
-    Midpoint: (...points: ReadonlyKV<ReadonlyKV<IPoint>[]>) => IPoint | null,
-    Angle: (point: ReadonlyKV<IPoint>) => number,
-    Scale: (point: ReadonlyKV<IPoint>, scalar: number | ReadonlyKV<IPoint>, from?: ReadonlyKV<IPoint>) => IPoint,
-    LengthSq: (point: ReadonlyKV<IPoint>) => number,
-    Length: (point: ReadonlyKV<IPoint>) => number,
-    Dot: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => number,
-    Cross: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => number,
-    Project: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => IPoint,
-    Normalized: (point: ReadonlyKV<IPoint>, length?: number) => IPoint,
-    Rotate: (point: ReadonlyKV<IPoint>, angle: number, center?: ReadonlyKV<IPoint>) => IPoint,
-    Negative: (point: ReadonlyKV<IPoint>) => IPoint,
-    Wiggle: (point: ReadonlyKV<IPoint>, angleRangeMax: number, center?: ReadonlyKV<IPoint>) => IPoint,
-    Towardness: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => number,
-    Lerp: (from: ReadonlyKV<IPoint>, to: ReadonlyKV<IPoint>, t: number) => IPoint,
-    Flip: (point: ReadonlyKV<IPoint>, center?: ReadonlyKV<IPoint>) => IPoint,
-    Reflect: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>) => IPoint,
-    ClampedInRectangle: (point: ReadonlyKV<IPoint>, rectangle: ReadonlyKV<IRectangle>) => IPoint,
+    readonly Zero: DeepReadonly<IPoint>,
+    readonly One: DeepReadonly<IPoint>,
+    readonly Up: DeepReadonly<IPoint>,
+    readonly Down: DeepReadonly<IPoint>,
+    readonly Left: DeepReadonly<IPoint>,
+    readonly Right: DeepReadonly<IPoint>,
+    readonly UpRight: DeepReadonly<IPoint>,
+    readonly UpLeft: DeepReadonly<IPoint>,
+    readonly DownRight: DeepReadonly<IPoint>,
+    readonly DownLeft: DeepReadonly<IPoint>,
+    AreEqual: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => boolean,
+    DistanceSq: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
+    Distance: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
+    Add: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => IPoint,
+    Subtract: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => IPoint,
+    Midpoint: (...points: DeepReadonly<DeepReadonly<IPoint>[]>) => IPoint | null,
+    Angle: (point: DeepReadonly<IPoint>) => number,
+    Scale: (point: DeepReadonly<IPoint>, scalar: number | DeepReadonly<IPoint>, from?: DeepReadonly<IPoint>) => IPoint,
+    LengthSq: (point: DeepReadonly<IPoint>) => number,
+    Length: (point: DeepReadonly<IPoint>) => number,
+    Dot: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
+    Cross: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
+    Project: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => IPoint,
+    Normalized: (point: DeepReadonly<IPoint>, length?: number) => IPoint,
+    Rotate: (point: DeepReadonly<IPoint>, angle: number, center?: DeepReadonly<IPoint>) => IPoint,
+    Negative: (point: DeepReadonly<IPoint>) => IPoint,
+    Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>) => IPoint,
+    Towardness: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
+    Lerp: (from: DeepReadonly<IPoint>, to: DeepReadonly<IPoint>, t: number) => IPoint,
+    Flip: (point: DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>) => IPoint,
+    Reflect: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>) => IPoint,
+    ClampedInRectangle: (point: DeepReadonly<IPoint>, rectangle: DeepReadonly<IRectangle>) => IPoint,
     Vector: (length: number, angle: number) => IPoint,
     UnitVector: (angle: number) => IPoint,
-    IsLeftCenterRightOf: (point: ReadonlyKV<IPoint>, { a, b }: ReadonlyKV<IPointPair>) => number,
-    IsLeftOf: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>) => boolean,
-    IsColinearWith: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>) => boolean,
-    InsideSegmentIfColinear: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<ISegment>) => boolean,
-    InsideRayIfColinear: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IRay>) => boolean,
-    IsRightOf: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>) => boolean,
+    IsLeftCenterRightOf: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>) => number,
+    IsLeftOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>) => boolean,
+    IsColinearWith: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>) => boolean,
+    InsideSegmentIfColinear: (point: DeepReadonly<IPoint>, pair: DeepReadonly<ISegment>) => boolean,
+    InsideRayIfColinear: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IRay>) => boolean,
+    IsRightOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>) => boolean,
     // Returns a list of the velocity vectors a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
     // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
-    LaunchVectors: (start: ReadonlyKV<IPoint>, target: ReadonlyKV<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => IPoint[]
+    LaunchVectors: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => IPoint[]
 }
 
 interface IPointPairStatic<T extends IPointPair> {
-    AreEqual: (pairA: ReadonlyKV<T>, pairB: ReadonlyKV<T>) => boolean,
-    YatX: (pair: ReadonlyKV<T>, x: number) => number,
-    XatY: (pair: ReadonlyKV<T>, y: number) => number,
-    Slope: (pair: ReadonlyKV<T>) => number,
-    Hash: (pair: ReadonlyKV<T>) => string,
-    Translate: (pair: ReadonlyKV<T>, offset: ReadonlyKV<IPoint>) => T,
-    ClosestPointTo: (pair: ReadonlyKV<T>, point: ReadonlyKV<IPoint>) => IPoint
+    AreEqual: (pairA: DeepReadonly<T>, pairB: DeepReadonly<T>) => boolean,
+    YatX: (pair: DeepReadonly<T>, x: number) => number,
+    XatY: (pair: DeepReadonly<T>, y: number) => number,
+    Slope: (pair: DeepReadonly<T>) => number,
+    Hash: (pair: DeepReadonly<T>) => string,
+    Translate: (pair: DeepReadonly<T>, offset: DeepReadonly<IPoint>) => T,
+    ClosestPointTo: (pair: DeepReadonly<T>, point: DeepReadonly<IPoint>) => IPoint
 }
 
 interface ILineStatic extends IPointPairStatic<ILine> {
-    Yintercept: (line: ReadonlyKV<ILine>) => number
+    Yintercept: (line: DeepReadonly<ILine>) => number
 };
 
 interface IRayStatic extends IPointPairStatic<IRay> {
     DefaultMaxDistance: number,
-    AsSegment: (ray: ReadonlyKV<IRay>, length: number) => ISegment,
-    PointAtDistance: (ray: ReadonlyKV<IRay>, length: number) => IPoint,
-    Cast: (ray: ReadonlyKV<IRay>, segments: ReadonlyKV<ReadonlyKV<ISegment>[]>, maxDistance: number) => IRaycastResult<ISegment> | null,
+    AsSegment: (ray: DeepReadonly<IRay>, length: number) => ISegment,
+    PointAtDistance: (ray: DeepReadonly<IRay>, length: number) => IPoint,
+    Cast: (ray: DeepReadonly<IRay>, segments: DeepReadonly<DeepReadonly<ISegment>[]>, maxDistance: number) => IRaycastResult<ISegment> | null,
 };
 
 interface ISegmentStatic extends IPointPairStatic<ISegment> {
-    Midpoint: (segment: ReadonlyKV<ISegment>) => IPoint,
-    PerpendicularBisector: (segment: ReadonlyKV<ISegment>) => ILine,
-    SharedVertex: (segmentA: ReadonlyKV<ISegment>, segmentB: ReadonlyKV<ISegment>) => IPoint | null,
-    Bounds: (segment: ReadonlyKV<ISegment>) => IRectangle,
+    Midpoint: (segment: DeepReadonly<ISegment>) => IPoint,
+    PerpendicularBisector: (segment: DeepReadonly<ISegment>) => ILine,
+    SharedVertex: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>) => IPoint | null,
+    Bounds: (segment: DeepReadonly<ISegment>) => IRectangle,
 }
 
 export class Geometry {
@@ -206,14 +206,14 @@ export class Geometry {
         UpLeft: { x: -1, y: -1 },
         DownRight: { x: 1, y: 1 },
         DownLeft: { x: -1, y: 1 },
-        AreEqual: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>) => Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
-        Hash: (point: ReadonlyKV<IPoint>) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
-        DistanceSq: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): number => Geometry.DistanceSq(a.x, a.y, b.x, b.y),
-        Distance: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
-        Add: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
-        Translate: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
-        Subtract: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): IPoint => ({ x: a.x - b.x, y: a.y - b.y }),
-        Midpoint: (...points: ReadonlyKV<ReadonlyKV<IPoint>[]>): IPoint | null => {
+        AreEqual: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
+        Hash: (point: DeepReadonly<IPoint>) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
+        DistanceSq: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => Geometry.DistanceSq(a.x, a.y, b.x, b.y),
+        Distance: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
+        Add: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
+        Translate: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): IPoint => ({ x: a.x + b.x, y: a.y + b.y }),
+        Subtract: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): IPoint => ({ x: a.x - b.x, y: a.y - b.y }),
+        Midpoint: (...points: DeepReadonly<DeepReadonly<IPoint>[]>): IPoint | null => {
             if(points.length <= 0)
                 return null;
             const sum = { x: 0, y: 0 };
@@ -223,8 +223,8 @@ export class Geometry {
                 y: sum.y / points.length
             };
         },
-        Angle: (point: ReadonlyKV<IPoint>): number => Math.atan2(point.y, point.x),
-        Scale: (point: ReadonlyKV<IPoint>, scalar: number | IPoint, from?: ReadonlyKV<IPoint>): IPoint => {
+        Angle: (point: DeepReadonly<IPoint>): number => Math.atan2(point.y, point.x),
+        Scale: (point: DeepReadonly<IPoint>, scalar: number | IPoint, from?: DeepReadonly<IPoint>): IPoint => {
             return from != null
                 ? (typeof scalar === "number"
                     ? { x: (point.x - from.x) * scalar + from.x, y: (point.y - from.y) * scalar + from.y }
@@ -233,20 +233,20 @@ export class Geometry {
                     ? { x: point.x * scalar, y: point.y * scalar }
                     : { x: point.x * scalar.x, y: point.y * scalar.y })
         },
-        LengthSq: (point: ReadonlyKV<IPoint>): number => point.x * point.x + point.y * point.y,
-        Length: (point: ReadonlyKV<IPoint>): number => Math.sqrt(Geometry.Point.LengthSq(point)),
-        Dot: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): number => a.x * b.x + a.y * b.y,
-        Cross: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): number => a.x * b.y - b.x * a.y,
-        Project: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): IPoint => { 
+        LengthSq: (point: DeepReadonly<IPoint>): number => point.x * point.x + point.y * point.y,
+        Length: (point: DeepReadonly<IPoint>): number => Math.sqrt(Geometry.Point.LengthSq(point)),
+        Dot: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => a.x * b.x + a.y * b.y,
+        Cross: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => a.x * b.y - b.x * a.y,
+        Project: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): IPoint => { 
             return Geometry.Point.Scale(b, Geometry.Point.Dot(a, b) / Math.max(Geometry.Point.LengthSq(b), Geometry.Tolerance)); 
         },
-        Normalized: (point: ReadonlyKV<IPoint>, length?: number): IPoint => {
+        Normalized: (point: DeepReadonly<IPoint>, length?: number): IPoint => {
             if((point.x === 0 && point.y === 0) || length === 0)
                 return { x: 0, y: 0 };
             const temp = (length == undefined ? 1 : length) / Geometry.Point.Length(point);
             return { x: point.x * temp, y: point.y * temp };
         },
-        Rotate: (point: ReadonlyKV<IPoint>, angle: number, center?: ReadonlyKV<IPoint>): IPoint => {
+        Rotate: (point: DeepReadonly<IPoint>, angle: number, center?: DeepReadonly<IPoint>): IPoint => {
             const x = point.x - (center ? center.x : 0);
             const y = point.y - (center ? center.y : 0);
             return {
@@ -255,32 +255,32 @@ export class Geometry {
             };
         },
         // same as rotating a vector 180 degrees
-        Negative: (point: ReadonlyKV<IPoint>): IPoint => ({ x: -point.x, y: -point.y }),
+        Negative: (point: DeepReadonly<IPoint>): IPoint => ({ x: -point.x, y: -point.y }),
         // rotates the point randomly in the range given about the center, or the origin if it is not defined
-        Wiggle: (point: ReadonlyKV<IPoint>, angleRangeMax: number, center?: ReadonlyKV<IPoint>): IPoint => Geometry.Point.Rotate(point, angleRangeMax * (random() - 0.5), center),
+        Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>): IPoint => Geometry.Point.Rotate(point, angleRangeMax * (random() - 0.5), center),
         // Returns how much a (as a vector) faces in the direction of b (as a vector)
         // -1 = a faces opposite the direction of b
         // 0 = a faces perpendicular to the direction of b
         // 1 = a faces the exact same direction as b
-        Towardness: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>): number => Geometry.Point.Dot(Geometry.Point.Normalized(a), Geometry.Point.Normalized(b)),
+        Towardness: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => Geometry.Point.Dot(Geometry.Point.Normalized(a), Geometry.Point.Normalized(b)),
         // t = 0 =  from
         // t = 0.5 = midpoint between from and to
         // t = 1 = to
-        Lerp: (from: ReadonlyKV<IPoint>, to: ReadonlyKV<IPoint>, t: number): IPoint => Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Subtract(to, from), t), from),
+        Lerp: (from: DeepReadonly<IPoint>, to: DeepReadonly<IPoint>, t: number): IPoint => Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Subtract(to, from), t), from),
         // returns a version of this point which is flipped over (rotated 180 degrees around) the given point
         // (or the origin if none is provided). Provided because it is faster than using rotate/reflect.
-        Flip: (point: ReadonlyKV<IPoint>, center?: ReadonlyKV<IPoint>): IPoint => { 
+        Flip: (point: DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>): IPoint => { 
             return center
                 ? { x: 2 * center.x - point.x, y: 2 * center.y - point.y } 
                 : Geometry.Point.Negative(point);
         },
         // reflects the given point over the given line
-        Reflect: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>): IPoint => {
+        Reflect: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): IPoint => {
             // use the Line method for Rays & Segments too
             const reflectionPoint = Geometry.Line.ClosestPointTo(pair, point);
             return Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Subtract(reflectionPoint, point), 2), point);
         },
-        ClampedInRectangle: (point: ReadonlyKV<IPoint>, rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        ClampedInRectangle: (point: DeepReadonly<IPoint>, rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: clamp(point.x, rectangle.x, rectangle.x + rectangle.w),
             y: clamp(point.y, rectangle.y, rectangle.y + rectangle.h)
         }),
@@ -289,25 +289,25 @@ export class Geometry {
         // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
         // if result is < 0, then this point is right of the line/segment/ray formed by the two points. 
         // if result == 0, then it is colinear with the two points.
-        IsLeftCenterRightOf: (point: ReadonlyKV<IPoint>, { a, b }: ReadonlyKV<IPointPair>): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
-        IsLeftOf: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
-        IsColinearWith: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>): boolean => Geometry.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
-        InsideSegmentIfColinear: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<ISegment>): boolean => {
+        IsLeftCenterRightOf: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>): number => Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
+        IsLeftOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
+        IsColinearWith: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean => Geometry.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
+        InsideSegmentIfColinear: (point: DeepReadonly<IPoint>, pair: DeepReadonly<ISegment>): boolean => {
             let ap = Geometry.Point.Subtract(point, pair.a);
             let ab = Geometry.Point.Subtract(pair.b, pair.a);
             let v = Geometry.Point.Dot(ap, ab);
             return v >= 0 && v <= Geometry.Point.LengthSq(ab);
         },
-        InsideRayIfColinear: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IRay>): boolean => {
+        InsideRayIfColinear: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IRay>): boolean => {
             let ap = Geometry.Point.Subtract(point, pair.a);
             let ab = Geometry.Point.Subtract(pair.b, pair.a);
             let v = Geometry.Point.Dot(ap, ab);
             return v >= 0;
         },
-        IsRightOf: (point: ReadonlyKV<IPoint>, pair: ReadonlyKV<IPointPair>): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
+        IsRightOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean => Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
         // Returns a list of the velocity vectors a projectile would need in order to hit 'target' from 'start'
         // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
-        LaunchVectors: (start: ReadonlyKV<IPoint>, target: ReadonlyKV<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => {
+        LaunchVectors: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => {
             if(velocityMagnitude === 0)
                 return [];
     
@@ -341,7 +341,7 @@ export class Geometry {
     };
 
     public static PointPair = {
-        YatX: (pair: ReadonlyKV<IPointPair>, x: number): number => {
+        YatX: (pair: DeepReadonly<IPointPair>, x: number): number => {
             const slope = Geometry.Line.Slope(pair);
             return slope === Number.POSITIVE_INFINITY
                 ? Number.POSITIVE_INFINITY
@@ -349,13 +349,13 @@ export class Geometry {
                     ? Number.NEGATIVE_INFINITY
                     : pair.a.y + (x - pair.a.x) * slope;
         },
-        XatY: (pair: ReadonlyKV<IPointPair>, y: number): number => {
+        XatY: (pair: DeepReadonly<IPointPair>, y: number): number => {
             const slope = Geometry.Line.Slope(pair);
             return slope === Number.POSITIVE_INFINITY || slope === Number.NEGATIVE_INFINITY
                 ? pair.a.x
                 : pair.a.x + (y - pair.a.y) / slope;
         },
-        Slope: (pair: ReadonlyKV<IPointPair>): number => pair.b.x !== pair.a.x 
+        Slope: (pair: DeepReadonly<IPointPair>): number => pair.b.x !== pair.a.x 
             ? (pair.b.y - pair.a.y) / (pair.b.x - pair.a.x) 
             : (pair.b.y > pair.a.y 
                 ? Number.NEGATIVE_INFINITY 
@@ -363,40 +363,40 @@ export class Geometry {
     }
 
     public static Line: ILineStatic = {
-        AreEqual: (lineA: ReadonlyKV<ILine>, lineB: ReadonlyKV<ILine>): boolean => Geometry.Line.Hash(lineA) === Geometry.Line.Hash(lineB),
-        YatX: (line: ReadonlyKV<ILine>, x: number): number => Geometry.PointPair.YatX(line, x),
-        XatY: (line: ReadonlyKV<ILine>, y: number): number => Geometry.PointPair.XatY(line, y),
-        Slope: (line: ReadonlyKV<ILine>): number => Geometry.PointPair.Slope(line),
-        Hash: (line: ReadonlyKV<ILine>): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`,
-        Translate: (line: ReadonlyKV<ILine>, offset: ReadonlyKV<IPoint>) => ({
+        AreEqual: (lineA: DeepReadonly<ILine>, lineB: DeepReadonly<ILine>): boolean => Geometry.Line.Hash(lineA) === Geometry.Line.Hash(lineB),
+        YatX: (line: DeepReadonly<ILine>, x: number): number => Geometry.PointPair.YatX(line, x),
+        XatY: (line: DeepReadonly<ILine>, y: number): number => Geometry.PointPair.XatY(line, y),
+        Slope: (line: DeepReadonly<ILine>): number => Geometry.PointPair.Slope(line),
+        Hash: (line: DeepReadonly<ILine>): string => `${Geometry.Line.Slope(line).toFixed(6)}${Geometry.Line.YatX(line, 0).toFixed(6)}`,
+        Translate: (line: DeepReadonly<ILine>, offset: DeepReadonly<IPoint>) => ({
                 a: Geometry.Point.Add(line.a, offset),
                 b: Geometry.Point.Add(line.b, offset)
             }),
-        ClosestPointTo: (line: ReadonlyKV<ILine>, point: ReadonlyKV<IPoint>): IPoint =>
+        ClosestPointTo: (line: DeepReadonly<ILine>, point: DeepReadonly<IPoint>): IPoint =>
             Geometry.Point.Add(line.a,
                 Geometry.Point.Project(
                     Geometry.Point.Subtract(point, line.a), 
                     Geometry.Point.Subtract(line.b, line.a)
                 )
             ),
-        Yintercept: (line: ReadonlyKV<ILine>): number => Geometry.Line.YatX(line, 0)
+        Yintercept: (line: DeepReadonly<ILine>): number => Geometry.Line.YatX(line, 0)
     };
 
     public static Ray: IRayStatic = {
-        AreEqual: (rayA: ReadonlyKV<IRay>, rayB: ReadonlyKV<IRay>): boolean => Geometry.Ray.Hash(rayA) === Geometry.Ray.Hash(rayB),
-        YatX: (ray: ReadonlyKV<IRay>, x: number): number | null => Math.sign(x - ray.a.x) * Math.sign(ray.b.x - ray.a.x) === -1 ? null : Geometry.PointPair.YatX(ray, x),
-        XatY: (ray: ReadonlyKV<IRay>, y: number): number | null => Math.sign(y - ray.a.y) * Math.sign(ray.b.y - ray.a.y) === -1 ? null : Geometry.PointPair.XatY(ray, y),
-        Slope: (ray: ReadonlyKV<IRay>): number => Geometry.PointPair.Slope(ray),
-        Hash: (ray: ReadonlyKV<IRay>): string => Geometry.Points.Hash([ray.a, Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a)), ray.a)]),
+        AreEqual: (rayA: DeepReadonly<IRay>, rayB: DeepReadonly<IRay>): boolean => Geometry.Ray.Hash(rayA) === Geometry.Ray.Hash(rayB),
+        YatX: (ray: DeepReadonly<IRay>, x: number): number | null => Math.sign(x - ray.a.x) * Math.sign(ray.b.x - ray.a.x) === -1 ? null : Geometry.PointPair.YatX(ray, x),
+        XatY: (ray: DeepReadonly<IRay>, y: number): number | null => Math.sign(y - ray.a.y) * Math.sign(ray.b.y - ray.a.y) === -1 ? null : Geometry.PointPair.XatY(ray, y),
+        Slope: (ray: DeepReadonly<IRay>): number => Geometry.PointPair.Slope(ray),
+        Hash: (ray: DeepReadonly<IRay>): string => Geometry.Points.Hash([ray.a, Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a)), ray.a)]),
         DefaultMaxDistance: 1000000,
-        AsSegment: (ray: ReadonlyKV<IRay>, length: number=Geometry.Ray.DefaultMaxDistance): ISegment => ({
+        AsSegment: (ray: DeepReadonly<IRay>, length: number=Geometry.Ray.DefaultMaxDistance): ISegment => ({
             a: ray.a, 
             b: Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a), length), ray.a)
         }),
-        PointAtDistance: (ray: ReadonlyKV<IRay>, length: number=Geometry.Ray.DefaultMaxDistance): IPoint => {
+        PointAtDistance: (ray: DeepReadonly<IRay>, length: number=Geometry.Ray.DefaultMaxDistance): IPoint => {
             return Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a), length), ray.a);
         },
-        Cast: (ray: ReadonlyKV<IRay>, segments: ReadonlyKV<ReadonlyKV<ISegment>[]>, maxDistance: number=Geometry.Ray.DefaultMaxDistance): IRaycastResult<ISegment> | null => {
+        Cast: (ray: DeepReadonly<IRay>, segments: DeepReadonly<DeepReadonly<ISegment>[]>, maxDistance: number=Geometry.Ray.DefaultMaxDistance): IRaycastResult<ISegment> | null => {
             const raySegment = Geometry.Ray.AsSegment(ray, maxDistance);
             const segmentIntersection = segments
                 .map(segment => ({ segment, intersection: Geometry.Intersection.SegmentSegment(raySegment, segment) }))
@@ -409,11 +409,11 @@ export class Geometry {
                     segmentHit: segmentIntersection.segment
                 };
         },
-        Translate: (ray: ReadonlyKV<IRay>, offset: ReadonlyKV<IPoint>) => ({
+        Translate: (ray: DeepReadonly<IRay>, offset: DeepReadonly<IPoint>) => ({
                 a: Geometry.Point.Add(ray.a, offset),
                 b: Geometry.Point.Add(ray.b, offset)
             }),
-        ClosestPointTo: ({ a, b }: ReadonlyKV<IRay>, point: ReadonlyKV<IPoint>): IPoint => {
+        ClosestPointTo: ({ a, b }: DeepReadonly<IRay>, point: DeepReadonly<IPoint>): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
             const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
             const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
@@ -422,24 +422,24 @@ export class Geometry {
     };
 
     public static Segment: ISegmentStatic = {
-        AreEqual: (segmentA: ReadonlyKV<ISegment>, segmentB: ReadonlyKV<ISegment>): boolean => Geometry.Segment.Hash(segmentA) === Geometry.Segment.Hash(segmentB),
-        YatX: (segment: ReadonlyKV<ISegment>, x: number): number | null => 
+        AreEqual: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>): boolean => Geometry.Segment.Hash(segmentA) === Geometry.Segment.Hash(segmentB),
+        YatX: (segment: DeepReadonly<ISegment>, x: number): number | null => 
             Math.sign(x - segment.a.x) * Math.sign(segment.b.x - segment.a.x) === -1 &&
             Math.sign(x - segment.b.x) * Math.sign(segment.a.x - segment.b.x) === -1
                 ? Geometry.PointPair.YatX(segment, x)
                 : null,
-        XatY: (segment: ReadonlyKV<ISegment>, y: number): number | null =>
+        XatY: (segment: DeepReadonly<ISegment>, y: number): number | null =>
             Math.sign(y - segment.a.y) * Math.sign(segment.b.y - segment.a.y) === -1 &&
             Math.sign(y - segment.b.y) * Math.sign(segment.a.y - segment.b.y) === -1
                 ? Geometry.PointPair.XatY(segment, y) 
                 : null,
-        Slope: (segment: ReadonlyKV<ISegment>): number => Geometry.PointPair.Slope(segment),
-        Hash: (segment: ReadonlyKV<ISegment>): string => Geometry.Points.Hash([segment.a, segment.b]),
-        Translate: (segment: ReadonlyKV<ISegment>, offset: ReadonlyKV<IPoint>) => ({
+        Slope: (segment: DeepReadonly<ISegment>): number => Geometry.PointPair.Slope(segment),
+        Hash: (segment: DeepReadonly<ISegment>): string => Geometry.Points.Hash([segment.a, segment.b]),
+        Translate: (segment: DeepReadonly<ISegment>, offset: DeepReadonly<IPoint>) => ({
                 a: Geometry.Point.Add(segment.a, offset),
                 b: Geometry.Point.Add(segment.b, offset)
             }),
-        ClosestPointTo: ({ a, b }: ReadonlyKV<ISegment>, point: ReadonlyKV<IPoint>): IPoint => {
+        ClosestPointTo: ({ a, b }: DeepReadonly<ISegment>, point: DeepReadonly<IPoint>): IPoint => {
             const ab = Geometry.Point.Subtract(b, a);
             const ret = Geometry.Point.Add(Geometry.Point.Project(Geometry.Point.Subtract(point, a), ab), a);
             const r = Geometry.Point.Dot(Geometry.Point.Subtract(ret, a), ab);
@@ -447,11 +447,11 @@ export class Geometry {
             if(r > Geometry.Point.LengthSq(ab)) return b;
             return ret;
         },
-        Midpoint: (segment: ReadonlyKV<ISegment>): IPoint => ({ 
+        Midpoint: (segment: DeepReadonly<ISegment>): IPoint => ({ 
             x: (segment.a.x + segment.b.x) / 2,
             y: (segment.a.y + segment.b.y) / 2
         }),
-        PerpendicularBisector: (segment: ReadonlyKV<ISegment>): ILine => {
+        PerpendicularBisector: (segment: DeepReadonly<ISegment>): ILine => {
             const midpoint = Geometry.Segment.Midpoint(segment);
             return {
                 a: midpoint,
@@ -462,13 +462,13 @@ export class Geometry {
                         tau/4))
             };
         },
-        SharedVertex: (segmentA: ReadonlyKV<ISegment>, segmentB: ReadonlyKV<ISegment>): IPoint | null =>
+        SharedVertex: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>): IPoint | null =>
             Geometry.Point.AreEqual(segmentA.a, segmentB.a) || Geometry.Point.AreEqual(segmentA.a, segmentB.b)
                 ? segmentA.a
                 : Geometry.Point.AreEqual(segmentA.b, segmentB.a) || Geometry.Point.AreEqual(segmentA.b, segmentB.b)
                     ? segmentA.b
                     : null,
-        Bounds: (segment: ReadonlyKV<ISegment>): IRectangle => { 
+        Bounds: (segment: DeepReadonly<ISegment>): IRectangle => { 
             const x = Math.min(segment.a.x, segment.b.x);
             const y = Math.min(segment.a.y, segment.b.y);
             const w = Math.max(segment.a.x, segment.b.x) - x;
@@ -478,13 +478,13 @@ export class Geometry {
     };
 
     public static Triangle: ITriangleStatic = {
-        Segments: (triangle: ReadonlyKV<ITriangle>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Triangle.Vertices(triangle, offset)),
-        Vertices: (triangle: ReadonlyKV<ITriangle>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint[] => [
+        Segments: (triangle: DeepReadonly<ITriangle>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Triangle.Vertices(triangle, offset)),
+        Vertices: (triangle: DeepReadonly<ITriangle>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => [
             { x: triangle.a.x + offset.x, y: triangle.a.y + offset.y },
             { x: triangle.b.x + offset.x, y: triangle.b.y + offset.y },
             { x: triangle.c.x + offset.x, y: triangle.c.y + offset.y },
         ],
-        Circumcircle: (triangle: ReadonlyKV<ITriangle>): ICircle => {
+        Circumcircle: (triangle: DeepReadonly<ITriangle>): ICircle => {
             const intersection = Geometry.Intersection.LineLine(
                 Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
                 Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c})
@@ -498,21 +498,21 @@ export class Geometry {
                 r: Geometry.Point.Distance(triangle.a, intersection)
             };
         },
-        Supertriangle: (triangle: ReadonlyKV<ITriangle>): ITriangle => triangle,
-        Triangulation: (triangle: ReadonlyKV<ITriangle>): ITriangle[] => [triangle],
-        Bounds: (triangle: ReadonlyKV<ITriangle>): IRectangle => Geometry.Points.Bounds(Geometry.Triangle.Vertices(triangle)),
-        Midpoint: (triangle: ReadonlyKV<ITriangle>): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle)),
-        Area: (triangle: ReadonlyKV<ITriangle>): number => Math.abs(Geometry.Triangle.AreaSigned(triangle)),
-        AreaSigned: (triangle: ReadonlyKV<ITriangle>): number => 0.5 * (
+        Supertriangle: (triangle: DeepReadonly<ITriangle>): ITriangle => triangle,
+        Triangulation: (triangle: DeepReadonly<ITriangle>): ITriangle[] => [triangle],
+        Bounds: (triangle: DeepReadonly<ITriangle>): IRectangle => Geometry.Points.Bounds(Geometry.Triangle.Vertices(triangle)),
+        Midpoint: (triangle: DeepReadonly<ITriangle>): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle)),
+        Area: (triangle: DeepReadonly<ITriangle>): number => Math.abs(Geometry.Triangle.AreaSigned(triangle)),
+        AreaSigned: (triangle: DeepReadonly<ITriangle>): number => 0.5 * (
             -triangle.b.y * triangle.c.x 
             + triangle.a.y * (-triangle.b.x + triangle.c.x) 
             + triangle.a.x * (triangle.b.y - triangle.c.y) 
             + triangle.b.x * triangle.c.y
         ),
-        Perimeter: (triangle: ReadonlyKV<ITriangle>): number => Geometry.Triangle.LengthAB(triangle) + Geometry.Triangle.LengthBC(triangle) + Geometry.Triangle.LengthCA(triangle),
-        Semiperimeter: (triangle: ReadonlyKV<ITriangle>): number => Geometry.Triangle.Perimeter(triangle) / 2,
-        Hash: (triangle: ReadonlyKV<ITriangle>): string => Geometry.Points.Hash(Geometry.Triangle.Vertices(triangle)),
-        Incenter: (triangle: ReadonlyKV<ITriangle>): IPoint => {
+        Perimeter: (triangle: DeepReadonly<ITriangle>): number => Geometry.Triangle.LengthAB(triangle) + Geometry.Triangle.LengthBC(triangle) + Geometry.Triangle.LengthCA(triangle),
+        Semiperimeter: (triangle: DeepReadonly<ITriangle>): number => Geometry.Triangle.Perimeter(triangle) / 2,
+        Hash: (triangle: DeepReadonly<ITriangle>): string => Geometry.Points.Hash(Geometry.Triangle.Vertices(triangle)),
+        Incenter: (triangle: DeepReadonly<ITriangle>): IPoint => {
             const bisectorA = Geometry.Triangle.AngleBisectorA(triangle);
             const bisectorB = Geometry.Triangle.AngleBisectorB(triangle);
             const intersection = Geometry.Intersection.RayRay(bisectorA, bisectorB);
@@ -520,38 +520,38 @@ export class Geometry {
                 throw `No intersection found between angle bisectors of points "a" and "b" in triangle (${triangle.a}, ${triangle.b}, ${triangle.c}`;
             return intersection;
 		},
-        Inradius: (triangle: ReadonlyKV<ITriangle>): number => {
+        Inradius: (triangle: DeepReadonly<ITriangle>): number => {
             const lengthAB = Geometry.Triangle.LengthAB(triangle);
             const lengthBC = Geometry.Triangle.LengthBC(triangle);
             const lengthCA = Geometry.Triangle.LengthCA(triangle);
             const s = (lengthAB + lengthBC + lengthCA) / 2;
             return Math.sqrt(s * (s - lengthAB) * (s - lengthBC) * (s - lengthCA)) / s;
 		},
-        InscribedCircle: (triangle: ReadonlyKV<ITriangle>): ICircle => {
+        InscribedCircle: (triangle: DeepReadonly<ITriangle>): ICircle => {
             const { x, y } = Geometry.Triangle.Incenter(triangle);
             const radius = Geometry.Triangle.Inradius(triangle);
             return { x, y, r: radius };
 		},
-        AngleA: (triangle: ReadonlyKV<ITriangle>): number => {
+        AngleA: (triangle: DeepReadonly<ITriangle>): number => {
             const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.b, triangle.a));
             const angleAC = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.c, triangle.a));
             return Math.abs(angleAC - angleAB);
 		},
-        AngleB: (triangle: ReadonlyKV<ITriangle>): number => {
+        AngleB: (triangle: DeepReadonly<ITriangle>): number => {
             const angleBC = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.c, triangle.b));
             const angleBA = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.a, triangle.b));
             return Math.abs(angleBA - angleBC);
 		},
-        AngleC: (triangle: ReadonlyKV<ITriangle>): number => {
+        AngleC: (triangle: DeepReadonly<ITriangle>): number => {
             const angleCA = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.a, triangle.c));
             const angleCB = Geometry.Point.Angle(Geometry.Point.Subtract(triangle.b, triangle.c));
             return Math.abs(angleCB - angleCA);
 		},
-        LengthAB: (triangle: ReadonlyKV<ITriangle>): number => Geometry.Point.Distance(triangle.a, triangle.b),
-        LengthBC: (triangle: ReadonlyKV<ITriangle>): number => Geometry.Point.Distance(triangle.b, triangle.c),
-        LengthCA: (triangle: ReadonlyKV<ITriangle>): number => Geometry.Point.Distance(triangle.c, triangle.a),
+        LengthAB: (triangle: DeepReadonly<ITriangle>): number => Geometry.Point.Distance(triangle.a, triangle.b),
+        LengthBC: (triangle: DeepReadonly<ITriangle>): number => Geometry.Point.Distance(triangle.b, triangle.c),
+        LengthCA: (triangle: DeepReadonly<ITriangle>): number => Geometry.Point.Distance(triangle.c, triangle.a),
         // returns the angle bisector of a given vertex ( vertices ordered: a => b => c )
-        AngleBisector: (bisectionVertex: ReadonlyKV<IPoint>, previousVertex: ReadonlyKV<IPoint>, nextVertex: ReadonlyKV<IPoint>): IRay => {
+        AngleBisector: (bisectionVertex: DeepReadonly<IPoint>, previousVertex: DeepReadonly<IPoint>, nextVertex: DeepReadonly<IPoint>): IRay => {
             const angleAB = Geometry.Point.Angle(Geometry.Point.Subtract(nextVertex, bisectionVertex));
             const angleAC = Geometry.Point.Angle(Geometry.Point.Subtract(previousVertex, bisectionVertex));
             const angleBisector = moduloSafe(Geometry.AngleDifference(angleAC, angleAB) / 2 + angleAB, tau);
@@ -560,18 +560,18 @@ export class Geometry {
                 b: Geometry.Point.Add(bisectionVertex, Geometry.Point.Vector(1, angleBisector))
             }
         },
-        AngleBisectorA: ({ a, b, c }: ReadonlyKV<ITriangle>): IRay => Geometry.Triangle.AngleBisector(a, c, b),
-        AngleBisectorB: ({ a, b, c }: ReadonlyKV<ITriangle>): IRay => Geometry.Triangle.AngleBisector(b, a, c),
-        AngleBisectorC: ({ a, b, c }: ReadonlyKV<ITriangle>): IRay => Geometry.Triangle.AngleBisector(c, b, a),
-        PerpendicularBisectorAB: (triangle: ReadonlyKV<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
-        PerpendicularBisectorBC: (triangle: ReadonlyKV<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c }),
-        PerpendicularBisectorCA: (triangle: ReadonlyKV<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.c, b: triangle.a }),
-        Translate: (triangle: ReadonlyKV<ITriangle>, position: ReadonlyKV<IPoint>): ITriangle => ({
+        AngleBisectorA: ({ a, b, c }: DeepReadonly<ITriangle>): IRay => Geometry.Triangle.AngleBisector(a, c, b),
+        AngleBisectorB: ({ a, b, c }: DeepReadonly<ITriangle>): IRay => Geometry.Triangle.AngleBisector(b, a, c),
+        AngleBisectorC: ({ a, b, c }: DeepReadonly<ITriangle>): IRay => Geometry.Triangle.AngleBisector(c, b, a),
+        PerpendicularBisectorAB: (triangle: DeepReadonly<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.a, b: triangle.b }),
+        PerpendicularBisectorBC: (triangle: DeepReadonly<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.b, b: triangle.c }),
+        PerpendicularBisectorCA: (triangle: DeepReadonly<ITriangle>): ILine => Geometry.Segment.PerpendicularBisector({ a: triangle.c, b: triangle.a }),
+        Translate: (triangle: DeepReadonly<ITriangle>, position: DeepReadonly<IPoint>): ITriangle => ({
             a: Geometry.Point.Add(triangle.a, position),
             b: Geometry.Point.Add(triangle.b, position),
             c: Geometry.Point.Add(triangle.c, position),
         }),
-        Rotate: ({ a, b, c }: ReadonlyKV<ITriangle>, angle: number, center?: ReadonlyKV<IPoint>) => ({
+        Rotate: ({ a, b, c }: DeepReadonly<ITriangle>, angle: number, center?: DeepReadonly<IPoint>) => ({
             a: Geometry.Point.Rotate(a, angle, center),
             b: Geometry.Point.Rotate(b, angle, center),
             c: Geometry.Point.Rotate(c, angle, center)
@@ -579,28 +579,28 @@ export class Geometry {
     };
 
     public static Rectangle: IRectangleStatic = {
-        Segments: (rectangle: ReadonlyKV<IRectangle>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle, offset)),
-        Vertices: (rectangle: ReadonlyKV<IRectangle>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint[] => [
+        Segments: (rectangle: DeepReadonly<IRectangle>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): ISegment[] => Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle, offset)),
+        Vertices: (rectangle: DeepReadonly<IRectangle>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => [
             { x: rectangle.x + offset.x, y: rectangle.y + offset.y },
             { x: rectangle.x + rectangle.w + offset.x, y: rectangle.y + offset.y },
             { x: rectangle.x + rectangle.w + offset.x, y: rectangle.y + rectangle.h + offset.y },
             { x: rectangle.x + offset.x, y: rectangle.y + rectangle.h + offset.y }
         ],
-        Circumcircle: (rectangle: ReadonlyKV<IRectangle>): ICircle => ({
+        Circumcircle: (rectangle: DeepReadonly<IRectangle>): ICircle => ({
             x: rectangle.x + rectangle.w/2,
             y: rectangle.y + rectangle.h/2,
             r: Geometry.Point.Length({ x: rectangle.w/2, y: rectangle.h/2 })
         }),
-        Supertriangle: (rectangle: ReadonlyKV<IRectangle>): ITriangle => Geometry.Points.Supertriangle(Geometry.Rectangle.Vertices(rectangle)),
-        Triangulation: (rectangle: ReadonlyKV<IRectangle>): ITriangle[] => {
+        Supertriangle: (rectangle: DeepReadonly<IRectangle>): ITriangle => Geometry.Points.Supertriangle(Geometry.Rectangle.Vertices(rectangle)),
+        Triangulation: (rectangle: DeepReadonly<IRectangle>): ITriangle[] => {
             const corners = Geometry.Rectangle.Vertices(rectangle);
             return [
                 { a: corners[1], b: corners[0], c: corners[2] },
                 { a: corners[0], b: corners[3], c: corners[2] }
             ];
         },
-        Bounds: (rectangle: ReadonlyKV<IRectangle>): IRectangle => rectangle,
-        BoundsRectangles: (rectangles: ReadonlyKV<IRectangle>[]) => {
+        Bounds: (rectangle: DeepReadonly<IRectangle>): IRectangle => rectangle,
+        BoundsRectangles: (rectangles: DeepReadonly<IRectangle>[]) => {
             if(rectangles == null || rectangles.length <= 0)
                 return { x: 0, y: 0, w: 0, h: 0 };
             let xMin = rectangles[0].x;
@@ -616,12 +616,12 @@ export class Geometry {
             }
             return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
         },
-        Midpoint: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({ x: rectangle.x + rectangle.w/2, y: rectangle.y + rectangle.h/2 }),
-        Area: (rectangle: ReadonlyKV<IRectangle>): number => rectangle.w * rectangle.h,
-        Hash: (rectangle: ReadonlyKV<IRectangle>): string => Geometry.Points.Hash(Geometry.Rectangle.Vertices(rectangle)),
+        Midpoint: (rectangle: DeepReadonly<IRectangle>): IPoint => ({ x: rectangle.x + rectangle.w/2, y: rectangle.y + rectangle.h/2 }),
+        Area: (rectangle: DeepReadonly<IRectangle>): number => rectangle.w * rectangle.h,
+        Hash: (rectangle: DeepReadonly<IRectangle>): string => Geometry.Points.Hash(Geometry.Rectangle.Vertices(rectangle)),
         // Expands the size of this rectangle by the given amount relative to its current size.
         // "center" defines the position the rectangle is expanding from (if undefined, the top-left of the rectangle is used)
-        Scale: (rectangle: ReadonlyKV<IRectangle>, scalar: number | IPoint, center?: ReadonlyKV<IPoint>): IRectangle => {
+        Scale: (rectangle: DeepReadonly<IRectangle>, scalar: number | IPoint, center?: DeepReadonly<IPoint>): IRectangle => {
             if(scalar === 1)
                 return rectangle;
 
@@ -649,29 +649,29 @@ export class Geometry {
                     h: rectangle.h * scalar.y
                 }
         },
-        Expand: (rectangle: ReadonlyKV<IRectangle>, wAmount: number, hAmount: number=wAmount): IRectangle => ({
+        Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount: number=wAmount): IRectangle => ({
             x: rectangle.x - wAmount,
             y: rectangle.y - hAmount,
             w: rectangle.w + 2 * wAmount,
             h: rectangle.h + 2 * hAmount
         }),
-        RandomPointInside: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        RandomPointInside: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x + random() * rectangle.w,
             y: rectangle.y + random() * rectangle.h
         }),
-        Square: (center: ReadonlyKV<IPoint>, sideLength: number): IRectangle => ({
+        Square: (center: DeepReadonly<IPoint>, sideLength: number): IRectangle => ({
             x: center.x - sideLength/2,
             y: center.y - sideLength/2,
             w: sideLength,
             h: sideLength
         }),
-        Translate: (rectangle: ReadonlyKV<IRectangle>, translation: ReadonlyKV<IPoint>): IRectangle => ({
+        Translate: (rectangle: DeepReadonly<IRectangle>, translation: DeepReadonly<IPoint>): IRectangle => ({
             x: rectangle.x + translation.x,
             y: rectangle.y + translation.y,
             w: rectangle.w,
             h: rectangle.h
         }),
-        Align: (rectangle: ReadonlyKV<IRectangle>, halign: Halign, valign: Valign): IRectangle => {
+        Align: (rectangle: DeepReadonly<IRectangle>, halign: Halign, valign: Valign): IRectangle => {
             const offset = { x: 0, y: 0 };
             switch(halign) {
                 case Halign.CENTER:
@@ -697,42 +697,42 @@ export class Geometry {
             }
             return Geometry.Rectangle.Translate(rectangle, offset);
         },
-        Center: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        Center: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x + rectangle.w/2,
             y: rectangle.y + rectangle.h/2
         }),
-        TopLeft: (rectangle: ReadonlyKV<IRectangle>): IPoint => rectangle,
-        TopRight: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        TopLeft: (rectangle: DeepReadonly<IRectangle>): IPoint => rectangle,
+        TopRight: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x + rectangle.w,
             y: rectangle.y
         }),
-        BottomLeft: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        BottomLeft: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x,
             y: rectangle.y + rectangle.h
         }),
-        BottomRight: (rectangle: ReadonlyKV<IRectangle>): IPoint => ({
+        BottomRight: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x + rectangle.w,
             y: rectangle.y + rectangle.h
         }),
-        xLeft: (rectangle: ReadonlyKV<IRectangle>): number => rectangle.x,
-        xRight: (rectangle: ReadonlyKV<IRectangle>): number => rectangle.x + rectangle.w,
-        yTop: (rectangle: ReadonlyKV<IRectangle>) => rectangle.y,
-        yBottom: (rectangle: ReadonlyKV<IRectangle>) => rectangle.y + rectangle.h,
+        xLeft: (rectangle: DeepReadonly<IRectangle>): number => rectangle.x,
+        xRight: (rectangle: DeepReadonly<IRectangle>): number => rectangle.x + rectangle.w,
+        yTop: (rectangle: DeepReadonly<IRectangle>) => rectangle.y,
+        yBottom: (rectangle: DeepReadonly<IRectangle>) => rectangle.y + rectangle.h,
     }
 
     public static Polygon: IPolygonStatic = {
-        Segments: (polygon: ReadonlyKV<IPolygon>, offset?: ReadonlyKV<IPoint>): ISegment[] => Geometry.Points.Segments(offset ? Geometry.Polygon.Vertices(polygon, offset) : polygon.vertices),
-        Vertices: (polygon: ReadonlyKV<IPolygon>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint[] => polygon.vertices.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
-        Circumcircle: (polygon: ReadonlyKV<IPolygon>): ICircle => Geometry.Points.Circumcircle(polygon.vertices),
-        Supertriangle: (polygon: ReadonlyKV<IPolygon>): ITriangle => Geometry.Points.Supertriangle(polygon.vertices),
-        Triangulation: (polygon: ReadonlyKV<IPolygon>): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
-        Bounds: (polygon: ReadonlyKV<IPolygon>): IRectangle => Geometry.Points.Bounds(polygon.vertices),
-        Midpoint: (polygon: ReadonlyKV<IPolygon>): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
-        Area: (polygon: ReadonlyKV<IPolygon>): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
-        Rotate: (polygon: ReadonlyKV<IPolygon>, angle: number, center?: ReadonlyKV<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
-        Translate: (polygon: ReadonlyKV<IPolygon>, position: ReadonlyKV<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Add(o, position)) }),
-        Hash: (polygon: ReadonlyKV<IPolygon>): string => Geometry.Points.Hash(polygon.vertices),
-        WindingNumber: (polygon: ReadonlyKV<IPolygon>, point: ReadonlyKV<IPoint>) : number => {
+        Segments: (polygon: DeepReadonly<IPolygon>, offset?: DeepReadonly<IPoint>): ISegment[] => Geometry.Points.Segments(offset ? Geometry.Polygon.Vertices(polygon, offset) : polygon.vertices),
+        Vertices: (polygon: DeepReadonly<IPolygon>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => polygon.vertices.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
+        Circumcircle: (polygon: DeepReadonly<IPolygon>): ICircle => Geometry.Points.Circumcircle(polygon.vertices),
+        Supertriangle: (polygon: DeepReadonly<IPolygon>): ITriangle => Geometry.Points.Supertriangle(polygon.vertices),
+        Triangulation: (polygon: DeepReadonly<IPolygon>): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
+        Bounds: (polygon: DeepReadonly<IPolygon>): IRectangle => Geometry.Points.Bounds(polygon.vertices),
+        Midpoint: (polygon: DeepReadonly<IPolygon>): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
+        Area: (polygon: DeepReadonly<IPolygon>): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
+        Rotate: (polygon: DeepReadonly<IPolygon>, angle: number, center?: DeepReadonly<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
+        Translate: (polygon: DeepReadonly<IPolygon>, position: DeepReadonly<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Add(o, position)) }),
+        Hash: (polygon: DeepReadonly<IPolygon>): string => Geometry.Points.Hash(polygon.vertices),
+        WindingNumber: (polygon: DeepReadonly<IPolygon>, point: DeepReadonly<IPoint>) : number => {
             // https://twitter.com/FreyaHolmer/status/1232826293902888960
             // http://geomalgorithms.com/a03-_inclusion.html
             let windingNumber = 0;
@@ -759,29 +759,29 @@ export class Geometry {
     }
 
     public static Circle: ICircleStatic = {
-        Circumcircle: (circle: ReadonlyKV<ICircle>): ICircle => circle,
-        Supertriangle: (circle: ReadonlyKV<ICircle>): ITriangle => ({
+        Circumcircle: (circle: DeepReadonly<ICircle>): ICircle => circle,
+        Supertriangle: (circle: DeepReadonly<ICircle>): ITriangle => ({
             a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, circle.r * 2), circle),
             b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), circle.r * 2), circle),
             c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), circle.r * 2), circle)
         }),
-        Bounds: (circle: ReadonlyKV<ICircle>): IRectangle => ({
+        Bounds: (circle: DeepReadonly<ICircle>): IRectangle => ({
             x: circle.x - circle.r,
             y: circle.y - circle.r,
             w: circle.r * 2,
             h: circle.r * 2
         }),
-        Midpoint: (circle: ReadonlyKV<ICircle>): IPoint => circle,
-        Area: (circle: ReadonlyKV<ICircle>): number => Math.PI * circle.r * circle.r,
-        Circumference: (circle: ReadonlyKV<ICircle>): number => tau * circle.r,
-        Hash: (circle: ReadonlyKV<ICircle>): string => `${Geometry.Point.Hash(circle)},${circle.r.toFixed(Geometry.HashDecimalDigits)}`,
-        RandomPointInside: (circle: ReadonlyKV<ICircle>): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r * random(), tau * random())),
-        Translate: (circle: ReadonlyKV<ICircle>, translation: ReadonlyKV<IPoint>): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, r: circle.r }),
-        Rotate: (circle: ReadonlyKV<ICircle>, angle: number, center?: ReadonlyKV<IPoint>): ICircle => ({
+        Midpoint: (circle: DeepReadonly<ICircle>): IPoint => circle,
+        Area: (circle: DeepReadonly<ICircle>): number => Math.PI * circle.r * circle.r,
+        Circumference: (circle: DeepReadonly<ICircle>): number => tau * circle.r,
+        Hash: (circle: DeepReadonly<ICircle>): string => `${Geometry.Point.Hash(circle)},${circle.r.toFixed(Geometry.HashDecimalDigits)}`,
+        RandomPointInside: (circle: DeepReadonly<ICircle>): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r * random(), tau * random())),
+        Translate: (circle: DeepReadonly<ICircle>, translation: DeepReadonly<IPoint>): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, r: circle.r }),
+        Rotate: (circle: DeepReadonly<ICircle>, angle: number, center?: DeepReadonly<IPoint>): ICircle => ({
             ...Geometry.Point.Rotate(circle, angle, center),
             r: circle.r
         }),
-        TangentPoints: (circle: ReadonlyKV<ICircle>, point: ReadonlyKV<IPoint>): { a: IPoint, b: IPoint } | null => {
+        TangentPoints: (circle: DeepReadonly<ICircle>, point: DeepReadonly<IPoint>): { a: IPoint, b: IPoint } | null => {
             const distanceSq = Geometry.Point.DistanceSq(circle, point);
             if(distanceSq <= 0 || circle.r <= 0 || distanceSq < circle.r * circle.r)
                 return null;
@@ -795,7 +795,7 @@ export class Geometry {
     }
 
     public static Points: IPointsStatic = {
-        Segments: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero, closed: boolean=true): ISegment[] => { 
+        Segments: (points: DeepReadonly<DeepReadonly<IPoint>[]>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero, closed: boolean=true): ISegment[] => { 
             const segments = [];
             for(let i = 0; i < points.length; i++) {
                 if(i == points.length-1 && !closed)
@@ -814,15 +814,15 @@ export class Geometry {
             }
             return segments;
         },
-        Vertices: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, offset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint[] => points.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
-        Circumcircle: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): ICircle => {
+        Vertices: (points: DeepReadonly<DeepReadonly<IPoint>[]>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => points.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
+        Circumcircle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ICircle => {
             // Doesn't necessarily fit tightly, but is guaranteed to contain all the points
             const center = Geometry.Point.Midpoint(...points);
             const furthest = points.maxOf(o => Geometry.Point.DistanceSq(center, o));
             const radius = Geometry.Point.Distance(furthest, center);
             return { x: center.x, y: center.y, r: radius };
         },
-        Supertriangle: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): ITriangle => {
+        Supertriangle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ITriangle => {
             const circumcircle = Geometry.Points.Circumcircle(points);
             const diameter = circumcircle.r * 2;
             return {
@@ -831,7 +831,7 @@ export class Geometry {
                 c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), diameter), circumcircle)
             };
         },
-        Triangulation: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): ITriangle[] => {
+        Triangulation: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ITriangle[] => {
             // http://paulbourke.net/papers/triangulate/
     
             // add supertriangle to points and triangles lists
@@ -892,7 +892,7 @@ export class Geometry {
     
             return triangles;
         },
-        Bounds: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): IRectangle => {
+        Bounds: (points: DeepReadonly<DeepReadonly<IPoint>[]>): IRectangle => {
             if(points == null || points.length <= 0)
                 return { x: 0, y: 0, w: 0, h: 0 };
             const xMin = points.minOf(o => o.x).x;
@@ -901,12 +901,12 @@ export class Geometry {
             const yMax = points.maxOf(o => o.y).y;
             return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
         },
-        Hash: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): string => points.clone()
+        Hash: (points: DeepReadonly<DeepReadonly<IPoint>[]>): string => points.clone()
             .sort((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
             .map(o => Geometry.Point.Hash(o))
             .join(';'),
-        Translate: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, offset: ReadonlyKV<IPoint>): IPoint[] => points.map(o => Geometry.Point.Translate(o, offset)),
-        Sum: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>): IPoint => {
+        Translate: (points: DeepReadonly<DeepReadonly<IPoint>[]>, offset: DeepReadonly<IPoint>): IPoint[] => points.map(o => Geometry.Point.Translate(o, offset)),
+        Sum: (points: DeepReadonly<DeepReadonly<IPoint>[]>): IPoint => {
             const sum = { x: 0, y: 0 };
             points.forEach(point => {
                 sum.x += point.x;
@@ -914,7 +914,7 @@ export class Geometry {
             });
             return sum;
         },
-        BezierPoint: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, t: number): IPoint => {
+        BezierPoint: (points: DeepReadonly<DeepReadonly<IPoint>[]>, t: number): IPoint => {
             const n = points.length - 1;
             let sum = { x: 0, y: 0 };
             for(let i = 0; i < points.length; i++)
@@ -929,7 +929,7 @@ export class Geometry {
             return sum;
         },
         // count must be greater than 1
-        Bezier: (points: ReadonlyKV<ReadonlyKV<IPoint>[]>, count: number): IPoint[] => {
+        Bezier: (points: DeepReadonly<DeepReadonly<IPoint>[]>, count: number): IPoint[] => {
             if(points.length <= 0 || count < 1)
                 return [];
             if(count === 1)
@@ -952,7 +952,7 @@ export class Geometry {
     private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && (o.type == null || o.type == PointPairType.SEGMENT); }
     private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null && o.w === undefined && o.r === undefined; }
 
-    public static Bounds(shape?: ReadonlyKV<BoundableShape> | null): IRectangle | null {
+    public static Bounds(shape?: DeepReadonly<BoundableShape> | null): IRectangle | null {
         if(!shape)
             null;
         
@@ -986,52 +986,52 @@ export class Geometry {
     //  2. add matching collision functions which operate only on number arguments and use them here
     //  3. create matching functions in Geometry.Intersection that actually returns intersection points, if any
     public static Collide = {
-        PointSegment: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<ISegment>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        PointSegment: (a: DeepReadonly<IPoint>, b: DeepReadonly<ISegment>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Point.Translate(a, aOffset);
             if(bOffset) b = Geometry.Segment.Translate(b, bOffset);
             return Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideSegmentIfColinear(a, b)
         },
-        TriangleSegment: (a: ReadonlyKV<ITriangle>, b: ReadonlyKV<ISegment>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
-        CircleSegment: (a: ReadonlyKV<ICircle>, b: ReadonlyKV<ISegment>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        TriangleSegment: (a: DeepReadonly<ITriangle>, b: DeepReadonly<ISegment>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
+        CircleSegment: (a: DeepReadonly<ICircle>, b: DeepReadonly<ISegment>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
             if(bOffset) b = Geometry.Segment.Translate(b, bOffset);
             return Geometry.Collide.CirclePoint(a, Geometry.Segment.ClosestPointTo(b, a))
         },
-        PolygonSegment: (a: ReadonlyKV<IPolygon>, b: ReadonlyKV<ISegment>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
-        PointRay: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IRay>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        PolygonSegment: (a: DeepReadonly<IPolygon>, b: DeepReadonly<ISegment>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.SegmentSegment(b, o, bOffset)),
+        PointRay: (a: DeepReadonly<IPoint>, b: DeepReadonly<IRay>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Point.Translate(a, aOffset);
             if(bOffset) b = Geometry.Ray.Translate(b, bOffset);
             return Geometry.Point.IsColinearWith(a, b) && Geometry.Point.InsideRayIfColinear(a, b)
         },
-        TriangleRay: (a: ReadonlyKV<ITriangle>, b: ReadonlyKV<IRay>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
-        CircleRay: (a: ReadonlyKV<ICircle>, b: ReadonlyKV<IRay>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        TriangleRay: (a: DeepReadonly<ITriangle>, b: DeepReadonly<IRay>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
+        CircleRay: (a: DeepReadonly<ICircle>, b: DeepReadonly<IRay>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
             if(bOffset) b = Geometry.Ray.Translate(b, bOffset);
             return Geometry.Collide.CirclePoint(a, Geometry.Ray.ClosestPointTo(b, a))
         },
-        PolygonRay: (a: ReadonlyKV<IPolygon>, b: ReadonlyKV<IRay>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
-        PointLine: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<ILine>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        PolygonRay: (a: DeepReadonly<IPolygon>, b: DeepReadonly<IRay>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.RaySegment(b, o, bOffset)),
+        PointLine: (a: DeepReadonly<IPoint>, b: DeepReadonly<ILine>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Point.Translate(a, aOffset);
             if(bOffset) b = Geometry.Line.Translate(b, bOffset);
             return Geometry.Point.IsColinearWith(a, b)
         },
-        TriangleLine: (a: ReadonlyKV<ITriangle>, b: ReadonlyKV<ILine>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
-        CircleLine: (a: ReadonlyKV<ICircle>, b: ReadonlyKV<ILine>, aOffset?: ReadonlyKV<IPoint>, bOffset?: ReadonlyKV<IPoint>): boolean => {
+        TriangleLine: (a: DeepReadonly<ITriangle>, b: DeepReadonly<ILine>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => Geometry.Collide.TrianglePoint(a, b.a, aOffset, bOffset) || Geometry.Triangle.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
+        CircleLine: (a: DeepReadonly<ICircle>, b: DeepReadonly<ILine>, aOffset?: DeepReadonly<IPoint>, bOffset?: DeepReadonly<IPoint>): boolean => {
             if(aOffset) a = Geometry.Circle.Translate(a, aOffset);
             if(bOffset) b = Geometry.Line.Translate(b, bOffset);
             return Geometry.Collide.CirclePoint(a, Geometry.Line.ClosestPointTo(b, a))
         },
-        PolygonLine: (a: ReadonlyKV<IPolygon>, b: ReadonlyKV<ILine>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
-        PointPoint: (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Point.AreEqual(Geometry.Point.Add(a, aOffset), Geometry.Point.Add(b, bOffset)),
-        LineLine: (a: ReadonlyKV<ILine>, b: ReadonlyKV<ILine>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineLine(a, b, aOffset, bOffset) != null,
-        LineRay: (a: ReadonlyKV<ILine>, b: ReadonlyKV<IRay>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineRay(a, b, aOffset, bOffset) != null,
-        LineSegment: (a: ReadonlyKV<ILine>, b: ReadonlyKV<ISegment>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineSegment(a, b, aOffset, bOffset) != null,
-        RayRay: (a: ReadonlyKV<IRay>, b: ReadonlyKV<IRay>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.RayRay(a, b, aOffset, bOffset) != null,
-        RaySegment: (a: ReadonlyKV<IRay>, b: ReadonlyKV<ISegment>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.RaySegment(a, b, aOffset, bOffset) != null,
-        SegmentSegment: (a: ReadonlyKV<ISegment>, b: ReadonlyKV<ISegment>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.SegmentSegment(a, b, aOffset, bOffset) != null,
-        SegmentsSegments: (segmentsA: ReadonlyKV<ReadonlyKV<ISegment>[]>, segmentsB: ReadonlyKV<ReadonlyKV<ISegment>[]>): boolean =>
+        PolygonLine: (a: DeepReadonly<IPolygon>, b: DeepReadonly<ILine>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Collide.PolygonPoint(a, b.a, aOffset, bOffset) || Geometry.Polygon.Segments(a, aOffset).any(o => Geometry.Collide.LineSegment(b, o, bOffset)),
+        PointPoint: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Point.AreEqual(Geometry.Point.Add(a, aOffset), Geometry.Point.Add(b, bOffset)),
+        LineLine: (a: DeepReadonly<ILine>, b: DeepReadonly<ILine>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineLine(a, b, aOffset, bOffset) != null,
+        LineRay: (a: DeepReadonly<ILine>, b: DeepReadonly<IRay>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineRay(a, b, aOffset, bOffset) != null,
+        LineSegment: (a: DeepReadonly<ILine>, b: DeepReadonly<ISegment>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.LineSegment(a, b, aOffset, bOffset) != null,
+        RayRay: (a: DeepReadonly<IRay>, b: DeepReadonly<IRay>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.RayRay(a, b, aOffset, bOffset) != null,
+        RaySegment: (a: DeepReadonly<IRay>, b: DeepReadonly<ISegment>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.RaySegment(a, b, aOffset, bOffset) != null,
+        SegmentSegment: (a: DeepReadonly<ISegment>, b: DeepReadonly<ISegment>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => Geometry.Intersection.SegmentSegment(a, b, aOffset, bOffset) != null,
+        SegmentsSegments: (segmentsA: DeepReadonly<DeepReadonly<ISegment>[]>, segmentsB: DeepReadonly<DeepReadonly<ISegment>[]>): boolean =>
             segmentsA.any(segmentA => segmentsB.any(segmentB => Geometry.Collide.SegmentSegment(segmentA, segmentB))),
-        RectangleRectangle: (rectangleA: ReadonlyKV<IRectangle>, rectangleB: ReadonlyKV<IRectangle>, rectangleAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rectangleBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => {
+        RectangleRectangle: (rectangleA: DeepReadonly<IRectangle>, rectangleB: DeepReadonly<IRectangle>, rectangleAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rectangleBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             const ax = rectangleA.x + rectangleAOffset.x;
             const ay = rectangleA.y + rectangleAOffset.y;
             const bx = rectangleB.x + rectangleBOffset.x;
@@ -1041,7 +1041,7 @@ export class Geometry {
                 && ax < bx + rectangleB.w 
                 && ay < by + rectangleB.h
         },
-        RectangleCircle: (rectangle: ReadonlyKV<IRectangle>, circle: ReadonlyKV<ICircle>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rectangleAngle: number=0): boolean => {
+        RectangleCircle: (rectangle: DeepReadonly<IRectangle>, circle: DeepReadonly<ICircle>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rectangleAngle: number=0): boolean => {
             // The rectangle's (x, y) position is its top-left corner if it were not rotated,
             // however the rectangle still rotates about its center (by "rectangleAngle" radians)
             //https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection
@@ -1068,47 +1068,47 @@ export class Geometry {
                 (yCircleDistance - halfH) * (yCircleDistance - halfH);
             return cornerDistanceSq <= (circle.r * circle.r);
         },
-        RectangleTriangle: (rectangle: ReadonlyKV<IRectangle>, triangle: ReadonlyKV<ITriangle>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, triangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => 
+        RectangleTriangle: (rectangle: DeepReadonly<IRectangle>, triangle: DeepReadonly<ITriangle>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
             Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangle, triangleOffset), Geometry.Rectangle.Segments(rectangle, rectangleOffset))
             || Geometry.Collide.TrianglePoint(triangle, rectangle)
             || Geometry.Collide.RectanglePoint(rectangle, triangle.a),
-        RectanglePolygon: (rectangle: ReadonlyKV<IRectangle>, polygon: ReadonlyKV<IPolygon>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, polygonOffset?: ReadonlyKV<IPoint>): boolean =>
+        RectanglePolygon: (rectangle: DeepReadonly<IRectangle>, polygon: DeepReadonly<IPolygon>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset?: DeepReadonly<IPoint>): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Rectangle.Segments(rectangle, rectangleOffset))
             || Geometry.Collide.PolygonPoint(polygon, rectangle)
             || Geometry.Collide.RectanglePoint(rectangle, polygon.vertices.first()),
-        RectangleSegment: (rectangle: ReadonlyKV<IRectangle>, segment: ReadonlyKV<ISegment>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => {
+        RectangleSegment: (rectangle: DeepReadonly<IRectangle>, segment: DeepReadonly<ISegment>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             return Geometry.Collide.RectanglePoint(rectangle, segment.a, rectangleOffset, segmentOffset) || Geometry.Collide.RectanglePoint(rectangle, segment.b, rectangleOffset, segmentOffset) || Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.SegmentSegment(s, segment, rectangleOffset, segmentOffset))
         },
-        RectangleLine: (rectangle: ReadonlyKV<IRectangle>, line: ReadonlyKV<ILine>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, lineOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        RectangleLine: (rectangle: DeepReadonly<IRectangle>, line: DeepReadonly<ILine>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, lineOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.LineSegment(line, s, lineOffset, rectangleOffset)),
-        RectangleRay: (rectangle: ReadonlyKV<IRectangle>, ray: ReadonlyKV<IRay>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rayOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        RectangleRay: (rectangle: DeepReadonly<IRectangle>, ray: DeepReadonly<IRay>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rayOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.RaySegment(ray, s, rayOffset, rectangleOffset)),
-        RectanglePoint: (rectangle: ReadonlyKV<IRectangle>, point: ReadonlyKV<IPoint>, rectangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, pointOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        RectanglePoint: (rectangle: DeepReadonly<IRectangle>, point: DeepReadonly<IPoint>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             point.x + pointOffset.x >= rectangle.x + rectangleOffset.x
              && point.y + pointOffset.y >= rectangle.y + rectangleOffset.y
              && point.x + pointOffset.x < rectangle.x + rectangleOffset.x + rectangle.w
              && point.y + pointOffset.y < rectangle.y + rectangleOffset.y + rectangle.h,
-        CircleCircle: (circleA: ReadonlyKV<ICircle>, circleB: ReadonlyKV<ICircle>, circleAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, circleBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        CircleCircle: (circleA: DeepReadonly<ICircle>, circleB: DeepReadonly<ICircle>, circleAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, circleBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.DistanceSq(circleA.x + circleAOffset.x, circleA.y + circleAOffset.y, circleB.x + circleBOffset.x, circleB.y + circleBOffset.y) <= (circleA.r + circleB.r) * (circleA.r + circleB.r),
-        CircleTriangle: (circle: ReadonlyKV<ICircle>, triangle: ReadonlyKV<ITriangle>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, triangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => 
+        CircleTriangle: (circle: DeepReadonly<ICircle>, triangle: DeepReadonly<ITriangle>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
             Geometry.Triangle.Segments(triangle).any(segment => Geometry.Intersection.CircleSegment(circle, segment, circleOffset, triangleOffset).length > 0)
             || Geometry.Collide.TrianglePoint(triangle, circle)
             || Geometry.Collide.CirclePoint(circle, triangle.a),
-        CirclePolygon: (circle: ReadonlyKV<ICircle>, polygon: ReadonlyKV<IPolygon>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, polygonOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => 
+        CirclePolygon: (circle: DeepReadonly<ICircle>, polygon: DeepReadonly<IPolygon>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
             Geometry.Polygon.Segments(polygon).any(segment => Geometry.Intersection.CircleSegment(circle, segment, circleOffset, polygonOffset).length > 0)
             || Geometry.Collide.PolygonPoint(polygon, circle, polygonOffset, circleOffset)
             || Geometry.Collide.CirclePoint(circle, polygon.vertices.first(), circleOffset, polygonOffset),
-        CirclePoint: (circle: ReadonlyKV<ICircle>, point: ReadonlyKV<IPoint>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, pointOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        CirclePoint: (circle: DeepReadonly<ICircle>, point: DeepReadonly<IPoint>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.DistanceSq(point.x + pointOffset.x, point.y + pointOffset.y, circle.x + circleOffset.x, circle.y + circleOffset.y) <= circle.r * circle.r,
-        TriangleTriangle: (triangleA: ReadonlyKV<ITriangle>, triangleB: ReadonlyKV<ITriangle>, triangleAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, triangleBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => 
+        TriangleTriangle: (triangleA: DeepReadonly<ITriangle>, triangleB: DeepReadonly<ITriangle>, triangleAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, triangleBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
             Geometry.Collide.SegmentsSegments(Geometry.Triangle.Segments(triangleA, triangleAOffset), Geometry.Triangle.Segments(triangleB, triangleBOffset))
             || Geometry.Collide.TrianglePoint(triangleA, triangleB.a, triangleAOffset, triangleBOffset)
             || Geometry.Collide.TrianglePoint(triangleB, triangleA.a, triangleBOffset, triangleAOffset),
-        TrianglePolygon: (triangle: ReadonlyKV<ITriangle>, polygon: ReadonlyKV<IPolygon>, triangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, polygonOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean =>
+        TrianglePolygon: (triangle: DeepReadonly<ITriangle>, polygon: DeepReadonly<IPolygon>, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Triangle.Segments(triangle, triangleOffset))
             || Geometry.Collide.PolygonPoint(polygon, triangle.a, polygonOffset, triangleOffset)
             || Geometry.Collide.TrianglePoint(triangle, polygon.vertices.first(), triangleOffset, polygonOffset),
-        TrianglePoint: (triangle: ReadonlyKV<ITriangle>, point: ReadonlyKV<IPoint>, triangleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, pointOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => {
+        TrianglePoint: (triangle: DeepReadonly<ITriangle>, point: DeepReadonly<IPoint>, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             const triangleAx = triangle.a.x + triangleOffset.x;
             const triangleAy = triangle.a.y + triangleOffset.y;
             const triangleBx = triangle.b.x + triangleOffset.x;
@@ -1128,18 +1128,18 @@ export class Geometry {
             const t = areaSigned2xInverse*(triangleAx*triangleBy - triangleAy*triangleBx + (triangleAy - triangleBy)*pointX + (triangleBx - triangleAx)*pointY);
             return s > 0 && t > 0 && 1 - s - t > 0;
         },
-        PolygonPolygon: (polygonA: ReadonlyKV<IPolygon>, polygonB: ReadonlyKV<IPolygon>, polygonAOffset?: ReadonlyKV<IPoint>, polygonBOffset?: ReadonlyKV<IPoint>): boolean =>
+        PolygonPolygon: (polygonA: DeepReadonly<IPolygon>, polygonB: DeepReadonly<IPolygon>, polygonAOffset?: DeepReadonly<IPoint>, polygonBOffset?: DeepReadonly<IPoint>): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset))
             || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first(), polygonAOffset ?? Geometry.Point.Zero, polygonBOffset ?? Geometry.Point.Zero)
             || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first(), polygonBOffset ?? Geometry.Point.Zero, polygonAOffset ?? Geometry.Point.Zero),
-        PolygonPoint: (polygon: ReadonlyKV<IPolygon>, point: ReadonlyKV<IPoint>, polygonOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, pointOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => {            
+        PolygonPoint: (polygon: DeepReadonly<IPolygon>, point: DeepReadonly<IPoint>, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {            
             point = {
                 x: point.x + pointOffset.x - polygonOffset.x,
                 y: point.y + pointOffset.y - polygonOffset.y
             }
             return Geometry.Polygon.WindingNumber(polygon, point) != 0
         },
-        AnyAny: (a?: ReadonlyKV<Shape>, b?: ReadonlyKV<Shape>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): boolean => {
+        AnyAny: (a?: DeepReadonly<Shape>, b?: DeepReadonly<Shape>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             if(a == null || b == null)
                 return false;
                     
@@ -1323,7 +1323,7 @@ export class Geometry {
     //  b = other endpoint of the same PointPair
     //  c = point being checked against the PointPair)
     // TODO: rename 
-    private static isSameSideOfPoint = (a: ReadonlyKV<IPoint>, b: ReadonlyKV<IPoint>, c: ReadonlyKV<IPoint>, aOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, bOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, cOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero) => {
+    private static isSameSideOfPoint = (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>, c: DeepReadonly<IPoint>, aOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, bOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, cOffset: DeepReadonly<IPoint>=Geometry.Point.Zero) => {
         const ax = a.x + aOffset.x;
         const ay = a.y + aOffset.y;
         const bx = b.x + bOffset.x;
@@ -1339,7 +1339,7 @@ export class Geometry {
     //  1. test what happens when the lines/rays/segments are directly atop one another
     //  2. add shape vs. shape intersections as well
     public static Intersection = {
-        CirclePointPair: (circle: ReadonlyKV<ICircle>, pair: ReadonlyKV<IPointPair>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, pairOffset?: ReadonlyKV<IPoint>): IPoint[] => {
+        CirclePointPair: (circle: DeepReadonly<ICircle>, pair: DeepReadonly<IPointPair>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pairOffset?: DeepReadonly<IPoint>): IPoint[] => {
             if(pairOffset)
                 pair = {
                     a: {
@@ -1379,42 +1379,42 @@ export class Geometry {
                 { x: x2, y: y2 }
             ];
         },
-        CircleLine: (circle: ReadonlyKV<ICircle>, line: ReadonlyKV<ILine>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, lineOffset?: ReadonlyKV<IPoint>): IPoint[] =>
+        CircleLine: (circle: DeepReadonly<ICircle>, line: DeepReadonly<ILine>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, lineOffset?: DeepReadonly<IPoint>): IPoint[] =>
             Geometry.Intersection.CirclePointPair(circle, line, circleOffset, lineOffset),
-        CircleRay: (circle: ReadonlyKV<ICircle>, ray: ReadonlyKV<IRay>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rayOffset?: ReadonlyKV<IPoint>): IPoint[] =>
+        CircleRay: (circle: DeepReadonly<ICircle>, ray: DeepReadonly<IRay>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rayOffset?: DeepReadonly<IPoint>): IPoint[] =>
             Geometry.Intersection.CirclePointPair(circle, ray, circleOffset, rayOffset)
                 .filter(o => Geometry.isSameSideOfPoint(ray.a, ray.b, o, rayOffset ?? Geometry.Point.Zero, rayOffset ?? Geometry.Point.Zero, circleOffset)),
-        CircleSegment: (circle: ReadonlyKV<ICircle>, segment: ReadonlyKV<ISegment>, circleOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentOffset?: ReadonlyKV<IPoint>): IPoint[] =>
+        CircleSegment: (circle: DeepReadonly<ICircle>, segment: DeepReadonly<ISegment>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentOffset?: DeepReadonly<IPoint>): IPoint[] =>
             Geometry.Intersection.CirclePointPair(circle, segment, circleOffset, segmentOffset)
                 .filter(o =>
                     Geometry.isSameSideOfPoint(segment.a, segment.b, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset) && 
                     Geometry.isSameSideOfPoint(segment.b, segment.a, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset)
                 ),
-        LineLine: (lineA: ReadonlyKV<ILine>, lineB: ReadonlyKV<ILine>, lineAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, lineBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        LineLine: (lineA: DeepReadonly<ILine>, lineB: DeepReadonly<ILine>, lineAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, lineBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE, lineAOffset, lineBOffset),
-        LineRay: (line: ReadonlyKV<ILine>, ray: ReadonlyKV<IRay>, lineOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rayOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        LineRay: (line: DeepReadonly<ILine>, ray: DeepReadonly<IRay>, lineOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rayOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY, lineOffset, rayOffset),
-        LineSegment: (line: ReadonlyKV<ILine>, segment: ReadonlyKV<ISegment>, lineOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        LineSegment: (line: DeepReadonly<ILine>, segment: DeepReadonly<ISegment>, lineOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(line, PointPairType.LINE, segment, PointPairType.SEGMENT, lineOffset, segmentOffset),
-        RayRay: (rayA: ReadonlyKV<IRay>, rayB: ReadonlyKV<IRay>, rayAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, rayBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        RayRay: (rayA: DeepReadonly<IRay>, rayB: DeepReadonly<IRay>, rayAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rayBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY, rayAOffset, rayBOffset),
-        RaySegment: (ray: ReadonlyKV<IRay>, segment: ReadonlyKV<ISegment>, rayOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        RaySegment: (ray: DeepReadonly<IRay>, segment: DeepReadonly<ISegment>, rayOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT, rayOffset, segmentOffset),
-        SegmentSegment: (segmentA: ReadonlyKV<ISegment>, segmentB: ReadonlyKV<ISegment>, segmentAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint | null =>
+        SegmentSegment: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>, segmentAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(segmentA, PointPairType.SEGMENT, segmentB, PointPairType.SEGMENT, segmentAOffset, segmentBOffset),
-        SegmentsSegments: (segmentsA: ReadonlyKV<ReadonlyKV<ISegment>[]>, segmentsB: ReadonlyKV<ReadonlyKV<ISegment>[]>, segmentsAOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero, segmentsBOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero): IPoint[] =>
+        SegmentsSegments: (segmentsA: DeepReadonly<DeepReadonly<ISegment>[]>, segmentsB: DeepReadonly<DeepReadonly<ISegment>[]>, segmentsAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentsBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] =>
             segmentsA.map(segmentA => 
                 segmentsB.map(segmentB => 
                     Geometry.Intersection.SegmentSegment(segmentA, segmentB, segmentsAOffset, segmentsBOffset)
                 ).filter(o => o != null)
             ).flattened(),
-        PolygonPolygon: (polygonA: ReadonlyKV<IPolygon>, polygonB: ReadonlyKV<IPolygon>, polygonAOffset?: ReadonlyKV<IPoint>, polygonBOffset?: ReadonlyKV<IPoint>): IPoint[] =>
+        PolygonPolygon: (polygonA: DeepReadonly<IPolygon>, polygonB: DeepReadonly<IPolygon>, polygonAOffset?: DeepReadonly<IPoint>, polygonBOffset?: DeepReadonly<IPoint>): IPoint[] =>
             Geometry.Intersection.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset)),
         PointPair: (
-            first: ReadonlyKV<IPointPair>, firstType: PointPairType, 
-            second: ReadonlyKV<IPointPair>, secondType: PointPairType,
-            firstOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero,
-            secondOffset: ReadonlyKV<IPoint>=Geometry.Point.Zero
+            first: DeepReadonly<IPointPair>, firstType: PointPairType, 
+            second: DeepReadonly<IPointPair>, secondType: PointPairType,
+            firstOffset: DeepReadonly<IPoint>=Geometry.Point.Zero,
+            secondOffset: DeepReadonly<IPoint>=Geometry.Point.Zero
         ): IPoint | null => {
             if(firstOffset && !Geometry.Point.AreEqual(firstOffset, Geometry.Point.Zero))
                 first = {
