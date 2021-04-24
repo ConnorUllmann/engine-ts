@@ -143,7 +143,7 @@ export const repeat = function<T>(count: number, get: (i: number, count: number)
     return array;
 }
 
-export type ReadonlyKV<T> = { readonly [K in keyof T]: Readonly<T[K]> };
+export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
 
 declare global {
     interface Set<T> {

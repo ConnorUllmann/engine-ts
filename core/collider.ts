@@ -2,7 +2,7 @@ import { Geometry, BoundableShape } from "@engine-ts/geometry/geometry";
 import { IRectangle } from "@engine-ts/geometry/interfaces";
 import { Rectangle } from "@engine-ts/geometry/rectangle";
 import { Component } from "./component";
-import { ReadonlyKV } from "./utils";
+import { DeepReadonly } from "./utils";
 
 // TODO: add "shape" property which translates shapeLocal to the position of the entity
 export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
@@ -18,7 +18,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         this._bounds = new Rectangle();
     }
 
-    public get shapeLocal(): ReadonlyKV<T> {
+    public get shapeLocal(): DeepReadonly<T> {
         return this._shapeLocal;
     }
 
@@ -110,7 +110,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         const aOffset = xOffset != 0 || yOffset != 0
             ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset }
             : this.entity.position;
-        return Geometry.Collide.AnyAny(this.shapeLocal as ReadonlyKV<BoundableShape>, collider.shapeLocal as ReadonlyKV<BoundableShape>, aOffset, collider.entity.position);
+        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity.position);
     }
 
     public get x(): number { return this._boundsLocal.x + this.entity.position.x; }
