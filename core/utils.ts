@@ -356,6 +356,8 @@ Array.prototype.samples = function<T>(count: number): T[]
 {
     if(count <= 0 || this.length <= 0)
         return [];
+    if(count >= this.length) 
+        return this.shuffled();
     const tempList = this.clone();
     while(tempList.length > count)
         tempList.removeAt(Math.floor(random() * tempList.length));
