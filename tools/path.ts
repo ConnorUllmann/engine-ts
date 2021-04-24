@@ -56,11 +56,17 @@ export class PathMap<T> {
             if (!useClosestNonSolidTileIfTargetIsSolid)
                 return [];
             // find the tile in the region I have access to which is closest to the target and find a path to it instead
-            first = Grid.GetRegion(this.gridPath, start, o => !this.getSolid(o.tile, o.position))
-                .minOf(o => Geometry.Point.DistanceSq(o.position, target));
-            if(first === null)
-                return [];
-            return this.findPath(start, first.position, useClosestNonSolidTileIfTargetIsSolid);
+            const region = Grid.GetRegion(this.gridPath, start, o => !this.getSolid(o.tile, o.position));
+            let minDistanceSq = null;
+            let minRegionTile = null;
+            for(let regionTile of region) {
+                const distanceSq = Geometry.Point.DistanceSq(regionTile.tile.position, target);
+                if(minDistanceSq == null || distanceSq < minDistanceSq) {
+                    minDistanceSq = distanceSq;
+                    minRegionTile = regionTile;
+                }
+            }
+            return minRegionTile?.tile == null ? [] : this.findPath(start, minRegionTile.tile.position, useClosestNonSolidTileIfTargetIsSolid);
         }
 
         first.setHeuristicProperties(0, this.distance(first, last));

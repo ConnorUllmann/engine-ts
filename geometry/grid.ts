@@ -2,6 +2,7 @@ import { IPoint } from './interfaces';
 import { Point } from './point';
 import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup as CompassDirectionsByGroup } from './compass';
 import { Stack } from '@engine-ts/tools/stack';
+import { IdSet } from '@engine-ts/tools/id-set';
 
 export interface IGrid<T> {
     w: number;
@@ -34,11 +35,11 @@ export class Grid<T> implements IGrid<T> {
         return Grid.GetCompassDirectionNeighbors(grid, position, compassDirections);
     };
 
-    //https://lodev.org/cgtutor/floodfill.html
-    public static GetRegion<T>(grid: IGrid<T>, position: IPoint, getValue: (t: T) => any)
-    {
+    // https://lodev.org/cgtutor/floodfill.html
+    // TODO: use a single temp point instead of creating so many extra points
+    public static GetRegion<T>(grid: IGrid<T>, position: IPoint, getValue: (t: T) => any): IdSet<{ x: number, y: number, tile: T }> {
         let oldValue = getValue(grid.get(position));
-        let region = [];
+        let region = new IdSet((o: {x: number, y: number, tile: T}) => o.y * grid.h + o.x);
 
         let y1 = 0;
         let spanAbove = false;
@@ -62,10 +63,11 @@ export class Grid<T> implements IGrid<T> {
             spanBelow = false;
             while(y1 < grid.h && getValue(grid.get({ y: y1, x })) === oldValue)
             {
-                const tile = grid.get({ y: y1, x });
-                if(tile == null || region.includes(tile))
+                const obj = { x, y: y1, tile: null };
+                obj.tile = grid.get(obj);
+                if(obj.tile == null || region.has(obj))
                     break;
-                region.push(tile);
+                region.add(obj);
                 if(!spanAbove && x > 0 && getValue(grid.get({ y: y1, x: x - 1 })) === oldValue)
                 {
                     stack.push({ x: x - 1, y: y1 });
