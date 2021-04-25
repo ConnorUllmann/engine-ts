@@ -32,8 +32,9 @@ export class PixelGrid implements IGrid<Color> {
     };
 
     // TODO: optional rectangle input to define what part of the image to use (null means all of it)
-    public refreshImageData() {
+    public refreshImageData(): this {
         this.imageData = this.getImageData();
+        return this;
     };
 
     // TODO: optional rectangle input to define what part of the image to use (null means all of it)
@@ -42,8 +43,9 @@ export class PixelGrid implements IGrid<Color> {
     };
 
     // Applies the changes made to the pixels in the grid to the actual canvas itself
-    public putImageData() {
+    public putImageData(): this {
         this.context.putImageData(this.imageData, 0, 0);
+        return this;
     };
 
     // filter = Function that takes in an (x, y) position and a function which can retrieve the color of any pixel
@@ -55,11 +57,12 @@ export class PixelGrid implements IGrid<Color> {
 
     // Necessary if you're going to use the values of neighboring pixels so that they aren't partially updated
     // Note: it's slower than .applyFilter()
-    public applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color) {
+    public applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
         const pixelGridTemp = new PixelGrid(this.canvas);
         pixelGridTemp.setEach((position) => filter(position, (p) => this.get(p)));
         this.setEach((position) => pixelGridTemp.get(position));
         this.putImageData();
+        return this;
     };
 
     public renderToContext(context: CanvasRenderingContext2D,
@@ -86,14 +89,15 @@ export class PixelGrid implements IGrid<Color> {
         return y >= 0 && y < this.h && x >= 0 && x < this.w;
     }
 
-    public set(position: IPoint, color: Color): void {
-        if(!this.isInside(position))
-            return;
-        const index = this.transformXYToIndex(position);
-        this.imageData.data[index] = color.red;
-        this.imageData.data[index+1] = color.green;
-        this.imageData.data[index+2] = color.blue;
-        this.imageData.data[index+3] = color.alpha * 255;
+    public set(position: IPoint, color: Color): this {
+        if(this.isInside(position)) {
+            const index = this.transformXYToIndex(position);
+            this.imageData.data[index] = color.red;
+            this.imageData.data[index+1] = color.green;
+            this.imageData.data[index+2] = color.blue;
+            this.imageData.data[index+3] = color.alpha * 255;
+        }
+        return this;
     };
 
     public get(position: IPoint): Color | null {
@@ -120,31 +124,34 @@ export class PixelGrid implements IGrid<Color> {
         return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
     }
 
-    public setEach(getColor: (position: IPoint) => Color): void {
+    public setEach(getColor: (position: IPoint) => Color): this {
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
             this.set(position, getColor(position));
         }
+        return this;
     };
 
-    public forEachWithGetter(pixelCall: (position: IPoint, getColor: (position: IPoint) => Color) => void) {
+    public forEachWithGetter(pixelCall: (position: IPoint, getColor: (position: IPoint) => Color) => void): this {
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
             pixelCall(position, (p) => this.get(p));
         }
+        return this;
     }
 
-    public forEach(pixelCall: (color: Color, position: IPoint) => void): void {
+    public forEach(pixelCall: (color: Color, position: IPoint) => void): this {
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
             pixelCall(this.get(position), position);
         }
+        return this;
     };
 
     public map<U>(getColor: (position: IPoint, color: Color) => U): U[] {
