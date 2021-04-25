@@ -19,7 +19,7 @@ export class Perlin {
         this.perlinPixelGrid = new PixelGrid(this.perlinCanvas);
     }
 
-    refreshRandomNoise(alpha: number=1) {
+    refreshRandomNoise(alpha: number=1): this {
         const x = 0;
         const y = 0;
         const context = this.noiseCanvas.getContext("2d");
@@ -31,18 +31,20 @@ export class Perlin {
             pixels[i+3] = alpha * 255;
         }
         context.putImageData(imageData, x, y);
+        return this;
     };
 
     getPixelColor(position: IPoint): Color | null {
         return this.perlinPixelGrid.get(position);
     };
 
-    setPixelColor(position: IPoint, color: Color): void {
-        return this.perlinPixelGrid.set(position, color);
+    setPixelColor(position: IPoint, color: Color): this {
+        this.perlinPixelGrid.set(position, color);
+        return this;
     };
     
     // https://gist.github.com/donpark/1796361
-    refreshPerlinNoise(scale: number) {
+    refreshPerlinNoise(scale: number): this {
         const contextDestination = this.perlinCanvas.getContext("2d");
         const canvasSource = this.noiseCanvas;
         for (let size = 4; size <= scale; size *= 2) {
@@ -53,9 +55,10 @@ export class Perlin {
             contextDestination.globalAlpha = 4 / size;
             contextDestination.drawImage(canvasSource, x, y, w, h, 0, 0, canvasSource.width, canvasSource.height);
         }
+        return this;
     };
 
-    normalizePerlinNoise() {
+    normalizePerlinNoise(): this {
         const perlinValues = this.perlinPixelGrid.map((position: IPoint, color: Color) => color.red);
         const perlinValuesMin = perlinValues.min();
         const perlinValuesMax = perlinValues.max();
@@ -67,10 +70,11 @@ export class Perlin {
             return new Color(newValue, newValue, newValue, 1);
         };
         this.perlinPixelGrid.applyFilter(filter);
+        return this;
     };
 
-    blurPerlinNoise(range: number=1) {
-        this.applyFilterWithBuffer(({ x, y }: IPoint, getColor: (position: IPoint) => Color) => {
+    blurPerlinNoise(range: number=1): this {
+        return this.applyFilterWithBuffer(({ x, y }: IPoint, getColor: (position: IPoint) => Color) => {
             let neighborSum = 0;
             let neighborCount = 0;
             for (let i = -range; i <= range; i++) {
@@ -87,12 +91,14 @@ export class Perlin {
         });
     };
 
-    applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color) {
+    applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
         this.perlinPixelGrid.applyFilter(filter);
+        return this;
     };
 
-    applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color) {
+    applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
         this.perlinPixelGrid.applyFilterWithBuffer(filter);
+        return this;
     };
 
     renderToContext(context: CanvasRenderingContext2D, position: IPoint=Geometry.Point.Zero) {
