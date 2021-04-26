@@ -1,4 +1,4 @@
-import { clamp, random } from '@engine-ts/core/utils';
+import { clamp, DeepReadonly, random } from '@engine-ts/core/utils';
 import { World } from '@engine-ts/core/world';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
@@ -26,7 +26,7 @@ export class SpriteAnimation {
     get frameCount(): number { return this.weightRange.range.length; }
 
     constructor(
-        frames: ISpriteFrame[],
+        frames: DeepReadonly<ISpriteFrame[]>,
         seconds: number,
         loop: boolean=true,
         completion: number=0,
@@ -127,7 +127,7 @@ export class Sprite {
             const currentIndices = animation.currentIndices;
             this.drawFrame(position, currentIndices.x, currentIndices.y, scale, angle, center, alpha, cameraContext);
         } else if(this._currentAnimationName == null) {
-            this.drawFrame(position, 0, 0, Geometry.Point.One, 0, undefined, 1, cameraContext);
+            this.drawFrame(position, 0, 0, scale, angle, center, alpha, cameraContext);
         }
     }
 
