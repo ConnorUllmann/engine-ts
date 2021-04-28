@@ -283,7 +283,7 @@ export class Draw {
         center = center || Geometry.Rectangle.Center(rectangle);
         center = Geometry.Point.Subtract(center, world.camera)
         context.translate(center.x, center.y);
-        context.rotate(-angle);
+        context.rotate(angle);
         context.fillRect(rectangle.x - world.camera.x - center.x, rectangle.y - world.camera.y - center.y, rectangle.w, rectangle.h);
         context.resetTransform();
     };
@@ -330,7 +330,7 @@ export class Draw {
         const context = world.context;
         center = center || Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
         context.translate(center.x, center.y);
-        context.rotate(-angle);
+        context.rotate(angle);
 
         const xOffset = -world.camera.x - center.x;
         const yOffset = -world.camera.y - center.y;
@@ -353,8 +353,7 @@ export class Draw {
         context.lineTo(xLeftHor, yTopHor);
         context.quadraticCurveTo(xLeftHor, yTopVer, xLeftVer, yTopVer);
 
-        context.rotate(angle);
-        context.translate(-center.x, -center.y);
+        context.resetTransform();
     }
 
     public static rectangleRounded(world: CameraContext, rectangle: IRectangle, radius: number, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {
@@ -453,12 +452,20 @@ export class Draw {
     public static text(world: CameraContext, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top", angle: number=0, center?: IPoint) {
         const context = world.context;
         Draw.textStyle(world, fillStyle, font, halign, valign);
-        center = center || Geometry.Point.Subtract(position, world.camera);
-        context.translate(center.x, center.y);
-        context.rotate(-angle);
-        context.fillText(text, position.x - world.camera.x - center.x, position.y - world.camera.y - center.y);
-        context.rotate(angle);
-        context.translate(-center.x, -center.y);
+        if(angle !== 0) {
+            const xCenter = center != null
+                ? (center.x - world.camera.x)
+                : (position.x + Draw.textWidth(world, text)/2 - world.camera.x)
+            const yCenter = center != null
+                ? (center.y - world.camera.y)
+                : (position.y + Draw.textHeight(world)/2 - world.camera.y)
+            context.translate(xCenter, yCenter);
+            context.rotate(angle);
+            context.fillText(text, position.x - world.camera.x - xCenter, position.y - world.camera.y - yCenter);
+            context.resetTransform();
+            return;
+        }
+        context.fillText(text, position.x - world.camera.x, position.y - world.camera.y);
     };
 
     public static textStyle(world: CameraContext, fillStyle: FillStyle=null, font: string | null=null, halign: HalignAll=null, valign: ValignAll=null) {
