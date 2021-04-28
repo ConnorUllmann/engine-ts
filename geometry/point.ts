@@ -50,3 +50,26 @@ export class Point implements IPoint {
     public collidesTriangle(triangle: ITriangle): boolean { return Geometry.Collide.TrianglePoint(triangle, this); }
     public collidesPolygon(polygon: IPolygon): boolean { return Geometry.Collide.PolygonPoint(polygon, this); }
 }
+
+export class NullablePoint {
+    private _value = new Point();
+    private _hasValue = false;
+
+    public get value(): IPoint | null {
+        return this._hasValue ? this._value : null;
+    }
+    public set value(_value: IPoint | null) {
+        if(_value == null) {
+            this._hasValue = false;
+            return;
+        }
+
+        this._value.x = _value.x;
+        this._value.y = _value.y;
+        this._hasValue = true;
+    }
+
+    constructor(_value: IPoint | null=null) {
+        this.value = _value;
+    }
+}
