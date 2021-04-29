@@ -22,7 +22,7 @@ export class SpriteAnimation {
     get finished(): boolean { return this.timer.finished; }
     get currentIndices(): IPoint | null { return this.weightRange.value(this.timer.value); }
     get currentFrameIndex(): number | null { return this.weightRange.index(this.timer.value); }
-    set currentFrameIndex(frameIndex: number) { this.timer.value = this.weightRange.normal(frameIndex); }
+    set currentFrameIndex(frameIndex: number | null) { this.timer.value = this.weightRange.normal(frameIndex ?? 0); }
     get frameCount(): number { return this.weightRange.range.length; }
 
     constructor(
@@ -65,9 +65,9 @@ export class Sprite {
             return this.animationByName[this._currentAnimationName].currentFrameIndex;
         return null;
     }
-    public set currentAnimationFrameIndex(frameIndex: number) {
+    public set currentAnimationFrameIndex(frameIndex: number | null) {
         if(this._currentAnimationName in this.animationByName)
-            this.animationByName[this._currentAnimationName].currentFrameIndex = frameIndex % this.animationByName[this._currentAnimationName].frameCount;
+            this.animationByName[this._currentAnimationName].currentFrameIndex = (frameIndex ?? 0) % this.animationByName[this._currentAnimationName].frameCount;
     }
     public get currentAnimationFrameCount(): number | null {
         if(this._currentAnimationName in this.animationByName)
@@ -125,7 +125,8 @@ export class Sprite {
         if(this._currentAnimationName in this.animationByName) {
             const animation = this.animationByName[this._currentAnimationName];
             const currentIndices = animation.currentIndices;
-            this.drawFrame(position, currentIndices.x, currentIndices.y, scale, angle, center, alpha, cameraContext);
+            if(currentIndices != null)
+                this.drawFrame(position, currentIndices.x, currentIndices.y, scale, angle, center, alpha, cameraContext);
         } else if(this._currentAnimationName == null) {
             this.drawFrame(position, 0, 0, scale, angle, center, alpha, cameraContext);
         }

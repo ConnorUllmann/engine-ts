@@ -5,6 +5,7 @@ import { Geometry } from '@engine-ts/geometry/geometry';
 import { IGrid, Grid } from '@engine-ts/geometry/grid';
 import { Point } from '@engine-ts/geometry/point';
 import { CompassDirection, CompassDirectionGroup } from '@engine-ts/geometry/compass';
+import { DeepReadonly } from '@engine-ts/core/utils';
 
 export class PixelGrid implements IGrid<Color> {
     private context: CanvasRenderingContext2D;
@@ -15,7 +16,7 @@ export class PixelGrid implements IGrid<Color> {
     public get h(): number { return this.canvas.height; }
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.context = canvas.getContext("2d");
+        this.context = canvas.getContext("2d")!;
         this.refreshImageData();
     }
 
@@ -50,17 +51,17 @@ export class PixelGrid implements IGrid<Color> {
 
     // filter = Function that takes in an (x, y) position and a function which can retrieve the color of any pixel
     //          in the canvas given its (x, y) position. It returns the resulting filtered Color.
-    public applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color) {
+    public applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color | null) => DeepReadonly<Color>) {
         this.setEach((position) => filter(position, (position) => this.get(position)));
         this.putImageData();
     };
 
     // Necessary if you're going to use the values of neighboring pixels so that they aren't partially updated
     // Note: it's slower than .applyFilter()
-    public applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
+    public applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color | null) => DeepReadonly<Color>): this {
         const pixelGridTemp = new PixelGrid(this.canvas);
         pixelGridTemp.setEach((position) => filter(position, (p) => this.get(p)));
-        this.setEach((position) => pixelGridTemp.get(position));
+        this.setEach((position) => pixelGridTemp.get(position)!);
         this.putImageData();
         return this;
     };
@@ -89,7 +90,7 @@ export class PixelGrid implements IGrid<Color> {
         return y >= 0 && y < this.h && x >= 0 && x < this.w;
     }
 
-    public set(position: IPoint, color: Color): this {
+    public set(position: IPoint, color: DeepReadonly<Color>): this {
         if(this.isInside(position)) {
             const index = this.transformXYToIndex(position);
             this.imageData.data[index] = color.red;
@@ -113,18 +114,18 @@ export class PixelGrid implements IGrid<Color> {
     };
 
     public getNeighbors(position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: Color | null }[] {
-        return Grid.GetNeighbors(this, position, relativePoints);
+        return Grid.GetNeighbors<Color>(this, position, relativePoints);
     }
 
     public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: Color | null }[] {
-        return Grid.GetCompassDirectionNeighbors(this, position, compassDirections);
+        return Grid.GetCompassDirectionNeighbors<Color>(this, position, compassDirections);
     }
 
     public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): { position: IPoint, tile: Color | null }[] {
-        return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
+        return Grid.GetCompassDirectionGroupNeighbors<Color>(this, position, directionalNeighbors);
     }
 
-    public setEach(getColor: (position: IPoint) => Color): this {
+    public setEach(getColor: (position: IPoint) => DeepReadonly<Color>): this {
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
@@ -139,7 +140,7 @@ export class PixelGrid implements IGrid<Color> {
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
-            pixelCall(position, (p) => this.get(p));
+            pixelCall(position, (p) => this.get(p)!);
         }
         return this;
     }
@@ -149,18 +150,18 @@ export class PixelGrid implements IGrid<Color> {
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
-            pixelCall(this.get(position), position);
+            pixelCall(this.get(position)!, position);
         }
         return this;
     };
 
     public map<U>(getColor: (position: IPoint, color: Color) => U): U[] {
-        const results = [];
+        const results: U[] = [];
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
-            results.push(getColor(position, this.get(position)));
+            results.push(getColor(position, this.get(position)!));
         }
         return results;
     }

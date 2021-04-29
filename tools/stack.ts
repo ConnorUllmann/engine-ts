@@ -4,6 +4,6 @@ export class Stack<T> {
 
     public get length(): number { return this.elements.length; }
     public isEmpty(): boolean { return this.elements.length <= 0; }
-    public pop(): T { return this.elements.pop(); };
+    public pop(): T | null { return this.elements.pop() ?? null; };
     public push(item: T): void { this.elements.push(item); };
 }

@@ -38,8 +38,8 @@ export class Grid<T> implements IGrid<T> {
     // https://lodev.org/cgtutor/floodfill.html
     // TODO: use a single temp point instead of creating so many extra points
     public static GetRegion<T>(grid: IGrid<T>, position: IPoint, getValue: (t: T) => any): IdSet<{ x: number, y: number, tile: T }> {
-        let oldValue = getValue(grid.get(position));
-        let region = new IdSet((o: {x: number, y: number, tile: T}) => o.y * grid.h + o.x);
+        let oldValue = getValue(grid.get(position)!);
+        let region = new IdSet((o: { x: number, y: number, tile: T }) => o.y * grid.h + o.x);
 
         let y1 = 0;
         let spanAbove = false;
@@ -55,34 +55,36 @@ export class Grid<T> implements IGrid<T> {
             const { x, y } = pt;
     
             y1 = y;
-            while(y1 >= 0 && getValue(grid.get({ y: y1, x: x })) === oldValue)
+            while(y1 >= 0 && getValue(grid.get({ y: y1, x: x })!) === oldValue)
                 y1--;
             y1++;
     
             spanAbove = false;
             spanBelow = false;
-            while(y1 < grid.h && getValue(grid.get({ y: y1, x })) === oldValue)
+            while(y1 < grid.h && getValue(grid.get({ y: y1, x })!) === oldValue)
             {
-                const obj = { x, y: y1, tile: null };
-                obj.tile = grid.get(obj);
-                if(obj.tile == null || region.has(obj))
+                const tile = grid.get({ x, y: y1 });
+                if(tile == null)
+                    break;
+                const obj = { x, y: y1, tile };
+                if(region.has(obj))
                     break;
                 region.add(obj);
-                if(!spanAbove && x > 0 && getValue(grid.get({ y: y1, x: x - 1 })) === oldValue)
+                if(!spanAbove && x > 0 && getValue(grid.get({ y: y1, x: x - 1 })!) === oldValue)
                 {
                     stack.push({ x: x - 1, y: y1 });
                     spanAbove = true;
                 }
-                else if(spanAbove && x > 0 && getValue(grid.get({ y: y1, x: x - 1 })) !== oldValue)
+                else if(spanAbove && x > 0 && getValue(grid.get({ y: y1, x: x - 1 })!) !== oldValue)
                 {
                     spanAbove = false;
                 }
-                if(!spanBelow && x < grid.w - 1 && getValue(grid.get({ y: y1, x: x + 1 })) === oldValue)
+                if(!spanBelow && x < grid.w - 1 && getValue(grid.get({ y: y1, x: x + 1 })!) === oldValue)
                 {
                     stack.push({ y: y1, x: x + 1 });
                     spanBelow = true;
                 }
-                else if(spanBelow && x < grid.w - 1 && getValue(grid.get({ y: y1, x: x + 1 })) !== oldValue)
+                else if(spanBelow && x < grid.w - 1 && getValue(grid.get({ y: y1, x: x + 1 })!) !== oldValue)
                 {
                     spanBelow = false;
                 }
@@ -103,7 +105,7 @@ export class Grid<T> implements IGrid<T> {
         const position = new Point();
         this.tiles = [];
         for(let y = 0; y < this.h; y++) {
-            const row = [];
+            const row: T[] = [];
             for(let x = 0; x < this.w; x++) {
                 row.push(this.tileGetter(position.setToXY(x, y)));
             }
@@ -154,7 +156,7 @@ export class Grid<T> implements IGrid<T> {
         }
     };
 
-    public forEach(tileCall: (tile: T, position?: IPoint) => void): void {
+    public forEach(tileCall: (tile: T, position: IPoint) => void): void {
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
@@ -165,13 +167,13 @@ export class Grid<T> implements IGrid<T> {
         }
     };
 
-    public map<U>(valueGetter: (tile: T, position?: IPoint) => U): U[] {
-        const results = [];
+    public map<U>(valueGetter: (tile: T, position: IPoint) => U): U[] {
+        const results: U[] = [];
         const position = new Point();
         for(let y = 0; y < this.h; y++)
         for(let x = 0; x < this.w; x++) {
             position.setToXY(x, y);
-            results.push(valueGetter(this.get(position), position));
+            results.push(valueGetter(this.tiles[position.y][position.x], position));
         }
         return results;
     };

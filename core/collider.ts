@@ -27,29 +27,31 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     public get bounds(): Readonly<IRectangle> {
-        this._bounds.x = this._boundsLocal.x + this.entity.position.x;
-        this._bounds.y = this._boundsLocal.y + this.entity.position.y;
+        this._bounds.x = this._boundsLocal.x + (this.entity?.position.x ?? 0);
+        this._bounds.y = this._boundsLocal.y + (this.entity?.position.y ?? 0);
         this._bounds.w = this._boundsLocal.w;
         this._bounds.h = this._boundsLocal.h;
         return this._bounds;
     }
 
-    public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<any> | null {
-        return this.entity.world.firstComponentOfClass(
+    public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape> | null {
+        return this.entity == null ? null : this.entity.world.firstComponentOfClass(
             Collider,
             collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset)
         );
     }
 
-    public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<any> | null {
-        return this.entity.world.firstComponentOfClass(
+    public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape> | null {
+        return this.entity == null ? null : this.entity.world.firstComponentOfClass(
             Collider,
             collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset)
         );
     }
 
-    public allBoundsCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<any>[] {
-        const results = [];
+    public allBoundsCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape>[] {
+        if(!this.entity)
+            return [];
+        const results: Collider<BoundableShape>[] = [];
         this.entity.world.forEachComponentOfClass(
             Collider,
             collider => {
@@ -60,8 +62,10 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         return results;
     }
 
-    public allCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<any>[] {
-        const results = [];
+    public allCollisions(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape>[] {
+        if(!this.entity)
+            return [];
+        const results: Collider<BoundableShape>[] = [];
         this.entity.world.forEachComponentOfClass(
             Collider,
             collider => {
@@ -81,8 +85,8 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // any inactive colliders/entities will result in false
-    public collideCollider(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
-        if(collider == this || !this.active || !collider.active || !this.entity.active || !collider.entity.active)
+    public collideCollider(collider: Collider<BoundableShape>, xOffset: number=0, yOffset: number=0): boolean {
+        if(collider == this || !this.active || !collider.active || !this.entity || !collider.entity || !this.entity.active || !collider.entity.active)
             return false;
         if(!this.collideBounds(collider, xOffset, yOffset))
             return false;
@@ -90,13 +94,13 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // does not consider active/inactive status
-    public collideBounds(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
-        const rectangleAx = this._boundsLocal.x + this.entity.position.x + xOffset;
-        const rectangleAy = this._boundsLocal.y + this.entity.position.y + yOffset;
+    public collideBounds(collider: Collider<BoundableShape>, xOffset: number=0, yOffset: number=0): boolean {
+        const rectangleAx = this._boundsLocal.x + (this.entity?.position.x ?? 0) + xOffset;
+        const rectangleAy = this._boundsLocal.y + (this.entity?.position.y ?? 0) + yOffset;
         const rectangleAw = this._boundsLocal.w;
         const rectangleAh = this._boundsLocal.h;
-        const rectangleBx = collider._boundsLocal.x + collider.entity.position.x;
-        const rectangleBy = collider._boundsLocal.y + collider.entity.position.y;
+        const rectangleBx = collider._boundsLocal.x + (collider.entity?.position.x ?? 0);
+        const rectangleBy = collider._boundsLocal.y + (collider.entity?.position.y ?? 0);
         const rectangleBw = collider._boundsLocal.w;
         const rectangleBh = collider._boundsLocal.h;
         return rectangleAx + rectangleAw > rectangleBx 
@@ -108,19 +112,19 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     // does not consider active/inactive status
     public collideShape<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): boolean {
         const aOffset = xOffset != 0 || yOffset != 0
-            ? { x: this.entity.position.x + xOffset, y: this.entity.position.y + yOffset }
-            : this.entity.position;
-        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity.position);
+            ? { x: (this.entity?.position.x ?? 0) + xOffset, y: (this.entity?.position.y ?? 0) + yOffset }
+            : this.entity?.position ?? Geometry.Point.Zero;
+        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity?.position ?? Geometry.Point.Zero);
     }
 
-    public get x(): number { return this._boundsLocal.x + this.entity.position.x; }
-    public get y(): number { return this._boundsLocal.y + this.entity.position.y; }
+    public get x(): number { return this._boundsLocal.x + (this.entity?.position.x ?? 0); }
+    public get y(): number { return this._boundsLocal.y + (this.entity?.position.y ?? 0); }
     public get w(): number { return this._boundsLocal.w; };
     public get h(): number { return this._boundsLocal.h; }
-    public get xLeft(): number { return this._boundsLocal.x + this.entity.position.x; }
+    public get xLeft(): number { return this._boundsLocal.x + (this.entity?.position.x ?? 0); }
     public get xCenter(): number { return this.xLeft + this.w/2; }
-    public get xRight(): number { return this._boundsLocal.x + this._boundsLocal.w + this.entity.position.x; }
-    public get yTop(): number { return this._boundsLocal.y + this.entity.position.y; }
+    public get xRight(): number { return this._boundsLocal.x + this._boundsLocal.w + (this.entity?.position.x ?? 0); }
+    public get yTop(): number { return this._boundsLocal.y + (this.entity?.position.y ?? 0); }
     public get yCenter(): number { return this.yTop + this.h/2; }
-    public get yBottom(): number { return this._boundsLocal.y + this._boundsLocal.h + this.entity.position.y; }
+    public get yBottom(): number { return this._boundsLocal.y + this._boundsLocal.h + (this.entity?.position.y ?? 0); }
 } 

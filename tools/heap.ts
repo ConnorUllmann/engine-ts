@@ -22,7 +22,7 @@ export class Heap<T> {
         if(this.isEmpty())
             return;
     
-        const element = this.elements.pop();
+        const element = this.elements.pop()!;
         if(this.isEmpty())
             return;
         this.elements[index] = element;

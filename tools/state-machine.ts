@@ -21,7 +21,7 @@ export class StateMachineGeneric<T extends any[]> {
 
     public reset(): this {
         const state = this.currentState;
-        if(state.finish)
+        if(state?.finish)
             state.finish(...this.args);
         this.currentStateName = null;
         return this;
@@ -32,8 +32,8 @@ export class StateMachineGeneric<T extends any[]> {
         return this;
     };
     
-    private get currentState(): StateGeneric<T> {
-        return this.states[this.currentStateName];
+    private get currentState(): StateGeneric<T> | null {
+        return this.currentStateName != null ? this.states[this.currentStateName] : null;
     };
     
     // forceChange = even if we're already in this state, finish & start it again

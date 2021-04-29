@@ -7,6 +7,7 @@ import { Gamepads } from './gamepads';
 import { Sounds } from './sounds';
 import { Images } from './images';
 import { IComponent } from './component';
+import { DeepReadonly } from './utils';
 
 export class World {
     public readonly canvas: HTMLCanvasElement;
@@ -30,7 +31,7 @@ export class World {
 
     public paused: boolean = false;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
-    public get millisecondsSinceStart(): number { return Date.now() - this.firstUpdateTimestamp; }
+    public get millisecondsSinceStart(): number { return this.firstUpdateTimestamp == null ? 0 : (Date.now() - this.firstUpdateTimestamp); }
     private _isFirstFrame: boolean = true;
     public get isFirstFrame(): boolean { return this._isFirstFrame; }
     public firstUpdateTimestamp: number | null = null;
@@ -41,7 +42,7 @@ export class World {
     public get deltaNormal(): number { return this.delta / this.millisecondsPerFrame; }
     public millisecondsLastUpdate: number = 0;
 
-    public backgroundColor: Color | (() => Color) = Color.lightGrey;
+    public backgroundColor: DeepReadonly<Color> | (() => DeepReadonly<Color>) = Color.lightGrey;
 
     private interval: any | null = null;
 
@@ -59,7 +60,10 @@ export class World {
             throw `Canvas '${canvasId}' does not exist`;
         if(!this.canvas.getContext)
             throw `Cannot retrieve canvas context for '${canvasId}'`;
-        this.context = this.canvas.getContext('2d', { alpha });
+        const context = this.canvas.getContext('2d', { alpha });
+        if(context == null)
+            throw `Cannot retrieve 2D rendering context for canvas '${canvasId}'`;
+        this.context = context;
         this.canvas.oncontextmenu = () => false;
 
         this.setCanvasResolution(canvasResolutionWidth, canvasResolutionHeight);
@@ -119,7 +123,7 @@ export class World {
         
         this.updateDelta();
         this.updateEntities();
-        this.clearCanvas(this.backgroundColor instanceof Color ? this.backgroundColor : this.backgroundColor());
+        this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
         this.drawEntities();
         this.mouse.update();
         this.keyboard.update();
@@ -185,9 +189,7 @@ export class World {
     }
 
     // returns the id of the entity
-    public addEntity(entity: Entity): number | null {
-        if(entity.world != this)
-            return null;
+    public addEntity(entity: Entity): number {
         const entityId = this.nextEntityId++;
         this.entityToAddById[entityId] = entity;
         return entityId;
@@ -200,12 +202,12 @@ export class World {
         entity.destroyed = true;
     }
 
-    public clearCanvas(color: Color | null=null) {
+    public clearCanvas(color: DeepReadonly<Color> | null=null) {
         if(color == null) {
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
             return;
         }
-        this.context.fillStyle = color.toString();
+        this.context.fillStyle = Color.ToString(color);
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 

@@ -1,6 +1,6 @@
 import { Color } from './color';
 import { World } from '@engine-ts/core/world';
-import { tau, Halign, Valign } from '@engine-ts/core/utils';
+import { tau, Halign, Valign, DeepReadonly } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon } from '@engine-ts/geometry/interfaces';
@@ -9,7 +9,7 @@ import { Point } from '@engine-ts/geometry/point';
 import { Geometry, Shape } from '@engine-ts/geometry/geometry';
 import { Images } from '@engine-ts/core/images';
 
-export type FillStyle = Color | string | null;
+export type FillStyle = DeepReadonly<Color> | string | null;
 export type StrokeStyle = FillStyle;
 export type HalignAll = Halign | "left" | "center" | "right" | "start" | "end";
 export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "ideographic" | "bottom";
@@ -89,6 +89,10 @@ export class Draw {
         context.globalAlpha = globalAlphaPrevious;
     }
 
+    private static styleToString(style: FillStyle | StrokeStyle): string {
+        return style instanceof Color ? Color.ToString(style) : (style as string).toString();
+    }
+
     public static circleArc(world: CameraContext, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
         if(circle.r <= 0)
             return;
@@ -96,7 +100,7 @@ export class Draw {
         context.beginPath();
         context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     }
 
@@ -107,7 +111,7 @@ export class Draw {
         context.beginPath();
         context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
         context.stroke();
     }
@@ -124,7 +128,7 @@ export class Draw {
         context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, 0, tau);
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     };
 
@@ -144,7 +148,7 @@ export class Draw {
         context.beginPath();
         context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, startAngle, endAngle);
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     };
 
@@ -160,7 +164,7 @@ export class Draw {
         context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, 0, tau);
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     };
 
@@ -171,7 +175,7 @@ export class Draw {
         context.lineTo(triangle.b.x - world.camera.x, triangle.b.y - world.camera.y);
         context.lineTo(triangle.c.x - world.camera.x, triangle.c.y - world.camera.y);
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     };
 
@@ -184,36 +188,38 @@ export class Draw {
         context.closePath();
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     };
 
     public static polygon(world: CameraContext, { vertices }: IPolygon, fillStyle: FillStyle=null) {
-        if(vertices.length <= 0)
+        const vertexFirst = vertices.first();
+        if(vertexFirst == null)
             return;
         const context = world.context;
         context.beginPath();
-        context.moveTo(vertices.first().x - world.camera.x, vertices.first().y - world.camera.y);
+        context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
         for(let i = 1; i < vertices.length; i++)
             context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
         context.closePath();
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     };
 
     public static polygonOutline(world: CameraContext, { vertices }: IPolygon, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(vertices.length <= 0)
+        const vertexFirst = vertices.first();
+        if(vertexFirst == null)
             return;
         const context = world.context;
         context.beginPath();
-        context.moveTo(vertices.first().x - world.camera.x, vertices.first().y - world.camera.y);
+        context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
         for(let i = 1; i < vertices.length; i++)
             context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
         context.closePath();
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     };
 
@@ -232,16 +238,17 @@ export class Draw {
                 context.lineTo(point.x, point.y);
         }
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     };
 
     public static regularPolygonOutline(world: CameraContext, position: IPoint, radius: number, sides: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
         const context = world.context;
         const points = Draw._getRegularPolygonPoints(position, radius, sides, angle);
-        if(points.length <= 0)
+        const pointFirst = points.first();
+        if(pointFirst == null)
             return;
-        points.push(points.first());
+        points.push(pointFirst);
         context.beginPath();
         for(let i = 0; i < points.length; i++)
         {
@@ -253,14 +260,14 @@ export class Draw {
         }
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     };
 
-    private static _getRegularPolygonPoints(position: IPoint, radius: number, sides: number, angle: number) {
+    private static _getRegularPolygonPoints(position: IPoint, radius: number, sides: number, angle: number): Point[] {
         if(sides <= 0)
             throw `Cannot create a regular polygon with ${sides} sides`;
-        const points = [];
+        const points: Point[] = [];
         for(let i = 0; i < sides; i++)
         {
             const angleToCorner = tau * i / sides + angle;
@@ -273,7 +280,7 @@ export class Draw {
     public static rectangle(world: CameraContext, rectangle: IRectangle, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {        
         const context = world.context;
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
 
         if(angle === 0) {
             context.fillRect(rectangle.x - world.camera.x, rectangle.y - world.camera.y, rectangle.w, rectangle.h);
@@ -360,7 +367,7 @@ export class Draw {
         const context = world.context;
         this.rectangleRoundedPath(world, rectangle, radius, angle, center);
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     }
 
@@ -369,7 +376,7 @@ export class Draw {
         this.rectangleRoundedPath(world, rectangle, radius, angle, center);
         context.lineWidth = lineWidth;
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.stroke();
     }
 
@@ -386,7 +393,7 @@ export class Draw {
         context.moveTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
         context.lineTo(points[1].x - world.camera.x, points[1].y - world.camera.y);
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
         context.stroke();
     };
@@ -402,7 +409,7 @@ export class Draw {
             context.moveTo(ray.a.x - world.camera.x, ray.a.y - world.camera.y);
             context.lineTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
             if(strokeStyle)
-                context.strokeStyle = strokeStyle.toString();
+                context.strokeStyle = this.styleToString(strokeStyle);
             context.lineWidth = lineWidth;
             context.stroke();
             return;
@@ -415,7 +422,7 @@ export class Draw {
         context.moveTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
         context.lineTo(points[1].x - world.camera.x, points[1].y - world.camera.y);
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
         context.stroke();
     };
@@ -428,7 +435,7 @@ export class Draw {
         context.moveTo(segment.a.x - world.camera.x, segment.a.y - world.camera.y);
         context.lineTo(segment.b.x - world.camera.x, segment.b.y - world.camera.y);
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
         context.stroke();
     };
@@ -444,7 +451,7 @@ export class Draw {
         if(closePath)
             context.closePath();
         if(strokeStyle)
-            context.strokeStyle = strokeStyle.toString();;
+            context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
         context.stroke();
     };
@@ -468,14 +475,14 @@ export class Draw {
         context.fillText(text, position.x - world.camera.x, position.y - world.camera.y);
     };
 
-    public static textStyle(world: CameraContext, fillStyle: FillStyle=null, font: string | null=null, halign: HalignAll=null, valign: ValignAll=null) {
+    public static textStyle(world: CameraContext, fillStyle: FillStyle=null, font: string | null=null, halign?: HalignAll, valign?: ValignAll) {
         const context = world.context;
         if(font)
             context.font = font;
         if(halign)
             context.textAlign = halign;
         if(fillStyle)
-            context.fillStyle = fillStyle.toString();
+            context.fillStyle = this.styleToString(fillStyle);
         if(valign)
             context.textBaseline = valign;
     };

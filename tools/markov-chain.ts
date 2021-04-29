@@ -1,11 +1,18 @@
 import { random } from '@engine-ts/core/utils';
 
 export class MarkovChain {
-    constructor(private current: MarkovLink) {}
+    private current: MarkovLink | null;
+
+    constructor(current: MarkovLink) {
+        this.current = current;
+    }
 
     public update() {
+        if(this.current == null)
+            return;
         this.current = this.current.sample();
-        this.current.execute();
+        if(this.current != null)
+            this.current.execute();
     }
 }
 
@@ -27,7 +34,7 @@ export class MarkovLink {
         if(this.linkWeights.length <= 0)
             return null;
         
-        const max = this.linkWeights.map(o => o.weight).sum();
+        const max = this.linkWeights.map(o => o.weight).sum() ?? 0;
         const selection = random() * max;
         let partialSum = 0;
         for(const { link, weight } of this.linkWeights) {

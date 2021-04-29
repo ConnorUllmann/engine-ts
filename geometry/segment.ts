@@ -11,8 +11,8 @@ export class Segment implements ISegment {
     public isEqualTo(segment: ISegment): boolean { return Geometry.Segment.AreEqual(this, segment); }
     public get midpoint(): IPoint { return this.a.midpoint(this.b); }
     public get slope(): number { return Geometry.Segment.Slope(this); }
-    public YatX(x: number): number { return Geometry.Segment.YatX(this, x); }
-    public XatY(y: number): number { return Geometry.Segment.XatY(this, y); }
+    public YatX(x: number): number | null { return Geometry.Segment.YatX(this, x); }
+    public XatY(y: number): number | null { return Geometry.Segment.XatY(this, y); }
     public lineIntersection(line: ILine): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.SEGMENT, line, PointPairType.LINE)); }
     public rayIntersection(ray: IRay): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.SEGMENT, ray, PointPairType.RAY)); }
     public segmentIntersection(segment: ISegment): Point | null { return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.SEGMENT, segment, PointPairType.SEGMENT)); }

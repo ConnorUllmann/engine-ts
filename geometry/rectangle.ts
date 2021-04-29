@@ -69,7 +69,7 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
     public static intersections(rectangle: IRectangle, pair: IPointPair, pairType: PointPairType): Point[] { 
         const intersections = Geometry.Rectangle.Segments(rectangle)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
-            .filter(point => point != null);
+            .filter(point => point != null) as IPoint[];
         const indicesToRemove = new Set();
         for(let i = 0; i < intersections.length; i++) {
             const a = intersections[i];
