@@ -136,7 +136,7 @@ export const randomRange = (min: number, max: number): number => random() * (max
 export const randomChoice = <T>(...options: T[]): T => options.sample();
 
 export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
-    const array = [];
+    const array: T[] = [];
     for(let i = 0; i < count; i++) {
         array.push(get(i, count));
     }
@@ -380,7 +380,7 @@ Array.prototype.unflattened = function<T>(width: number): T[][]
 {
     if(width <= 0)
         throw `Cannot unflatten array using width ${width}`;
-    const result = [];
+    const result: T[][] = [];
     for(let i = 0; i < this.length; i += width)
         result.push(this.slice(i, i+width));
     return result;

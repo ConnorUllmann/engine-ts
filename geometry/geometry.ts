@@ -16,8 +16,8 @@ interface IGeometryStatic<T> {
 interface IPointListStatic<T> extends IGeometryStatic<T> {
     Segments: (t: DeepReadonly<T>, offset?:DeepReadonly<IPoint>) => ISegment[],
     Vertices: (t: DeepReadonly<T>, offset?:DeepReadonly<IPoint>) => IPoint[],
-    Circumcircle: (t: DeepReadonly<T>) => ICircle,
-    Supertriangle: (t: DeepReadonly<T>) => ITriangle,
+    Circumcircle: (t: DeepReadonly<T>) => ICircle | null,
+    Supertriangle: (t: DeepReadonly<T>) => ITriangle | null,
     Triangulation: (t: DeepReadonly<T>) => ITriangle[],
     Bounds: (t: DeepReadonly<T>) => IRectangle,
     Hash: (t: DeepReadonly<T>) => string
@@ -30,11 +30,12 @@ interface IPointsStatic extends IPointListStatic<IPoint[]> {
 }
 
 interface IShapeStatic<T> extends IPointListStatic<T> {
-    Midpoint: (o: DeepReadonly<T>) => IPoint,
+    Midpoint: (o: DeepReadonly<T>) => IPoint | null,
     Area: (o: DeepReadonly<T>) => number,
 }
 
 interface ITriangleStatic extends IShapeStatic<ITriangle> {
+    Midpoint: (o: DeepReadonly<ITriangle>) => IPoint,
     AreaSigned: (triangle: DeepReadonly<ITriangle>) => number,
     
     // TODO: add these to IShapeStatic<T>
@@ -44,6 +45,7 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
     Incenter: (triangle: DeepReadonly<ITriangle>) => IPoint,
     Inradius: (triangle: DeepReadonly<ITriangle>) => number,
     InscribedCircle: (triangle: DeepReadonly<ITriangle>) => ICircle,
+    Circumcircle: (t: DeepReadonly<ITriangle>) => ICircle,
     AngleA: (triangle: DeepReadonly<ITriangle>) => number,
     AngleB: (triangle: DeepReadonly<ITriangle>) => number,
     AngleC: (triangle: DeepReadonly<ITriangle>) => number,
@@ -61,12 +63,14 @@ interface ITriangleStatic extends IShapeStatic<ITriangle> {
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
+    Midpoint: (o: DeepReadonly<IRectangle>) => IPoint,
     BoundsRectangles: (rectangles: DeepReadonly<DeepReadonly<IRectangle>[]>) => IRectangle,
     Scale: (rectangle: DeepReadonly<IRectangle>, scalar: number | DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
     Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount?: number) => IRectangle,
     RandomPointInside: (rectangle: DeepReadonly<IRectangle>) => IPoint,
     Square: (center: DeepReadonly<IPoint>, sideLength: number) => IRectangle,
+    Circumcircle: (t: DeepReadonly<IRectangle>) => ICircle,
     Translate: (rectangle: DeepReadonly<IRectangle>, translation: DeepReadonly<IPoint>) => IRectangle,
     Align: (rectangle: DeepReadonly<IRectangle>, halign: Halign, valign: Valign) => IRectangle,
     Center: (rectangle: DeepReadonly<IRectangle>) => IPoint,
@@ -147,8 +151,8 @@ interface IPointStatic extends IGeometryStatic<IPoint> {
 
 interface IPointPairStatic<T extends IPointPair> {
     AreEqual: (pairA: DeepReadonly<T>, pairB: DeepReadonly<T>) => boolean,
-    YatX: (pair: DeepReadonly<T>, x: number) => number,
-    XatY: (pair: DeepReadonly<T>, y: number) => number,
+    YatX: (pair: DeepReadonly<T>, x: number) => number | null,
+    XatY: (pair: DeepReadonly<T>, y: number) => number | null,
     Slope: (pair: DeepReadonly<T>) => number,
     Hash: (pair: DeepReadonly<T>) => string,
     Translate: (pair: DeepReadonly<T>, offset: DeepReadonly<IPoint>) => T,
@@ -157,6 +161,8 @@ interface IPointPairStatic<T extends IPointPair> {
 
 interface ILineStatic extends IPointPairStatic<ILine> {
     Yintercept: (line: DeepReadonly<ILine>) => number
+    YatX: (pair: DeepReadonly<ILine>, x: number) => number,
+    XatY: (pair: DeepReadonly<ILine>, y: number) => number,
 };
 
 interface IRayStatic extends IPointPairStatic<IRay> {
@@ -401,8 +407,8 @@ export class Geometry {
             const segmentIntersection = segments
                 .map(segment => ({ segment, intersection: Geometry.Intersection.SegmentSegment(raySegment, segment) }))
                 .filter(({ segment, intersection }) => intersection != null && segment != null)
-                .minOf(({ intersection }) => Geometry.Point.DistanceSq(intersection, ray.a));
-            return segmentIntersection == null 
+                .minOf(({ intersection }) => Geometry.Point.DistanceSq(intersection!, ray.a));
+            return segmentIntersection == null || segmentIntersection.intersection == null
                 ? null 
                 : {
                     contactPoint: segmentIntersection.intersection,
@@ -501,7 +507,7 @@ export class Geometry {
         Supertriangle: (triangle: DeepReadonly<ITriangle>): ITriangle => triangle,
         Triangulation: (triangle: DeepReadonly<ITriangle>): ITriangle[] => [triangle],
         Bounds: (triangle: DeepReadonly<ITriangle>): IRectangle => Geometry.Points.Bounds(Geometry.Triangle.Vertices(triangle)),
-        Midpoint: (triangle: DeepReadonly<ITriangle>): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle)),
+        Midpoint: (triangle: DeepReadonly<ITriangle>): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle))!,
         Area: (triangle: DeepReadonly<ITriangle>): number => Math.abs(Geometry.Triangle.AreaSigned(triangle)),
         AreaSigned: (triangle: DeepReadonly<ITriangle>): number => 0.5 * (
             -triangle.b.y * triangle.c.x 
@@ -591,7 +597,7 @@ export class Geometry {
             y: rectangle.y + rectangle.h/2,
             r: Geometry.Point.Length({ x: rectangle.w/2, y: rectangle.h/2 })
         }),
-        Supertriangle: (rectangle: DeepReadonly<IRectangle>): ITriangle => Geometry.Points.Supertriangle(Geometry.Rectangle.Vertices(rectangle)),
+        Supertriangle: (rectangle: DeepReadonly<IRectangle>): ITriangle | null => Geometry.Points.Supertriangle(Geometry.Rectangle.Vertices(rectangle)),
         Triangulation: (rectangle: DeepReadonly<IRectangle>): ITriangle[] => {
             const corners = Geometry.Rectangle.Vertices(rectangle);
             return [
@@ -723,12 +729,12 @@ export class Geometry {
     public static Polygon: IPolygonStatic = {
         Segments: (polygon: DeepReadonly<IPolygon>, offset?: DeepReadonly<IPoint>): ISegment[] => Geometry.Points.Segments(offset ? Geometry.Polygon.Vertices(polygon, offset) : polygon.vertices),
         Vertices: (polygon: DeepReadonly<IPolygon>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => polygon.vertices.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
-        Circumcircle: (polygon: DeepReadonly<IPolygon>): ICircle => Geometry.Points.Circumcircle(polygon.vertices),
-        Supertriangle: (polygon: DeepReadonly<IPolygon>): ITriangle => Geometry.Points.Supertriangle(polygon.vertices),
+        Circumcircle: (polygon: DeepReadonly<IPolygon>): ICircle | null => Geometry.Points.Circumcircle(polygon.vertices),
+        Supertriangle: (polygon: DeepReadonly<IPolygon>): ITriangle | null => Geometry.Points.Supertriangle(polygon.vertices),
         Triangulation: (polygon: DeepReadonly<IPolygon>): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
         Bounds: (polygon: DeepReadonly<IPolygon>): IRectangle => Geometry.Points.Bounds(polygon.vertices),
-        Midpoint: (polygon: DeepReadonly<IPolygon>): IPoint => Geometry.Point.Midpoint(...polygon.vertices),
-        Area: (polygon: DeepReadonly<IPolygon>): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum(),
+        Midpoint: (polygon: DeepReadonly<IPolygon>): IPoint | null => Geometry.Point.Midpoint(...polygon.vertices),
+        Area: (polygon: DeepReadonly<IPolygon>): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum() ?? 0,
         Rotate: (polygon: DeepReadonly<IPolygon>, angle: number, center?: DeepReadonly<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
         Translate: (polygon: DeepReadonly<IPolygon>, position: DeepReadonly<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Add(o, position)) }),
         Hash: (polygon: DeepReadonly<IPolygon>): string => Geometry.Points.Hash(polygon.vertices),
@@ -796,7 +802,7 @@ export class Geometry {
 
     public static Points: IPointsStatic = {
         Segments: (points: DeepReadonly<DeepReadonly<IPoint>[]>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero, closed: boolean=true): ISegment[] => { 
-            const segments = [];
+            const segments: ISegment[] = [];
             for(let i = 0; i < points.length; i++) {
                 if(i == points.length-1 && !closed)
                     break;
@@ -815,15 +821,21 @@ export class Geometry {
             return segments;
         },
         Vertices: (points: DeepReadonly<DeepReadonly<IPoint>[]>, offset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint[] => points.map(o => ({ x: o.x + offset.x, y: o.y + offset.y })),
-        Circumcircle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ICircle => {
+        Circumcircle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ICircle | null => {
             // Doesn't necessarily fit tightly, but is guaranteed to contain all the points
             const center = Geometry.Point.Midpoint(...points);
+            if(center == null)
+                return null;
             const furthest = points.maxOf(o => Geometry.Point.DistanceSq(center, o));
+            if(furthest == null)
+                return null;
             const radius = Geometry.Point.Distance(furthest, center);
             return { x: center.x, y: center.y, r: radius };
         },
-        Supertriangle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ITriangle => {
+        Supertriangle: (points: DeepReadonly<DeepReadonly<IPoint>[]>): ITriangle | null => {
             const circumcircle = Geometry.Points.Circumcircle(points);
+            if(circumcircle == null)
+                return null;
             const diameter = circumcircle.r * 2;
             return {
                 a: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Up, diameter), circumcircle),
@@ -835,7 +847,9 @@ export class Geometry {
             // http://paulbourke.net/papers/triangulate/
     
             // add supertriangle to points and triangles lists
-            const supertriangle: ITriangle = Geometry.Points.Supertriangle(points);
+            const supertriangle: ITriangle | null = Geometry.Points.Supertriangle(points);
+            if(!supertriangle)
+                return [];
             const supertriangleVertices = Geometry.Triangle.Vertices(supertriangle);
             const triangles: ITriangle[] = [supertriangle];
             const pointsTemp = [
@@ -850,10 +864,12 @@ export class Geometry {
                 const segments: ISegment[] = [];
                 triangles.removeWhere(triangle => {
                     const circumcircle = Geometry.Triangle.Circumcircle(triangle);
-                    const collides = Geometry.Collide.CirclePoint(circumcircle, point);
-                    if(collides) {
-                        segments.push(...Geometry.Triangle.Segments(triangle));
-                        return true;
+                    if(circumcircle) {
+                        const collides = Geometry.Collide.CirclePoint(circumcircle, point);
+                        if(collides) {
+                            segments.push(...Geometry.Triangle.Segments(triangle));
+                            return true;
+                        }
                     }
                     return false;
                 });
@@ -893,12 +909,12 @@ export class Geometry {
             return triangles;
         },
         Bounds: (points: DeepReadonly<DeepReadonly<IPoint>[]>): IRectangle => {
-            if(points == null || points.length <= 0)
+            if(points == null)
                 return { x: 0, y: 0, w: 0, h: 0 };
-            const xMin = points.minOf(o => o.x).x;
-            const yMin = points.minOf(o => o.y).y;
-            const xMax = points.maxOf(o => o.x).x;
-            const yMax = points.maxOf(o => o.y).y;
+            const xMin = points.minOf(o => o.x)?.x ?? 0;
+            const yMin = points.minOf(o => o.y)?.y ?? 0;
+            const xMax = points.maxOf(o => o.x)?.x ?? 0;
+            const yMax = points.maxOf(o => o.y)?.y ?? 0;
             return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
         },
         Hash: (points: DeepReadonly<DeepReadonly<IPoint>[]>): string => points.clone()
@@ -930,11 +946,12 @@ export class Geometry {
         },
         // count must be greater than 1
         Bezier: (points: DeepReadonly<DeepReadonly<IPoint>[]>, count: number): IPoint[] => {
-            if(points.length <= 0 || count < 1)
+            const pointFirst = points.first();
+            if(pointFirst == null || count < 1)
                 return [];
             if(count === 1)
-                return [points.first()];
-            const bezierPoints = [];
+                return [pointFirst];
+            const bezierPoints: IPoint[] = [];
             const coarseness = 1 / (count-1);
             for(let i = 0; i <= 1; i += coarseness)
                 bezierPoints.push(Geometry.Points.BezierPoint(points, i));
@@ -952,6 +969,8 @@ export class Geometry {
     private static IsSegment(o: any): o is ISegment { return o.a != null && o.b != null && (o.type == null || o.type == PointPairType.SEGMENT); }
     private static IsPoint(o: any): o is IPoint { return o.x != null && o.y != null && o.w === undefined && o.r === undefined; }
 
+    public static Bounds(shape?: DeepReadonly<BoundableShape>): IRectangle
+    public static Bounds(shape?: DeepReadonly<BoundableShape> | null): IRectangle | null
     public static Bounds(shape?: DeepReadonly<BoundableShape> | null): IRectangle | null {
         if(!shape)
             null;
@@ -1075,7 +1094,7 @@ export class Geometry {
         RectanglePolygon: (rectangle: DeepReadonly<IRectangle>, polygon: DeepReadonly<IPolygon>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset?: DeepReadonly<IPoint>): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Rectangle.Segments(rectangle, rectangleOffset))
             || Geometry.Collide.PolygonPoint(polygon, rectangle)
-            || Geometry.Collide.RectanglePoint(rectangle, polygon.vertices.first()),
+            || (polygon.vertices.length > 0 && Geometry.Collide.RectanglePoint(rectangle, polygon.vertices[0])),
         RectangleSegment: (rectangle: DeepReadonly<IRectangle>, segment: DeepReadonly<ISegment>, rectangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, segmentOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             return Geometry.Collide.RectanglePoint(rectangle, segment.a, rectangleOffset, segmentOffset) || Geometry.Collide.RectanglePoint(rectangle, segment.b, rectangleOffset, segmentOffset) || Geometry.Rectangle.Segments(rectangle).any(s => Geometry.Collide.SegmentSegment(s, segment, rectangleOffset, segmentOffset))
         },
@@ -1097,7 +1116,7 @@ export class Geometry {
         CirclePolygon: (circle: DeepReadonly<ICircle>, polygon: DeepReadonly<IPolygon>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
             Geometry.Polygon.Segments(polygon).any(segment => Geometry.Intersection.CircleSegment(circle, segment, circleOffset, polygonOffset).length > 0)
             || Geometry.Collide.PolygonPoint(polygon, circle, polygonOffset, circleOffset)
-            || Geometry.Collide.CirclePoint(circle, polygon.vertices.first(), circleOffset, polygonOffset),
+            || (polygon.vertices.length > 0 && Geometry.Collide.CirclePoint(circle, polygon.vertices[0], circleOffset, polygonOffset)),
         CirclePoint: (circle: DeepReadonly<ICircle>, point: DeepReadonly<IPoint>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.DistanceSq(point.x + pointOffset.x, point.y + pointOffset.y, circle.x + circleOffset.x, circle.y + circleOffset.y) <= circle.r * circle.r,
         TriangleTriangle: (triangleA: DeepReadonly<ITriangle>, triangleB: DeepReadonly<ITriangle>, triangleAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, triangleBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => 
@@ -1107,7 +1126,7 @@ export class Geometry {
         TrianglePolygon: (triangle: DeepReadonly<ITriangle>, polygon: DeepReadonly<IPolygon>, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygon, polygonOffset), Geometry.Triangle.Segments(triangle, triangleOffset))
             || Geometry.Collide.PolygonPoint(polygon, triangle.a, polygonOffset, triangleOffset)
-            || Geometry.Collide.TrianglePoint(triangle, polygon.vertices.first(), triangleOffset, polygonOffset),
+            || (polygon.vertices.length > 0 && Geometry.Collide.TrianglePoint(triangle, polygon.vertices[0], triangleOffset, polygonOffset)),
         TrianglePoint: (triangle: DeepReadonly<ITriangle>, point: DeepReadonly<IPoint>, triangleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {
             const triangleAx = triangle.a.x + triangleOffset.x;
             const triangleAy = triangle.a.y + triangleOffset.y;
@@ -1130,8 +1149,8 @@ export class Geometry {
         },
         PolygonPolygon: (polygonA: DeepReadonly<IPolygon>, polygonB: DeepReadonly<IPolygon>, polygonAOffset?: DeepReadonly<IPoint>, polygonBOffset?: DeepReadonly<IPoint>): boolean =>
             Geometry.Collide.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset))
-            || Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices.first(), polygonAOffset ?? Geometry.Point.Zero, polygonBOffset ?? Geometry.Point.Zero)
-            || Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices.first(), polygonBOffset ?? Geometry.Point.Zero, polygonAOffset ?? Geometry.Point.Zero),
+            || (polygonB.vertices.length > 0 && Geometry.Collide.PolygonPoint(polygonA, polygonB.vertices[0], polygonAOffset ?? Geometry.Point.Zero, polygonBOffset ?? Geometry.Point.Zero))
+            || (polygonA.vertices.length > 0 && Geometry.Collide.PolygonPoint(polygonB, polygonA.vertices[0], polygonBOffset ?? Geometry.Point.Zero, polygonAOffset ?? Geometry.Point.Zero)),
         PolygonPoint: (polygon: DeepReadonly<IPolygon>, point: DeepReadonly<IPoint>, polygonOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pointOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): boolean => {            
             point = {
                 x: point.x + pointOffset.x - polygonOffset.x,
@@ -1407,7 +1426,7 @@ export class Geometry {
                 segmentsB.map(segmentB => 
                     Geometry.Intersection.SegmentSegment(segmentA, segmentB, segmentsAOffset, segmentsBOffset)
                 ).filter(o => o != null)
-            ).flattened(),
+            ).flattened() as IPoint[],
         PolygonPolygon: (polygonA: DeepReadonly<IPolygon>, polygonB: DeepReadonly<IPolygon>, polygonAOffset?: DeepReadonly<IPoint>, polygonBOffset?: DeepReadonly<IPoint>): IPoint[] =>
             Geometry.Intersection.SegmentsSegments(Geometry.Polygon.Segments(polygonA, polygonAOffset), Geometry.Polygon.Segments(polygonB, polygonBOffset)),
         PointPair: (

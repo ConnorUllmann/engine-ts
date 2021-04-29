@@ -18,8 +18,8 @@ export class Gamepads {
     private get gamepads(): { [gamepadId: number]: Gamepad } {
         const gamepadsRaw = navigator.getGamepads();
         // since navigator.getGamepads() doesn't seem to return an actual array, access the controllers individually
-        return [gamepadsRaw[0], gamepadsRaw[1], gamepadsRaw[2], gamepadsRaw[3]]
-            .filter(o => o != null && o.connected)
+        return ([gamepadsRaw[0], gamepadsRaw[1], gamepadsRaw[2], gamepadsRaw[3]]
+            .filter(o => o != null && o.connected) as Gamepad[])
             .mappedByUnique(o => o.index.toString());
     }
 
@@ -115,7 +115,7 @@ export class Gamepads {
         return value;
     };
 
-    private applyDeadzone(value: number, deadzone: number=null) {
+    private applyDeadzone(value: number, deadzone: number | null=null) {
         const deadzoneFinal = deadzone != null ? deadzone : Gamepads.DeadzoneDefault;
         return Math.abs(value) >= deadzoneFinal
             ? Math.sign(value) * (Math.abs(value) - deadzoneFinal) / (1 - deadzoneFinal)

@@ -22,7 +22,7 @@ export class Perlin {
     refreshRandomNoise(alpha: number=1): this {
         const x = 0;
         const y = 0;
-        const context = this.noiseCanvas.getContext("2d");
+        const context = this.noiseCanvas.getContext("2d")!;
         const imageData = context.getImageData(x, y, this.noiseCanvas.width, this.noiseCanvas.height);
         const pixels = imageData.data;
         for(let i = 0; i < pixels.length; i += 4) {
@@ -45,7 +45,7 @@ export class Perlin {
     
     // https://gist.github.com/donpark/1796361
     refreshPerlinNoise(scale: number): this {
-        const contextDestination = this.perlinCanvas.getContext("2d");
+        const contextDestination = this.perlinCanvas.getContext("2d")!;
         const canvasSource = this.noiseCanvas;
         for (let size = 4; size <= scale; size *= 2) {
             const w = size * canvasSource.width/scale;
@@ -60,12 +60,12 @@ export class Perlin {
 
     normalizePerlinNoise(): this {
         const perlinValues = this.perlinPixelGrid.map((position: IPoint, color: Color) => color.red);
-        const perlinValuesMin = perlinValues.min();
-        const perlinValuesMax = perlinValues.max();
+        const perlinValuesMin = perlinValues.min() ?? 0;
+        const perlinValuesMax = perlinValues.max() ?? 0;
 
         const filter = (position: IPoint, getColor: (position: IPoint) => Color) => {
             const oldValue = getColor(position).red;
-            const normal = (oldValue - perlinValuesMin) / (perlinValuesMax - perlinValuesMin);
+            const normal = perlinValuesMin == perlinValuesMax ? 0 : (oldValue - perlinValuesMin) / (perlinValuesMax - perlinValuesMin);
             const newValue = clamp(Math.floor(256 * normal), 0, 255);
             return new Color(newValue, newValue, newValue, 1);
         };

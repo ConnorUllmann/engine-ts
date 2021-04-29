@@ -1,5 +1,5 @@
 import { Color } from './color';
-import { clamp } from '../core/utils';
+import { clamp, DeepReadonly } from '../core/utils';
 
 /* Color Stops - used for gradients */
 export interface ColorStop {
@@ -8,12 +8,12 @@ export interface ColorStop {
 }
 
 export class ColorStopArray {
-    constructor(public readonly colorStops: ColorStop[]) {
+    constructor(public readonly colorStops: Readonly<ColorStop[]>) {
         if(colorStops.length < 2)
             throw 'Cannot create ColorStopList with less than two colors';
-        if(colorStops.first().stop !== 0)
+        if(colorStops.first()!.stop !== 0)
             throw 'First ColorStop must have stop=0';
-        if(colorStops.last().stop !== 1)
+        if(colorStops.last()!.stop !== 1)
             throw 'Last ColorStop must have stop=1';
         if(colorStops.any(o => o.stop < 0 || o.stop > 1))
             throw 'All ColorStops must have 0 <= stop <= 1';
@@ -41,7 +41,7 @@ export class ColorStopArray {
     };
 
     public applyToGradient(gradient: CanvasGradient) {
-        this.colorStops.forEach(o => gradient.addColorStop(o.stop, o.color.toString()));
+        this.colorStops.forEach(o => gradient.addColorStop(o.stop, Color.ToString(o.color)));
     }
 
     // Returns the color from the gradient at the given position [0..1] given the ColorStops in this ColorStopArray
@@ -54,9 +54,9 @@ export class ColorStopArray {
     //  .sample(0.25) === new Color(127, 127, 0)
     public sample(normal: number): Color {
         if(normal <= 0)
-            return this.colorStops.first().color;
+            return Color.Create(this.colorStops.first()!.color);
         if(normal >= 1)
-            return this.colorStops.last().color;
+            return Color.Create(this.colorStops.last()!.color);
         for(let j = 0; j < this.colorStops.length-1; j++)
         {
             const colorStop = this.colorStops[j];
@@ -64,8 +64,9 @@ export class ColorStopArray {
             if(normal >= colorStop.stop && normal <= colorStopNext.stop)
             {
                 const colorStopNormal = clamp((normal - colorStop.stop) / (colorStopNext.stop - colorStop.stop), 0, 1);
-                return colorStop.color.lerp(colorStopNext.color, colorStopNormal);
+                return Color.Lerp(colorStop.color, colorStopNext.color, colorStopNormal);
             }
         }
+        return Color.Create(Color.black);
     }
 }

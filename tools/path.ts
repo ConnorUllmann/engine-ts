@@ -3,7 +3,7 @@ import { IPoint } from '@engine-ts/geometry/interfaces';
 import { CompassDirectionGroup } from '@engine-ts/geometry/compass';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { Heap } from './heap';
-import { clamp } from '@engine-ts/core/utils';
+import { clamp, DeepReadonly } from '@engine-ts/core/utils';
 
 export class PathMap<T> {
     private readonly gridPath: IGrid<PathTile<T>>;
@@ -39,26 +39,26 @@ export class PathMap<T> {
 
         let open = new Heap<PathTile<T>>((a, b) => a.compare(b));
         let closed = new Set();
-        let path = [];
+        let path: PathTile<T>[] = [];
 
         let last = this.gridPath.get({
             x: clamp(start.x, 0, this.gridPath.w-1),
             y: clamp(start.y, 0, this.gridPath.h-1)
         });
-        if(this.getSolid(last.tile, last.position))
+        if(!last || this.getSolid(last.tile, last.position))
             return [];
 
         let first = this.gridPath.get({
             x: clamp(target.x, 0, this.gridPath.w-1),
             y: clamp(target.y, 0, this.gridPath.h-1)
         });
-        if(this.getSolid(first.tile, first.position)) {
+        if(!first || this.getSolid(first.tile, first.position)) {
             if (!useClosestNonSolidTileIfTargetIsSolid)
                 return [];
             // find the tile in the region I have access to which is closest to the target and find a path to it instead
             const region = Grid.GetRegion(this.gridPath, start, o => !this.getSolid(o.tile, o.position));
-            let minDistanceSq = null;
-            let minRegionTile = null;
+            let minDistanceSq: number | null = null;
+            let minRegionTile: { x: number, y: number, tile: PathTile<T> } | null = null;
             for(let regionTile of region) {
                 const distanceSq = Geometry.Point.DistanceSq(regionTile.tile.position, target);
                 if(minDistanceSq == null || distanceSq < minDistanceSq) {
@@ -72,10 +72,10 @@ export class PathMap<T> {
         first.setHeuristicProperties(0, this.distance(first, last));
         open.add(first);
 
-        let current: PathTile<T> | null = null;
+        let current: PathTile<T>;
         while(!open.isEmpty())
         {
-            current = open.pop();
+            current = open.pop()!;
             closed.add(current.hash);
 
             if(current === last) {
@@ -98,7 +98,7 @@ export class PathMap<T> {
                 if(neighbor == null || closed.has(neighbor.hash) || this.getSolid(neighbor.tile, neighbor.position))
                     continue;
 
-                const neighborSteps = current.steps + this.distance(current, neighbor);
+                const neighborSteps = (current.steps ?? 0) + this.distance(current, neighbor);
                 const neighborTargetDistance = this.distance(neighbor, last);
                 if(open.contains(neighbor)) {
                     const neighborHeuristic = PathTile.Heuristic(neighborSteps, neighborTargetDistance);
@@ -121,9 +121,10 @@ class PathTile<T> {
     public steps: number | null;
     public targetDistance: number | null;
     public readonly hash: number;
-    public readonly position: IPoint;
+    public readonly position: DeepReadonly<IPoint>;
 
-    constructor(private readonly grid: IGrid<T>, position: IPoint) {
+    // position must be inside the grid
+    constructor(private readonly grid: IGrid<T>, position: DeepReadonly<IPoint>) {
         this.position = { x: position.x, y: position.y }
         this.hash = this.position.x + this.position.y * this.grid.w;
         this.refreshTileReference();
@@ -131,7 +132,7 @@ class PathTile<T> {
     }
 
     public refreshTileReference() {
-        this.tile = this.grid.get(this.position);
+        this.tile = this.grid.get(this.position)!;
         this.resetHeuristics();
     }
     

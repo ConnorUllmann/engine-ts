@@ -4,7 +4,9 @@ import { IPoint, IPointPair, IRectangle, ICircle, ITriangle, ILine, ISegment, IR
 export class Point implements IPoint {
     constructor(public x: number=0, public y: number=0) {}
 
-    public static Create(point: IPoint): Point { return new Point(point.x, point.y); }
+    public static Create(point: IPoint): Point;
+    public static Create(point: IPoint | null): Point | null;
+    public static Create(point: IPoint  | null): Point | null { return point ? new Point(point.x, point.y) : null; }
     public static Vector(length: number, angle: number): Point { return Point.Create(Geometry.Point.Vector(length, angle)); }
 
     public get clone(): Point { return new Point(this.x, this.y); }
@@ -25,7 +27,7 @@ export class Point implements IPoint {
     public project(b: IPoint): this { return this.setTo(Geometry.Point.Project(this, b)); }
     public normalize(length: number=1): this { return this.setTo(Geometry.Point.Normalized(this, length)); }
     public scale(scalar: number | IPoint): this { return this.setTo(Geometry.Point.Scale(this, scalar)); }
-    public midpoint(...points: IPoint[]): this { return this.setTo(Geometry.Point.Midpoint(this, ...points)); }
+    public midpoint(...points: IPoint[]): this { const midpoint = Geometry.Point.Midpoint(this, ...points); if(midpoint != null) this.setTo(midpoint); return this; }
     public distanceSqTo(b: IPoint): number { return Geometry.Point.DistanceSq(this, b); }
     public distanceTo(b: IPoint): number { return Geometry.Point.Distance(this, b); }
     public reflect(pair: IPointPair): this { return this.setTo(Geometry.Point.Reflect(this, pair)); }
@@ -33,8 +35,8 @@ export class Point implements IPoint {
     public lerp(point: IPoint, t: number): this { return this.setTo(Geometry.Point.Lerp(this, point, t)); };
     public wiggle(angleRangeMax: number): this { return this.setTo(Geometry.Point.Wiggle(this, angleRangeMax)); }
     public negative(): this { return this.setTo(Geometry.Point.Negative(this)); }
-    public rotate(angle: number, center: IPoint | null=null): this { return this.setTo(Geometry.Point.Rotate(this, angle, center)); }
-    public flip(center: IPoint | null=null): this { return this.setTo(Geometry.Point.Flip(this, center)); }
+    public rotate(angle: number, center?: IPoint): this { return this.setTo(Geometry.Point.Rotate(this, angle, center)); }
+    public flip(center?: IPoint): this { return this.setTo(Geometry.Point.Flip(this, center)); }
     public clampInRectangle(rectangle: IRectangle): this { return this.setTo(Geometry.Point.ClampedInRectangle(this, rectangle)); }
     public isLeftCenterRightOf(pair: IPointPair): number { return Geometry.Point.IsLeftCenterRightOf(this, pair); }
     public isLeftOf(pair: IPointPair): boolean { return Geometry.Point.IsLeftOf(this, pair); }

@@ -19,7 +19,7 @@ export class WeightRange<T> {
     }
 
     private resetWeightTotal() {
-        this.weightTotal = this._range.sumOf(o => o.weight);
+        this.weightTotal = this._range.sumOf(o => o.weight) ?? 0;
     }
 
     public setWeight(index: number, newWeight: number) {

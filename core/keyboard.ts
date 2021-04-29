@@ -30,9 +30,9 @@ export class Keyboard {
             const keyCode = !commands[1] || commands[1] === '' ? null : Number(commands[1]);
             const code = !commands[2] || commands[2] === '' ? null : commands[2];
             const repeating = !commands[3] || commands[3] === '' ? false : Boolean(commands[3])
-            if(commands[0] === 'down')
+            if(commands[0] === 'down' && keyCode != null && code != null)
                 keyboard.setKeyDown(keyCode, code, repeating);
-            if(commands[0] === 'up')
+            if(commands[0] === 'up' && keyCode != null && code != null)
                 keyboard.setKeyUp(keyCode, code);
         }, false);
     };

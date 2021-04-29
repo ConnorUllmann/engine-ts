@@ -1,58 +1,21 @@
-import { clamp, random } from '../core/utils';
+import { clamp, DeepReadonly, random } from '../core/utils';
 
 export class Color {
-    public static get random(): Color {
-        return new Color(Math.floor(random() * 256), Math.floor(random() * 256), Math.floor(random() * 256));
-    }
-
-    private static _red: ConstColor;
-    public static get red(): ConstColor { return Color._red; }
-    private static _green: ConstColor;
-    public static get green(): ConstColor { return Color._green; }
-    private static _blue: ConstColor;
-    public static get blue(): ConstColor { return Color._blue; }
-    private static _cyan: ConstColor;
-    public static get cyan(): ConstColor { return Color._cyan; }
-    private static _yellow: ConstColor;
-    public static get yellow(): ConstColor { return Color._yellow; }
-    private static _magenta: ConstColor;
-    public static get magenta(): ConstColor { return Color._magenta; }
-    private static _orange: ConstColor;
-    public static get orange(): ConstColor { return Color._orange; }
-    private static _brown: ConstColor;
-    public static get brown(): ConstColor { return Color._brown; }
-    private static _lightBrown: ConstColor;
-    public static get lightBrown(): ConstColor { return Color._lightBrown; }
-    private static _black: ConstColor;
-    public static get black(): ConstColor { return Color._black; }
-    private static _lightGrey: ConstColor;
-    public static get lightGrey(): ConstColor { return Color._lightGrey; }
-    private static _grey: ConstColor;
-    public static get grey(): ConstColor { return Color._grey; }
-    private static _darkGrey: ConstColor;
-    public static get darkGrey(): ConstColor { return Color._darkGrey; }
-    private static _white: ConstColor;
-    public static get white(): ConstColor { return Color._white; }
-    private static _none: ConstColor;
-    public static get none(): ConstColor { return Color._none; }
-
-    public static start(): void {
-        Color._red = new ConstColor(255, 0, 0);
-        Color._green = new ConstColor(0, 255, 0);
-        Color._blue = new ConstColor(0, 0, 255);
-        Color._cyan = new ConstColor(0, 255, 255);
-        Color._yellow = new ConstColor(255, 255, 0);
-        Color._orange = new ConstColor(255, 128, 0);
-        Color._brown = new ConstColor(40, 26, 13);
-        Color._lightBrown = new ConstColor(153, 102, 51);
-        Color._magenta = new ConstColor(255, 0, 255);
-        Color._black = new ConstColor(0, 0, 0);
-        Color._lightGrey = new ConstColor(192, 192, 192);
-        Color._grey = new ConstColor(128, 128, 128);
-        Color._darkGrey = new ConstColor(64, 64, 64);
-        Color._white = new ConstColor(255, 255, 255);
-        Color._none = new ConstColor(0, 0, 0, 0);
-    }
+    public static red: DeepReadonly<Color>;
+    public static green: DeepReadonly<Color>;
+    public static blue: DeepReadonly<Color>;
+    public static cyan: DeepReadonly<Color>;
+    public static yellow: DeepReadonly<Color>;
+    public static magenta: DeepReadonly<Color>;
+    public static orange: DeepReadonly<Color>;
+    public static brown: DeepReadonly<Color>;
+    public static lightBrown: DeepReadonly<Color>;
+    public static black: DeepReadonly<Color>;
+    public static lightGrey: DeepReadonly<Color>;
+    public static grey: DeepReadonly<Color>;
+    public static darkGrey: DeepReadonly<Color>;
+    public static white: DeepReadonly<Color>;
+    public static none: DeepReadonly<Color>;
 
     public get red(): number { return this._red; }
     public get green(): number { return this._green; }
@@ -65,49 +28,52 @@ export class Color {
     public set alpha(value: number) { this._alpha = clamp(value, 0, 1); }
 
     constructor(protected _red: number, protected _green: number, protected _blue: number, protected _alpha: number=1) {
-        // Duplicated logic of 'set' functions above instead of just assigning using the setters because this way ConstColor won't throw errors
-        this._red = clamp(_red, 0, 255);
-        this._green = clamp(_green, 0, 255);
-        this._blue = clamp(_blue, 0, 255);
-        this._alpha = clamp(_alpha, 0, 1);
-    }
-
-    public clone(alpha: number | null=null): Color {
-        return new Color(this.red, this.green, this.blue, alpha != null ? alpha : this.alpha);
+        this.red = _red;
+        this.green = _green;
+        this.blue = _blue;
+        this.alpha = _alpha;
     }
 
     public toString(): string {
-        return `rgba(${this.red},${this.green},${this.blue},${this.alpha})`;
+        return Color.ToString(this);
     }
 
-    public toInt(): number {
-        return (this.alpha << 24) | (this.red << 16) | (this.green << 8) | this.blue;
+    public static get Random(): Color {
+        return new Color(Math.floor(random() * 256), Math.floor(random() * 256), Math.floor(random() * 256));
+    }
+
+    public static Create(color: DeepReadonly<Color>, alpha: number | null=null): Color {
+        return new Color(color.red, color.green, color.blue, alpha != null ? alpha : color.alpha);
+    }
+
+    public static ToString(color: DeepReadonly<Color>): string {
+        return `rgba(${color.red},${color.green},${color.blue},${color.alpha})`;
+    }
+
+    public static ToInt(color: DeepReadonly<Color>): number {
+        return (color.alpha << 24) | (color.red << 16) | (color.green << 8) | color.blue;
     }
 
     public static FromInt(value: number): Color {
         return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF, (value >> 24) & 0xFF);
     }
 
-    public lerp(other: Color, amount: number): Color {
-        if(amount <= 0) return this.clone();
-        if(amount >= 1) return other.clone();
+    public static Lerp(a: DeepReadonly<Color>, b: DeepReadonly<Color>, amount: number): Color {
+        if(amount <= 0) return Color.Create(a);
+        if(amount >= 1) return Color.Create(b);
         return new Color(
-            (other.red - this.red) * amount + this.red,
-            (other.green - this.green) * amount + this.green,
-            (other.blue - this.blue) * amount + this.blue,
-            (other.alpha - this.alpha) * amount + this.alpha
+            (b.red - a.red) * amount + a.red,
+            (b.green - a.green) * amount + a.green,
+            (b.blue - a.blue) * amount + a.blue,
+            (b.alpha - a.alpha) * amount + a.alpha
         );
     }
 
-    public inverted(): Color {
-        return new Color(255 - this.red, 255 - this.green, 255 - this.blue, this.alpha);
+    public static Inverted(color: DeepReadonly<Color>): Color {
+        return new Color(255 - color.red, 255 - color.green, 255 - color.blue, color.alpha);
     }
 
-    public isEqualTo(color:Color): boolean {
-        return Color.AreEqual(this, color);
-    }
-
-    public static AreEqual(a: Color | null | undefined, b: Color | null | undefined): boolean {
+    public static AreEqual(a: DeepReadonly<Color> | null | undefined, b: DeepReadonly<Color> | null | undefined): boolean {
         if(a == null && b == null)
             return true;
         if(a == null || b == null)
@@ -119,16 +85,18 @@ export class Color {
     }
 }
 
-class ConstColor extends Color {
-    public get red(): number { return this._red; }
-    public get green(): number { return this._green; }
-    public get blue(): number { return this._blue; }
-    public get alpha(): number { return this._alpha; }
-
-    public set red(value: number) { throw 'Cannot set \'red\' property of a ConstColor'; }
-    public set green(value: number) { throw 'Cannot set \'green\' property of a ConstColor'; }
-    public set blue(value: number) { throw 'Cannot set \'blue\' property of a ConstColor'; }
-    public set alpha(value: number) { throw 'Cannot set \'alpha\' property of a ConstColor'; }
-}
-
-Color.start();
+Color.red = new Color(255, 0, 0);
+Color.green = new Color(0, 255, 0);
+Color.blue = new Color(0, 0, 255);
+Color.cyan = new Color(0, 255, 255);
+Color.yellow = new Color(255, 255, 0);
+Color.orange = new Color(255, 128, 0);
+Color.brown = new Color(40, 26, 13);
+Color.lightBrown = new Color(153, 102, 51);
+Color.magenta = new Color(255, 0, 255);
+Color.black = new Color(0, 0, 0);
+Color.lightGrey = new Color(192, 192, 192);
+Color.grey = new Color(128, 128, 128);
+Color.darkGrey = new Color(64, 64, 64);
+Color.white = new Color(255, 255, 255);
+Color.none = new Color(0, 0, 0, 0);
