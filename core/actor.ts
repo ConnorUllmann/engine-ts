@@ -71,6 +71,6 @@ export class Actor extends Entity {
     }
 
     public collide(collider: Collider<any>, xOffset: number=0, yOffset: number=0): boolean {
-        return this.collider.collideCollider(collider, xOffset, yOffset);
+        return this.collider.collideCollider(collider, xOffset, yOffset) != null;
     }
 }
