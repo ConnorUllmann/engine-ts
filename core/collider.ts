@@ -44,7 +44,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     public firstCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape> | null {
         return this.entity == null ? null : this.entity.world.firstComponentOfClass(
             Collider,
-            collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset)
+            collider => collider != this && (collider.mask & mask) == mask && this.collideBounds(collider, xOffset, yOffset) && this.collideShape(collider, xOffset, yOffset) != null
         );
     }
 
@@ -85,11 +85,11 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // any inactive colliders/entities will result in false
-    public collideCollider(collider: Collider<BoundableShape>, xOffset: number=0, yOffset: number=0): boolean {
-        if(collider == this || !this.active || !collider.active || !this.entity || !collider.entity || !this.entity.active || !collider.entity.active)
-            return false;
+    public collideCollider<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): Collider<U> | null {
+        if((collider as unknown as Collider<T>) == this || !this.active || !collider.active || !this.entity || !collider.entity || !this.entity.active || !collider.entity.active)
+            return null;
         if(!this.collideBounds(collider, xOffset, yOffset))
-            return false;
+            return null;
         return this.collideShape(collider, xOffset, yOffset);
     }
 
@@ -110,11 +110,13 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // does not consider active/inactive status
-    public collideShape<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): boolean {
+    public collideShape<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): Collider<U> | null {
         const aOffset = xOffset != 0 || yOffset != 0
             ? { x: (this.entity?.position.x ?? 0) + xOffset, y: (this.entity?.position.y ?? 0) + yOffset }
             : this.entity?.position ?? Geometry.Point.Zero;
-        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity?.position ?? Geometry.Point.Zero);
+        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity?.position ?? Geometry.Point.Zero)
+            ? collider
+            : null;
     }
 
     public get x(): number { return this._boundsLocal.x + (this.entity?.position.x ?? 0); }
