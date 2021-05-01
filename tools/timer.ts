@@ -2,7 +2,7 @@ import { clamp } from '@engine-ts/core/utils';
 
 export class Timer {
     public value: number = 0;
-    public triggered: boolean = false; // whether or not the timer's value has crossed from < 1 to >= 1 this frame
+    public triggered: boolean = false; // whether or not the timer's value has crossed over 1 this frame
     public started: boolean = false; // whether or not the timer has had its .update() method called at least once
     public paused: boolean = false;
 
@@ -28,8 +28,9 @@ export class Timer {
         if(this.paused)
             return;
         const valueLast = this.value;
-        this.value = this.clean(this.seconds > 0 ? this.value + deltaMs / 1000 / this.seconds : 1);
-        this.triggered = this.value >= 1 && valueLast < 1;
+        const valueNext = this.seconds > 0 ? this.value + deltaMs / 1000 / this.seconds : 1;
+        this.value = this.clean(valueNext);
+        this.triggered = valueNext >= 1 && valueLast < 1;
         this.started = true;
     }
 }
