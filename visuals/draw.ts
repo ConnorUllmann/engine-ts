@@ -440,7 +440,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static path(world: CameraContext, points: IPoint[], strokeStyle: StrokeStyle=null, lineWidth: number=1, closePath: boolean=false) {
+    public static path(world: CameraContext, points: DeepReadonly<IPoint[]>, strokeStyle: StrokeStyle=null, lineWidth: number=1, closePath: boolean=false) {
         if(lineWidth <= 0 || points.length <= 0)
             return;
         const context = world.context;
