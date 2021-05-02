@@ -114,7 +114,7 @@ interface IPointStatic extends IGeometryStatic<IPoint> {
     readonly UpLeft: DeepReadonly<IPoint>,
     readonly DownRight: DeepReadonly<IPoint>,
     readonly DownLeft: DeepReadonly<IPoint>,
-    AreEqual: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => boolean,
+    AreEqual: (a?: DeepReadonly<IPoint> | null, b?: DeepReadonly<IPoint> | null) => boolean,
     DistanceSq: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
     Distance: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
     Add: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => IPoint,
@@ -212,7 +212,13 @@ export class Geometry {
         UpLeft: { x: -1, y: -1 },
         DownRight: { x: 1, y: 1 },
         DownLeft: { x: -1, y: 1 },
-        AreEqual: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b)),
+        AreEqual: (a?: DeepReadonly<IPoint> | null, b?: DeepReadonly<IPoint> | null) => {
+            if(a == null && b == null)
+                return true;
+            if(a == null || b == null)
+                return false;
+            return Geometry.IsWithinToleranceOf(Geometry.Point.DistanceSq(a, b))
+        },
         Hash: (point: DeepReadonly<IPoint>) => `${point.x.toFixed(Geometry.HashDecimalDigits)},${point.y.toFixed(Geometry.HashDecimalDigits)}`,
         DistanceSq: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => Geometry.DistanceSq(a.x, a.y, b.x, b.y),
         Distance: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>): number => Math.sqrt(Geometry.Point.DistanceSq(a, b)),
