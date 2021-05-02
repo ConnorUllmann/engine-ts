@@ -21,8 +21,8 @@ export class World {
     public readonly gamepads: Gamepads;
 
     public readonly entities: Entity[] = [];
-    public readonly entityById: { [id: number]: Entity } = {};
-    public readonly entitiesByClass: { [key: string]: Entity[] } = {};
+    private readonly entityById: { [id: number]: Entity } = {};
+    private readonly entitiesByClass: { [key: string]: Entity[] } = {};
 
     private readonly entityToAddById: { [id: number]: Entity } = {};
     private readonly entityToRemoveById: { [id: number]: Entity } = {};
@@ -224,6 +224,10 @@ export class World {
     // not a clone of the list, but the actual World list itself!
     public entitiesOfClass<T extends new (...args: any[]) => U, U extends Entity>(_class: T): InstanceType<T>[] {
         return _class.name in this.entitiesByClass ? this.entitiesByClass[_class.name] as InstanceType<T>[] : [];
+    }
+
+    public entityOfId(id: number): Entity | null {
+        return this.entityById[id] ?? null;
     }
 
     public forEachComponentOfClass<T extends new (...args: any[]) => U, U extends IComponent>(_class: T, forEach: (c: InstanceType<T>) => any) {

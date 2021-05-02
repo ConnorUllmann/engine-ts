@@ -1,4 +1,4 @@
-import { clamp, DeepReadonly, random } from '@engine-ts/core/utils';
+import { clamp, DeepReadonly, moduloSafe, random } from '@engine-ts/core/utils';
 import { World } from '@engine-ts/core/world';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
@@ -50,6 +50,10 @@ export class Sprite {
         if(this._currentAnimationName in this.animationByName)
             return this.animationByName[this._currentAnimationName].completion;
         return 0;
+    }
+    public set currentAnimationCompletion(completion: number) { 
+        if(this._currentAnimationName in this.animationByName)
+            this.animationByName[this._currentAnimationName].completion = completion;
     }
     public get currentAnimationSpeed(): number { 
         if(this._currentAnimationName in this.animationByName)
