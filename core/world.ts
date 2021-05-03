@@ -31,18 +31,25 @@ export class World {
 
     public paused: boolean = false;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
-    public get millisecondsSinceStart(): number { return this.firstUpdateTimestamp == null ? 0 : (Date.now() - this.firstUpdateTimestamp); }
+    public get millisecondsSinceStart(): number { return this._firstUpdateTimestamp == null ? 0 : (Date.now() - this._firstUpdateTimestamp); }
     private _isFirstFrame: boolean = true;
     public get isFirstFrame(): boolean { return this._isFirstFrame; }
-    public firstUpdateTimestamp: number | null = null;
-    public lastUpdateTimestamp: number = 0;
+    public _firstUpdateTimestamp: number | null = null;
+    public get firstUpdateTimestamp(): number | null { return this._firstUpdateTimestamp; }
+    public _lastUpdateTimestamp: number = 0;
+    public get lastUpdateTimestamp(): number | null { return this._lastUpdateTimestamp; }
     public _delta: number = 0;
     public fixedFrameRate: boolean = true;
     public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
     public get deltaNormal(): number { return this.delta / this.millisecondsPerFrame; }
-    public millisecondsLastUpdate: number = 0;
+    public _millisecondsLastUpdate: number = 0;
+    public get millisecondsLastUpdate(): number { return this._millisecondsLastUpdate; }
 
     public backgroundColor: DeepReadonly<Color> | (() => DeepReadonly<Color>) = Color.lightGrey;
+
+    // can be set externally to evaluate whether entities should be updated/drawn this frame
+    // mouse/keyboard/gamepad updates will still be received during the period this function returns false
+    public canUpdateEntities: (() => boolean) | null = null;
 
     private interval: any | null = null;
 
@@ -78,11 +85,6 @@ export class World {
         this.mouse.start();
         this.keyboard.start();
 
-        // const update = () => {
-        //     this.updateFrame();
-        //     requestAnimationFrame(update);
-        // }
-        // requestAnimationFrame(update)
         this.startLoop();
     }
 
@@ -92,6 +94,7 @@ export class World {
         
         // default _delta to the value at the given fps
         this._delta = this.millisecondsPerFrame;
+        // not using requestAnimationFrame because fixed frame rate would be impossible
         this.interval = setInterval(() => this.updateFrame(), this.millisecondsPerFrame);
     }
 
@@ -115,32 +118,35 @@ export class World {
         this.canvas.height = height;
     }
 
-    private updateFrame(): void {
+    private async updateFrame(): Promise<void> {
         if(this.paused)
             return;
             
         const startMs = Date.now();
         
         this.updateDelta();
-        this.updateEntities();
-        this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
-        this.drawEntities();
+        const canUpdateEntities = this.canUpdateEntities == null || this.canUpdateEntities()
+        if(canUpdateEntities) {
+            this.updateEntities();
+            this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
+            this.drawEntities();
+        }
         this.mouse.update();
         this.keyboard.update();
         this.gamepads.update();
 
         this._isFirstFrame = false;
 
-        this.millisecondsLastUpdate = Date.now() - startMs;
+        this._millisecondsLastUpdate = Date.now() - startMs;
     }
 
     private updateDelta(): void {
-        if(this.firstUpdateTimestamp == null)
-            this.firstUpdateTimestamp = Date.now();
+        if(this._firstUpdateTimestamp == null)
+            this._firstUpdateTimestamp = Date.now();
         const now = Date.now();
-        if(this.lastUpdateTimestamp != 0)
-            this._delta = now - this.lastUpdateTimestamp;
-        this.lastUpdateTimestamp = now;
+        if(this._lastUpdateTimestamp != 0)
+            this._delta = now - this._lastUpdateTimestamp;
+        this._lastUpdateTimestamp = now;
     }
 
     private updateEntities(): void {
