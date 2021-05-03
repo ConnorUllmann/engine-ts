@@ -40,8 +40,10 @@ export class ColorStopArray {
         return new ColorStopArray(colors.map((color, i) => ({ color, stop: i / (colors.length - 1) })));
     };
 
-    public applyToGradient(gradient: CanvasGradient) {
-        this.colorStops.forEach(o => gradient.addColorStop(o.stop, Color.ToString(o.color)));
+    public static ApplyToGradient(colorStopArray: DeepReadonly<ColorStopArray>, gradient: CanvasGradient) {
+        for(let colorStop of colorStopArray.colorStops) {
+            gradient.addColorStop(colorStop.stop, Color.ToString(colorStop.color))
+        }
     }
 
     // Returns the color from the gradient at the given position [0..1] given the ColorStops in this ColorStopArray
