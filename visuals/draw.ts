@@ -32,7 +32,7 @@ export class Draw {
 
     // "position" refers to the top-left corner of the image in world space
     // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
-    public static image(world: ImagesCameraContext, imageName: string, position: IPoint, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
+    public static image(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
         if(!image) {
@@ -62,7 +62,7 @@ export class Draw {
     
     // "position" refers to the top-left corner of the image in world space
     // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
-    public static imagePart(world: ImagesCameraContext, imageName: string, position: IPoint, sx: number, sy: number, sw: number, sh: number, scale: IPoint=Geometry.Point.One, angle: number=0, center?:IPoint, alpha:number=1) {
+    public static imagePart(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, sx: number, sy: number, sw: number, sh: number, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
         const context = world.context;
         const image = world.images.get(imageName);
         if(!image) {
@@ -93,7 +93,7 @@ export class Draw {
         return style instanceof Color ? Color.ToString(style) : (style as string).toString();
     }
 
-    public static circleArc(world: CameraContext, circle: ICircle, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
+    public static circleArc(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
         if(circle.r <= 0)
             return;
         const context = world.context;
@@ -104,7 +104,7 @@ export class Draw {
         context.fill();
     }
 
-    public static circleArcOutline(world: CameraContext, circle: ICircle, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static circleArcOutline(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(circle.r <= 0)
             return;
         const context = world.context;
@@ -116,11 +116,11 @@ export class Draw {
         context.stroke();
     }
 
-    public static circle(world: CameraContext, circle: ICircle, fillStyle: FillStyle=null) {
+    public static circle(world: CameraContext, circle: DeepReadonly<ICircle>, fillStyle: FillStyle=null) {
         this.circleArc(world, circle, 0, tau, fillStyle);
     };
 
-    public static circleOutline(world: CameraContext, circle: ICircle, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static circleOutline(world: CameraContext, circle: DeepReadonly<ICircle>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(circle.r <= 0 || lineWidth <= 0)
             return;
         const context = world.context;
@@ -133,7 +133,7 @@ export class Draw {
     };
 
     // same as circleOutline except you specify the inner and outer radii
-    public static ring(world: CameraContext, position: IPoint, innerRadius: number, outerRadius: number, strokeStyle: StrokeStyle=null) {
+    public static ring(world: CameraContext, position: DeepReadonly<IPoint>, innerRadius: number, outerRadius: number, strokeStyle: StrokeStyle=null) {
         if(outerRadius <= 0)
             return;
         const lineWidth = outerRadius - innerRadius;
@@ -141,7 +141,7 @@ export class Draw {
         Draw.circleOutline(world, { x: position.x, y: position.y, r: radius }, strokeStyle, lineWidth);
     };
 
-    public static ovalArc(world: CameraContext, position: IPoint, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0) {
+    public static ovalArc(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
@@ -152,11 +152,11 @@ export class Draw {
         context.fill();
     };
 
-    public static oval(world: CameraContext, position: IPoint, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
+    public static oval(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
         this.ovalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle);
     };
 
-    public static ovalOutline(world: CameraContext, position: IPoint, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
+    public static ovalOutline(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
@@ -168,7 +168,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static triangle(world: CameraContext, triangle: ITriangle, fillStyle: FillStyle=null) {
+    public static triangle(world: CameraContext, triangle: DeepReadonly<ITriangle>, fillStyle: FillStyle=null) {
         const context = world.context;
         context.beginPath();
         context.moveTo(triangle.a.x - world.camera.x, triangle.a.y - world.camera.y);
@@ -179,7 +179,7 @@ export class Draw {
         context.fill();
     };
 
-    public static triangleOutline(world: CameraContext, triangle: ITriangle, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static triangleOutline(world: CameraContext, triangle: DeepReadonly<ITriangle>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         const context = world.context;
         context.beginPath();
         context.moveTo(triangle.a.x - world.camera.x, triangle.a.y - world.camera.y);
@@ -192,7 +192,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static polygon(world: CameraContext, { vertices }: IPolygon, fillStyle: FillStyle=null) {
+    public static polygon(world: CameraContext, { vertices }: DeepReadonly<IPolygon>, fillStyle: FillStyle=null) {
         const vertexFirst = vertices.first();
         if(vertexFirst == null)
             return;
@@ -207,7 +207,7 @@ export class Draw {
         context.fill();
     };
 
-    public static polygonOutline(world: CameraContext, { vertices }: IPolygon, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static polygonOutline(world: CameraContext, { vertices }: DeepReadonly<IPolygon>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         const vertexFirst = vertices.first();
         if(vertexFirst == null)
             return;
@@ -223,7 +223,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static regularPolygon(world: CameraContext, position: IPoint, radius: number, sides: number, fillStyle: FillStyle=null, angle: number=0) {
+    public static regularPolygon(world: CameraContext, position: DeepReadonly<IPoint>, radius: number, sides: number, fillStyle: FillStyle=null, angle: number=0) {
         const context = world.context;
         const points = Draw._getRegularPolygonPoints(position, radius, sides, angle);
         if(points.length <= 0)
@@ -242,7 +242,7 @@ export class Draw {
         context.fill();
     };
 
-    public static regularPolygonOutline(world: CameraContext, position: IPoint, radius: number, sides: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
+    public static regularPolygonOutline(world: CameraContext, position: DeepReadonly<IPoint>, radius: number, sides: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
         const context = world.context;
         const points = Draw._getRegularPolygonPoints(position, radius, sides, angle);
         const pointFirst = points.first();
@@ -264,7 +264,7 @@ export class Draw {
         context.stroke();
     };
 
-    private static _getRegularPolygonPoints(position: IPoint, radius: number, sides: number, angle: number): Point[] {
+    private static _getRegularPolygonPoints(position: DeepReadonly<IPoint>, radius: number, sides: number, angle: number): Point[] {
         if(sides <= 0)
             throw `Cannot create a regular polygon with ${sides} sides`;
         const points: Point[] = [];
@@ -277,7 +277,7 @@ export class Draw {
         return points;
     };
 
-    public static rectangle(world: CameraContext, rectangle: IRectangle, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {        
+    public static rectangle(world: CameraContext, rectangle: DeepReadonly<IRectangle>, fillStyle: FillStyle=null, angle: number=0, center?: DeepReadonly<IPoint>) {        
         const context = world.context;
         if(fillStyle)
             context.fillStyle = this.styleToString(fillStyle);
@@ -295,7 +295,7 @@ export class Draw {
         context.resetTransform();
     };
     
-    public static rectangleOutline(world: CameraContext, rectangle: IRectangle, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {
+    public static rectangleOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {
         let points: IPoint[] = Geometry.Rectangle.Vertices(rectangle)
         if(angle !== 0) {
             const center = new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2);
@@ -304,36 +304,36 @@ export class Draw {
         Draw.path(world, points, strokeStyle, lineWidth, true);
     };
     
-    public static rectangleGradientVertical(world: CameraContext, rectangle: IRectangle, colorStopArray: ColorStopArray) {
+    public static rectangleGradientVertical(world: CameraContext, rectangle: DeepReadonly<IRectangle>, colorStopArray: DeepReadonly<ColorStopArray>) {
         const context = world.context;
         const diff = new Point(rectangle.x, rectangle.y).subtract(world.camera);
         const gradient = context.createLinearGradient(diff.x, diff.y, diff.x, diff.y + rectangle.h);
-        colorStopArray.applyToGradient(gradient);
+        ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
         context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
     };
     
-    public static rectangleGradientHorizontal(world: CameraContext, rectangle: IRectangle, colorStopArray: ColorStopArray) {
+    public static rectangleGradientHorizontal(world: CameraContext, rectangle: DeepReadonly<IRectangle>, colorStopArray: DeepReadonly<ColorStopArray>) {
         const context = world.context;
         const diff = new Point(rectangle.x, rectangle.y).subtract(world.camera);
         const gradient = context.createLinearGradient(diff.x, diff.y, diff.x + rectangle.w, diff.y);
-        colorStopArray.applyToGradient(gradient);
+        ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
         context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
     };
     
-    public static circleArcGradient(world: CameraContext, circle: ICircle, colorStopArray: ColorStopArray, startAngle: number=0, endAngle: number=tau) {
+    public static circleArcGradient(world: CameraContext, circle: DeepReadonly<ICircle>, colorStopArray: DeepReadonly<ColorStopArray>, startAngle: number=0, endAngle: number=tau) {
         const context = world.context;
         const diff = new Point(circle.x, circle.y).subtract(world.camera);
         const gradient = context.createRadialGradient(diff.x, diff.y, 0, diff.x, diff.y, circle.r);
-        colorStopArray.applyToGradient(gradient);
+        ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
         context.beginPath();
         context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         context.fill();
     };
 
-    private static rectangleRoundedPath(world: CameraContext, rectangle: IRectangle, radius: number, angle: number=0, center?: IPoint) {
+    private static rectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
         center = center || Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
         context.translate(center.x, center.y);
@@ -363,7 +363,7 @@ export class Draw {
         context.resetTransform();
     }
 
-    public static rectangleRounded(world: CameraContext, rectangle: IRectangle, radius: number, fillStyle: FillStyle=null, angle: number=0, center?: IPoint) {
+    public static rectangleRounded(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, fillStyle: FillStyle=null, angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
         this.rectangleRoundedPath(world, rectangle, radius, angle, center);
         if(fillStyle)
@@ -371,7 +371,7 @@ export class Draw {
         context.fill();
     }
 
-    public static rectangleRoundedOutline(world: CameraContext, rectangle: IRectangle, radius: number, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number=0, center?: IPoint) {
+    public static rectangleRoundedOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
         this.rectangleRoundedPath(world, rectangle, radius, angle, center);
         context.lineWidth = lineWidth;
@@ -380,7 +380,7 @@ export class Draw {
         context.stroke();
     }
 
-    public static line(world: World, line: ILine, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static line(world: World, line: DeepReadonly<ILine>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(lineWidth <= 0)
             return;
 
@@ -398,7 +398,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static ray(world: World, ray: IRay, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static ray(world: World, ray: DeepReadonly<IRay>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(lineWidth <= 0)
             return;
 
@@ -427,7 +427,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static segment(world: CameraContext, segment: ISegment, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+    public static segment(world: CameraContext, segment: DeepReadonly<ISegment>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
         if(lineWidth <= 0)
             return;
         const context = world.context;
@@ -456,7 +456,7 @@ export class Draw {
         context.stroke();
     };
 
-    public static text(world: CameraContext, text: string, position: IPoint, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top", angle: number=0, center?: IPoint) {
+    public static text(world: CameraContext, text: string, position: DeepReadonly<IPoint>, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top", angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
         Draw.textStyle(world, fillStyle, font, halign, valign);
         if(angle !== 0) {
