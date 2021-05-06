@@ -20,6 +20,7 @@ export class Actor extends Entity {
     public get yBottom(): number { return this.collider.yBottom }
 
     // TODO add the rest of them
+    public set yTop(y: number) { this.position.y = y - (this.collider.yTop - this.position.y); }
     public set yBottom(y: number) { this.position.y = y - (this.collider.yBottom - this.position.y); }
 
     public friction: number = 0.01;
