@@ -69,6 +69,8 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
     Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount?: number) => IRectangle,
     RandomPointInside: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint,
+    ClosestPointInside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint,
     Square: (center: DeepReadonly<IPoint>, sideLength: number) => IRectangle,
     Circumcircle: (t: DeepReadonly<IRectangle>) => ICircle,
     Translate: (rectangle: DeepReadonly<IRectangle>, translation: DeepReadonly<IPoint>) => IRectangle,
@@ -670,6 +672,29 @@ export class Geometry {
         RandomPointInside: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
             x: rectangle.x + random() * rectangle.w,
             y: rectangle.y + random() * rectangle.h
+        }),
+        // Returns the closest point to "position" that is on or outside of "rectangle"
+        ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint): IPoint => {
+            if(!Geometry.Collide.RectanglePoint(rectangle, position))
+                return { x: position.x, y: position.y };
+            const yTopDiff = Math.abs(position.y - rectangle.y);
+            const yBottomDiff = Math.abs(rectangle.y + rectangle.h - position.y);
+            const xLeftDiff = Math.abs(position.x - rectangle.x);
+            const xRightDiff = Math.abs(rectangle.x + rectangle.w - position.x);
+            const min = Math.min(yTopDiff, yBottomDiff, xLeftDiff, xRightDiff);
+            if(min == yTopDiff) {
+                return { x: position.x, y: rectangle.y };
+            } else if(min == yBottomDiff) {
+                return { x: position.x, y: rectangle.y + rectangle.h };
+            } else if(min == xLeftDiff) {
+                return { x: rectangle.x, y: position.y };
+            }
+            return { x: rectangle.x + rectangle.w, y: position.y };
+        },
+        // Returns the closest point to "position" that is on or inside of "rectangle"
+        ClosestPointInside: (rectangle: DeepReadonly<IRectangle>, position: IPoint): IPoint => ({
+            x: clamp(position.x, rectangle.x, rectangle.x + rectangle.w),
+            y: clamp(position.y, rectangle.y, rectangle.y + rectangle.h),
         }),
         Square: (center: DeepReadonly<IPoint>, sideLength: number): IRectangle => ({
             x: center.x - sideLength/2,
