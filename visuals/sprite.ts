@@ -108,6 +108,10 @@ export class Sprite {
         return this;
     }
 
+    getAnimation(animationName: string): SpriteAnimation | null {
+        return this.animationByName[animationName] ?? null;
+    }
+
     resetCurrentAnimation(): this {
         if(this._currentAnimationName in this.animationByName)
             this.animationByName[this._currentAnimationName].reset();
