@@ -148,7 +148,15 @@ interface IPointStatic extends IGeometryStatic<IPoint> {
     IsRightOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>) => boolean,
     // Returns a list of the velocity vectors a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
     // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
-    LaunchVectors: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => IPoint[]
+    LaunchVectors: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, velocityMagnitude: number) => IPoint[],
+    // Returns the velocity vector a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
+    // given the angle of the shot and gravity.
+    // Returns null if not possible. If gravityMagnitude > 0, then using angle = -Math.PI/4 will determine the speed of a shot upward at 45 degrees
+    LaunchVector: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, angle: number) => IPoint | null,
+    // Returns the velocity vector a projectile would need in order to hit the (xTarget, yTarget) from (xStart, yStart)
+    // given the angle of the shot when facing to the right (and reflected over the y-axis if facing the wrong direction) and gravity.
+    // Returns null if not possible. If gravityMagnitude > 0, then using angle = -Math.PI/4 will determine the speed of a shot upward at 45 degrees
+    LaunchVectorReflective: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, angle: number) => IPoint | null,
 }
 
 interface IPointPairStatic<T extends IPointPair> {
@@ -351,6 +359,44 @@ export class Geometry {
                 Geometry.Point.Vector(Math.sign(diff.x) * v, Math.atan((v2 + Math.sqrt(sqrt))/(g * diff.x))),
                 Geometry.Point.Vector(Math.sign(diff.x) * v, Math.atan((v2 - Math.sqrt(sqrt))/(g * diff.x)))
             ];
+        },
+        LaunchVector: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, angle: number) => {
+            const x0r = start.x;
+            const y0r = start.y;
+            const x1r = target.x;
+            const y1r = target.y;
+            const a = gravityMagnitude;
+    
+            const xrDiff = x1r - x0r;
+            const yrDiff = y1r - y0r;
+    
+            const x0 = x0r;
+            const y0 = y0r;
+            const x1 = x1r;
+            const y1 = -yrDiff + y0r;
+    
+            const cos = Math.cos(-angle);
+            const sin = Math.sin(-angle);
+    
+            if(Math.sign(cos) != Math.sign(xrDiff))
+                return null;
+    
+            const sqrt = a * (x1 * x1 - 2 * x1 * x0 + x0 * x0) / (2 * cos * ((x1 - x0) * sin + (y0 - y1) * cos));
+            if(sqrt < 0)
+                return null;
+            
+            const v = Math.sqrt(sqrt);
+            const vx = v * cos;
+            const vy = -v * sin;
+            return { x: vx, y: vy };
+        },
+        LaunchVectorReflective: (start: DeepReadonly<IPoint>, target: DeepReadonly<IPoint>, gravityMagnitude: number, angle: number) => {
+            const xrDiff = target.x - start.x;
+            const x1 = Math.abs(xrDiff) + start.x;
+            const y1 = target.y;
+    
+            const launchVector = Geometry.Point.LaunchVector(start, { x: x1, y: y1 }, gravityMagnitude, angle);
+            return launchVector == null ? null : { x: launchVector.x * Math.sign(xrDiff), y: launchVector.y };
         }
     };
 
