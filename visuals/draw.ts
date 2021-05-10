@@ -16,7 +16,7 @@ export type ValignAll = Valign | "top" | "hanging" | "middle" | "alphabetic" | "
 
 export interface CameraContext {
     camera: IPoint,
-    context: CanvasRenderingContext2D,
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 }
 
 export interface ImagesCameraContext extends CameraContext {
