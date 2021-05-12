@@ -1,6 +1,6 @@
 import { Entity } from './entity';
 import { Camera } from './camera';
-import { Mouse } from './mouse';
+import { IMouse, Mouse } from './mouse';
 import { Color } from '../visuals/color';
 import { Keyboard } from './keyboard';
 import { Gamepads } from './gamepads';
@@ -16,7 +16,8 @@ export class World {
     public readonly images: Images;
     public readonly sounds: Sounds;
     public readonly camera: Camera;
-    public readonly mouse: Mouse;
+    private readonly _mouse: Mouse;
+    public get mouse(): IMouse { return this._mouse; }
     public readonly keyboard: Keyboard;
     public readonly gamepads: Gamepads;
 
@@ -78,11 +79,11 @@ export class World {
         this.images = new Images();
         this.sounds = new Sounds();
         this.camera = new Camera(this.canvas);
-        this.mouse = new Mouse(this.canvas, this.camera);
+        this._mouse = new Mouse(this.canvas, this.camera);
         this.keyboard = new Keyboard();
         this.gamepads = new Gamepads();
 
-        this.mouse.start();
+        this._mouse.start();
         this.keyboard.start();
 
         this.startLoop();
@@ -131,7 +132,7 @@ export class World {
             this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
             this.drawEntities();
         }
-        this.mouse.update();
+        this._mouse.update();
         this.keyboard.update();
         this.gamepads.update();
 
