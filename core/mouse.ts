@@ -2,13 +2,63 @@ import { Point } from '../geometry/point';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { Camera } from './camera';
+import { DeepReadonly } from './utils';
 
 export enum MouseButton {
     Left = 0,
     Right = 2
 }
 
-export class Mouse extends Point {
+export interface IMouse {
+    readonly leftReleased: boolean
+    readonly leftPressed: boolean
+    readonly rightReleased: boolean
+    readonly rightPressed: boolean
+    readonly leftDown: boolean
+    readonly rightDown: boolean
+    readonly moved: boolean
+    readonly focus: boolean
+    readonly scroll: DeepReadonly<IPoint>
+    readonly touchscreen: boolean
+    readonly screenPosition: DeepReadonly<IPoint>
+    readonly worldPosition: DeepReadonly<IPoint>
+    readonly onCanvas: boolean
+}
+
+export class MouseSnapshot implements IMouse {
+    leftReleased: boolean = false;
+    leftPressed: boolean = false;
+    rightReleased: boolean = false;
+    rightPressed: boolean = false;
+    leftDown: boolean = false;
+    rightDown: boolean = false;
+    moved: boolean = false;
+    focus: boolean = false;
+    scroll: Point = new Point();
+    touchscreen: boolean = false;
+    screenPosition: Point = new Point();
+    worldPosition: Point = new Point();
+    onCanvas: boolean = false;
+
+    public update(snapshot: IMouse): this {
+        this.leftReleased = snapshot.leftReleased;
+        this.leftPressed = snapshot.leftPressed;
+        this.rightReleased = snapshot.rightReleased;
+        this.rightPressed = snapshot.rightPressed;
+        this.leftDown = snapshot.leftDown;
+        this.rightDown = snapshot.rightDown;
+        this.moved = snapshot.moved;
+        this.focus = snapshot.focus;
+        this.scroll.setTo(snapshot.scroll);
+        this.touchscreen = snapshot.touchscreen;
+        this.screenPosition.setTo(snapshot.screenPosition);
+        this.worldPosition.setTo(snapshot.worldPosition);
+        this.onCanvas = snapshot.onCanvas;
+        return this;
+    }
+}
+
+export class Mouse extends Point implements IMouse {
     public leftReleased: boolean = false;
     public leftPressed: boolean = false;    
     public rightReleased: boolean = false;    
@@ -21,9 +71,19 @@ export class Mouse extends Point {
     public get touchscreen(): boolean { return 'ontouchstart' in document.documentElement; }
 
     // position relative to the screen, e.g. always (0, 0) whenever the mouse is on the top-left pixel
-    public get screenPosition(): IPoint { return this; }
+    public get screenPosition(): DeepReadonly<IPoint> { return this; }
     // position in the world relative to the camera
-    public get worldPosition(): IPoint { return Geometry.Point.Add(this.camera, this); }
+    private readonly _worldPosition = new Point();
+    public get worldPosition(): DeepReadonly<IPoint> { return this._worldPosition.setToXY(this.camera.x + this.x, this.camera.y + this.y); }
+
+    public get onCanvas(): boolean {
+        return this.focus 
+            && this.x != null 
+            && this.y != null 
+            && this.x >= 0 
+            && this.x < this.camera.w 
+            && this.y >= 0 && this.y < this.camera.h;
+    }
 
     constructor(private readonly canvas: HTMLCanvasElement, private readonly camera: Camera) { super(); }
 
@@ -84,15 +144,6 @@ export class Mouse extends Point {
         this.scroll.x = 0;
         this.scroll.y = 0;
         this.moved = false;
-    }
-
-    public onCanvas(): boolean {
-        return this.focus 
-            && this.x != null 
-            && this.y != null 
-            && this.x >= 0 
-            && this.x < this.camera.w 
-            && this.y >= 0 && this.y < this.camera.h;
     }
 
     private leftMouseDownEvent(): void {
