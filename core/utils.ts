@@ -145,6 +145,15 @@ export const repeat = function<T>(count: number, get: (i: number, count: number)
 
 export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
 
+export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & string>(_enum: EnumValue extends Exclude<EnumValue, number> ? Enum : never): EnumValue[];
+export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & number>(_enum: EnumValue extends Exclude<EnumValue, string> ? Enum : never): EnumValue[];
+export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & (number | string)>(_enum: EnumValue): EnumValue[] {
+    const values = Object.values(_enum);
+    return values.any(value => typeof value === 'number')
+        ? values.filter(value => !isNaN(parseFloat(value.toString())))
+        : values;
+}
+
 declare global {
     interface Set<T> {
         union(other: Set<T>): this,
