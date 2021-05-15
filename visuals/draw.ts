@@ -1,6 +1,6 @@
 import { Color } from './color';
 import { World } from '@engine-ts/core/world';
-import { tau, Halign, Valign, DeepReadonly } from '@engine-ts/core/utils';
+import { tau, Halign, Valign, DeepReadonly, enumToList } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon } from '@engine-ts/geometry/interfaces';
@@ -22,6 +22,15 @@ export interface CameraContext {
 export interface ImagesCameraContext extends CameraContext {
     images: Images
 }
+
+export enum OutlinePlacement {
+    FullyInner='FullyInner',
+    FullyOuter='FullyOuter',
+    InnerFirst='InnerFirst',
+    OuterFirst='OuterFirst',
+    Default='Default',
+}
+export const OutlinePlacements = enumToList(OutlinePlacement);
 
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
@@ -104,12 +113,15 @@ export class Draw {
         context.fill();
     }
 
-    public static circleArcOutline(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(circle.r <= 0)
+    public static circleArcOutline(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, strokeStyle: StrokeStyle=null, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.Default) {
+        if(lineWidth <= 0)
+            return;
+        const r = this.applyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
+        if(r <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, r, startAngle, endAngle);
         if(strokeStyle)
             context.strokeStyle = this.styleToString(strokeStyle);
         context.lineWidth = lineWidth;
@@ -120,12 +132,15 @@ export class Draw {
         this.circleArc(world, circle, 0, tau, fillStyle);
     };
 
-    public static circleOutline(world: CameraContext, circle: DeepReadonly<ICircle>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
-        if(circle.r <= 0 || lineWidth <= 0)
+    public static circleOutline(world: CameraContext, circle: DeepReadonly<ICircle>, strokeStyle: StrokeStyle=null, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.Default) {
+        if(lineWidth <= 0)
+            return;
+        const r = this.applyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
+        if(r <= 0)
             return;
         const context = world.context;
         context.beginPath();
-        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, 0, tau);
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, r, 0, tau);
         context.lineWidth = lineWidth;
         if(strokeStyle)
             context.strokeStyle = this.styleToString(strokeStyle);
@@ -134,6 +149,11 @@ export class Draw {
 
     // same as circleOutline except you specify the inner and outer radii
     public static ring(world: CameraContext, position: DeepReadonly<IPoint>, innerRadius: number, outerRadius: number, strokeStyle: StrokeStyle=null) {
+        if(outerRadius < innerRadius) {
+            const temp = outerRadius;
+            outerRadius = innerRadius;
+            innerRadius = temp;
+        }
         if(outerRadius <= 0)
             return;
         const lineWidth = outerRadius - innerRadius;
@@ -156,7 +176,9 @@ export class Draw {
         this.ovalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle);
     };
 
-    public static ovalOutline(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1) {
+    public static ovalOutline(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.Default) {
+        xRadius = this.applyOutlinePlacement(xRadius, lineWidth, outlinePlacement);
+        yRadius = this.applyOutlinePlacement(yRadius, lineWidth, outlinePlacement);
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
@@ -295,8 +317,23 @@ export class Draw {
         context.resetTransform();
     };
     
-    public static rectangleOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number = 0) {
-        let points: IPoint[] = Geometry.Rectangle.Vertices(rectangle)
+    private static applyOutlinePlacement(value: number, lineWidth: number, outlinePlacement: OutlinePlacement): number {
+        switch(outlinePlacement) {
+            case OutlinePlacement.FullyInner:
+                return value - lineWidth/2;
+            case OutlinePlacement.FullyOuter:
+                return value + lineWidth/2;
+            case OutlinePlacement.InnerFirst:
+                return value - 0.5 + 0.5 * Math.abs(lineWidth % 2 - 1)
+            case OutlinePlacement.OuterFirst:
+                return value + 0.5 - 0.5 * Math.abs(lineWidth % 2 - 1)
+            default:
+                return value;
+        }
+    }
+
+    public static rectangleOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, strokeStyle: StrokeStyle=null, angle: number = 0, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.InnerFirst) {
+        let points: IPoint[] = Geometry.Rectangle.Vertices(Geometry.Rectangle.Expand(rectangle, this.applyOutlinePlacement(0, lineWidth, outlinePlacement)))
         if(angle !== 0) {
             const center = new Point(rectangle.x + rectangle.w/2, rectangle.y + rectangle.h/2);
             points = points.map(point => Geometry.Point.Rotate(point, angle, center));
@@ -333,8 +370,11 @@ export class Draw {
         context.fill();
     };
 
-    private static rectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number=0, center?: DeepReadonly<IPoint>) {
+    private static rectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number, center: DeepReadonly<IPoint> | undefined, lineWidth: number, outlinePlacement: OutlinePlacement) {
         const context = world.context;
+        const outlinePlacementDiff = this.applyOutlinePlacement(0, lineWidth, outlinePlacement);
+        radius += outlinePlacementDiff;
+        rectangle = Geometry.Rectangle.Expand(rectangle, outlinePlacementDiff);
         center = center || Geometry.Point.Subtract(Geometry.Rectangle.Center(rectangle), world.camera);
         context.translate(center.x, center.y);
         context.rotate(angle);
@@ -365,15 +405,15 @@ export class Draw {
 
     public static rectangleRounded(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, fillStyle: FillStyle=null, angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
-        this.rectangleRoundedPath(world, rectangle, radius, angle, center);
+        this.rectangleRoundedPath(world, rectangle, radius, angle, center, 1, OutlinePlacement.Default);
         if(fillStyle)
             context.fillStyle = this.styleToString(fillStyle);
         context.fill();
     }
 
-    public static rectangleRoundedOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, strokeStyle: StrokeStyle=null, lineWidth: number=1, angle: number=0, center?: DeepReadonly<IPoint>) {
+    public static rectangleRoundedOutline(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, strokeStyle: StrokeStyle=null, angle: number=0, center?: DeepReadonly<IPoint>, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.InnerFirst) {
         const context = world.context;
-        this.rectangleRoundedPath(world, rectangle, radius, angle, center);
+        this.rectangleRoundedPath(world, rectangle, radius, angle, center, lineWidth, outlinePlacement);
         context.lineWidth = lineWidth;
         if(strokeStyle)
             context.strokeStyle = this.styleToString(strokeStyle);
