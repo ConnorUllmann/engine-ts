@@ -7,6 +7,7 @@ export class Color {
     public static cyan: DeepReadonly<Color>;
     public static yellow: DeepReadonly<Color>;
     public static magenta: DeepReadonly<Color>;
+    public static purple: DeepReadonly<Color>;
     public static orange: DeepReadonly<Color>;
     public static brown: DeepReadonly<Color>;
     public static lightBrown: DeepReadonly<Color>;
@@ -94,6 +95,7 @@ Color.orange = new Color(255, 128, 0);
 Color.brown = new Color(40, 26, 13);
 Color.lightBrown = new Color(153, 102, 51);
 Color.magenta = new Color(255, 0, 255);
+Color.purple = new Color(105, 0, 204);
 Color.black = new Color(0, 0, 0);
 Color.lightGrey = new Color(192, 192, 192);
 Color.grey = new Color(128, 128, 128);
