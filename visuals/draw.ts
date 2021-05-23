@@ -547,7 +547,7 @@ export class Draw {
     // {
     //     Draw.circle(world, 50, 50, 10, Color.red);
     // });
-    public static applyBlendMode(world: CameraContext, blendMode: BlendMode, drawCall: () => void)
+    public static applyBlendMode(world: Pick<CameraContext, 'context'>, blendMode: BlendMode, drawCall: () => void)
     {
         const context = world.context;
         const blendModeOriginal = context.globalCompositeOperation.toString();
