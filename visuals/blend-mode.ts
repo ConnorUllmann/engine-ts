@@ -1,3 +1,5 @@
+import { enumToList } from "@engine-ts/core/utils";
+
   export enum BlendMode {
     Default = 'source-over',
     SourceOver = 'source-over',
@@ -28,4 +30,4 @@
     Color = 'color',
     Luminosity = 'luminosity'
 };
-export const BlendModes = Object.values(BlendMode).distinct();
+export const BlendModes = enumToList(BlendMode);
