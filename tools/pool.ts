@@ -40,6 +40,7 @@ export class Pool<T extends IPoolable> {
 
     // returns true if the pool is currently at capacity (returns false if there is no capacity limit)
     get isFull(): boolean { return this.capacity != null && this.poolables.size >= this.capacity; }
+    get size(): number { return this.poolables.size; }
 }
 
 // // Test & Example Usage:
