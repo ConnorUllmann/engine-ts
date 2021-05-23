@@ -547,7 +547,8 @@ export class Draw {
     // {
     //     Draw.circle(world, 50, 50, 10, Color.red);
     // });
-    public static applyBlendMode({ context }: CameraContext, blendMode: BlendMode, drawCall: () => void) {
+    public static applyBlendMode({ context }: Pick<CameraContext, 'context'>, blendMode: BlendMode, drawCall: () => void)
+    {
         const blendModeOriginal = context.globalCompositeOperation.toString();
         context.globalCompositeOperation = blendMode;
         drawCall();
@@ -560,7 +561,7 @@ export class Draw {
         const previousShadowOffsetY = context.shadowOffsetY;
         const previousShadowBlur = context.shadowBlur;
         if(shadowColor)
-            context.shadowColor = shadowColor.toString();
+            context.shadowColor = this.styleToString(shadowColor);
         context.shadowOffsetX = shadowOffset.x;
         context.shadowOffsetY = shadowOffset.y;
         context.shadowBlur = shadowBlur;
