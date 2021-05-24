@@ -129,6 +129,10 @@ console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
 
 export const randomSign = (): number => random() >= 0.5 ? 1 : -1;
+export const randomSignWithZero: () => number = () => {
+    const value = random();
+    return value >= 0.6666666 ? 1 : value >= 0.3333333 ? -1 : 0;
+}
 
 // inclusive of lower bound, exclusive of upper bound
 export const randomRange = (min: number, max: number): number => random() * (max - min) + min
