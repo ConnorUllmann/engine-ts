@@ -39,7 +39,7 @@ export class Timer {
         this.triggered = deltaMs > 0
             ? (valueNext >= 1 && valueLast < 1)
             : deltaMs < 0
-                ? (valueLast >= 0 && valueNext < 0)
+                ? (valueLast > 0 && valueNext <= 0)
                 : false;
         this.started = true;
         return this;
