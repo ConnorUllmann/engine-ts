@@ -158,6 +158,13 @@ export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & (number | 
         : values;
 }
 
+export function invertMapping<T extends string | number | symbol, U extends string | number | symbol>(mapping: Record<T, U>): Record<U, T> {
+    const invertedMapping: Record<U, T> = {} as Record<U, T>;
+    for(let key in mapping)
+        invertedMapping[mapping[key]] = key;
+    return invertedMapping;
+}
+
 declare global {
     interface Set<T> {
         union(other: Set<T>): this,
