@@ -1,4 +1,4 @@
-import { clamp } from '@engine-ts/core/utils';
+import { clamp, moduloSafe } from '@engine-ts/core/utils';
 
 export class Timer {
     public value: number = 0;
@@ -15,27 +15,38 @@ export class Timer {
     
     constructor(public seconds: number=1) {}
 
-    public reset(seconds: number=this.seconds): void {
+    public finish(): this {
+        this.value = 1;
+        return this;
+    }
+
+    public reset(seconds: number=this.seconds): this {
         this.seconds = seconds;
         this.value = this.seconds === 0 ? 1 : 0;
         this.triggered = false;
         this.started = false;
         this.paused = false;
+        return this;
     }
 
     // deltaMs == world.delta
-    public update(deltaMs: number) {
+    public update(deltaMs: number): this {
         if(this.paused)
-            return;
+            return this;
         const valueLast = this.value;
         const valueNext = this.seconds > 0 ? this.value + deltaMs / 1000 / this.seconds : 1;
         this.value = this.clean(valueNext);
-        this.triggered = valueNext >= 1 && valueLast < 1;
+        this.triggered = deltaMs > 0
+            ? (valueNext >= 1 && valueLast < 1)
+            : deltaMs < 0
+                ? (valueLast >= 0 && valueNext < 0)
+                : false;
         this.started = true;
+        return this;
     }
 }
 
 export class LoopTimer extends Timer {
-    protected clean(valueRaw: number): number { return valueRaw % 1; }
+    protected clean(valueRaw: number): number { return moduloSafe(valueRaw, 1); }
     public get finished(): boolean { return false; }
 }

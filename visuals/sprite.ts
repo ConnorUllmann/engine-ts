@@ -14,7 +14,10 @@ export interface ISpriteFrame {
 export class SpriteAnimation {
     private weightRange: WeightRange<IPoint>;
     private readonly timer: Timer;
-    public speed: number = 1; // must be >= 0
+
+    // speed can be negative
+    // completion will also count backwards, non-looping animations will need to be set to completion=1 to do their animation
+    public speed: number = 1;
 
     get seconds(): number { return this.timer.seconds; }
     get completion(): number { return this.timer.value; }
