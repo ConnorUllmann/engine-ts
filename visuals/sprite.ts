@@ -8,7 +8,7 @@ import { Draw, ImagesCameraContext } from './draw';
 
 export interface ISpriteFrame {
     indices: IPoint,
-    timeWeight: number,
+    timeWeight?: number, // defaults to 1 if not set
 }
 
 export class SpriteAnimation {
@@ -36,7 +36,7 @@ export class SpriteAnimation {
     ) {
         this.timer = loop ? new LoopTimer(seconds) : new Timer(seconds);
         this.completion = completion;
-        this.weightRange = new WeightRange<IPoint>(...frames.map(o => ({ value: o.indices, weight: o.timeWeight })))
+        this.weightRange = new WeightRange<IPoint>(...frames.map(o => ({ value: o.indices, weight: o.timeWeight ?? 1 })))
     }
 
     update(deltaMs: number) { this.timer.update(deltaMs * this.speed); }
