@@ -1,5 +1,7 @@
 import { Rectangle } from '../geometry/rectangle';
 import { Point } from '../geometry/point';
+import { IRectangle } from '@engine-ts/geometry/interfaces';
+import { Geometry } from '@engine-ts/geometry/geometry';
 
 export class Camera extends Rectangle {
     public get w(): number { return this.canvas.width; }
@@ -19,5 +21,18 @@ export class Camera extends Rectangle {
             this.w / this.canvas.clientWidth,
             this.h / this.canvas.clientHeight
         );
+    }
+
+    public isColliding(rectangle: IRectangle, padding: number): boolean {
+        return Geometry.CollideExplicit.RectangleRectangle(
+            this.x - padding,
+            this.y - padding,
+            this.w + 2 * padding,
+            this.h + 2 * padding,
+            rectangle.x,
+            rectangle.y,
+            rectangle.w,
+            rectangle.h
+        )
     }
 }

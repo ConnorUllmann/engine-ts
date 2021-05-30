@@ -124,6 +124,8 @@ export function getRandomNumberGenerator(seed: number): () => number {
     };
 }
 
+export const goldenAngle = 2.39996322972865332;
+
 export const randomSeed = Math.random();
 console.log(`Random seed: ${randomSeed}`);
 export const random = getRandomNumberGenerator(randomSeed);
@@ -230,7 +232,7 @@ declare global {
         remove(item: T): number | null;
         removeAt(index: number): T;
         removeAtMultiple(...indices: number[]): T[];
-        removeWhere(valueGetter: (o: T, i?: number) => boolean): T[];
+        removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
         reversed(): T[];
         sample(): T;
         samples(count: number): T[];
@@ -324,7 +326,7 @@ Array.prototype.removeAtMultiple = function<T>(...indices: number[]): T[]
         .map((index: number) => this.removeAt(index));
 };
 
-Array.prototype.removeWhere = function<T>(valueGetter: (o: T, i?: number) => boolean): T[]
+Array.prototype.removeWhere = function<T>(valueGetter: (o: T, i: number) => boolean): T[]
 {
     const indicesToRemove = this.reduce((list: number[], obj: T, index: number) => {
         if(valueGetter(obj, index))
