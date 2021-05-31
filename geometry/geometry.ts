@@ -4,13 +4,11 @@ import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon,
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
 export type Shape = BoundableShape | IRay | ILine;
 
-// TODO: change most references from X to ReadonlyKV<X> to indicate that an argument will not be modified and allow Collider.shapeLocal to be used with these functions
-
 interface IGeometryStatic<T> {
     Translate: (t: DeepReadonly<T>, offset: DeepReadonly<IPoint>) => T,
     Hash: (t: DeepReadonly<T>) => string,
     // Can't add Rotate because a rectangle can't truly rotate (must be aligned with x/y axes)
-    //Rotate: (t: T, angle: number, center?: ReadonlyKV<IPoint>) => T,
+    //Rotate: (t: T, angle: number, center?: DeepReadonly<IPoint>) => T,
 }
 
 interface IPointListStatic<T> extends IGeometryStatic<T> {
