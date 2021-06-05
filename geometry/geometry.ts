@@ -121,6 +121,7 @@ interface IPointStatic extends IGeometryStatic<IPoint> {
     Subtract: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => IPoint,
     Midpoint: (...points: DeepReadonly<DeepReadonly<IPoint>[]>) => IPoint | null,
     Angle: (point: DeepReadonly<IPoint>) => number,
+    AngleTo: (to: DeepReadonly<IPoint>, from: DeepReadonly<IPoint>) => number,
     Scale: (point: DeepReadonly<IPoint>, scalar: number | DeepReadonly<IPoint>, from?: DeepReadonly<IPoint>) => IPoint,
     LengthSq: (point: DeepReadonly<IPoint>) => number,
     Length: (point: DeepReadonly<IPoint>) => number,
@@ -244,6 +245,7 @@ export class Geometry {
             };
         },
         Angle: (point: DeepReadonly<IPoint>): number => Math.atan2(point.y, point.x),
+        AngleTo: (to: DeepReadonly<IPoint>, from: DeepReadonly<IPoint>): number => Math.atan2(to.y - from.y, to.x - from.x),
         Scale: (point: DeepReadonly<IPoint>, scalar: number | IPoint, from?: DeepReadonly<IPoint>): IPoint => {
             return from != null
                 ? (typeof scalar === "number"
