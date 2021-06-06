@@ -1,4 +1,5 @@
-import { clamp, DeepReadonly, moduloSafe, random } from '@engine-ts/core/utils';
+import { RNG } from '@engine-ts/core/rng';
+import { clamp, DeepReadonly, rng } from '@engine-ts/core/utils';
 import { World } from '@engine-ts/core/world';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { IPoint } from '@engine-ts/geometry/interfaces';
@@ -41,7 +42,7 @@ export class SpriteAnimation {
 
     update(deltaMs: number) { this.timer.update(deltaMs * this.speed); }
     reset() { this.timer.reset(); }
-    randomize() { this.timer.value = random(); }
+    randomize(_rng?: RNG) { this.timer.value = (_rng ?? rng).random(); }
 }
 
 export class Sprite {

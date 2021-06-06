@@ -1,4 +1,5 @@
-import { tau, random, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly } from '@engine-ts/core/utils';
+import { RNG } from '@engine-ts/core/rng';
+import { tau, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly, rng } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
@@ -66,7 +67,7 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
     Scale: (rectangle: DeepReadonly<IRectangle>, scalar: number | DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>) => IRectangle,
     // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
     Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount?: number) => IRectangle,
-    RandomPointInside: (rectangle: DeepReadonly<IRectangle>) => IPoint,
+    RandomPointInside: (rectangle: DeepReadonly<IRectangle>, rng?: RNG) => IPoint,
     ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint,
     ClosestPointInside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint,
     Square: (center: DeepReadonly<IPoint>, sideLength: number) => IRectangle,
@@ -97,7 +98,7 @@ interface ICircleStatic extends IGeometryStatic<ICircle> {
     Area: (o: DeepReadonly<ICircle>) => number,
     Circumference: (o: DeepReadonly<ICircle>) => number,
     Bounds: (o: DeepReadonly<ICircle>) => IRectangle,
-    RandomPointInside: (circle: DeepReadonly<ICircle>) => IPoint,
+    RandomPointInside: (circle: DeepReadonly<ICircle>, rng?: RNG) => IPoint,
     Rotate: (circle: DeepReadonly<ICircle>, angle: number, center?: DeepReadonly<IPoint>) => ICircle,
     // returns the points on 'circle' that are tangent when they form a segment with 'point'
     TangentPoints: (circle: DeepReadonly<ICircle>, point: DeepReadonly<IPoint>) => { a: IPoint, b: IPoint } | null
@@ -131,7 +132,7 @@ interface IPointStatic extends IGeometryStatic<IPoint> {
     Normalized: (point: DeepReadonly<IPoint>, length?: number) => IPoint,
     Rotate: (point: DeepReadonly<IPoint>, angle: number, center?: DeepReadonly<IPoint>) => IPoint,
     Negative: (point: DeepReadonly<IPoint>) => IPoint,
-    Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>) => IPoint,
+    Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>, rng?: RNG) => IPoint,
     Towardness: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
     Lerp: (from: DeepReadonly<IPoint>, to: DeepReadonly<IPoint>, t: number) => IPoint,
     Flip: (point: DeepReadonly<IPoint>, center?: DeepReadonly<IPoint>) => IPoint,
@@ -279,7 +280,7 @@ export class Geometry {
         // same as rotating a vector 180 degrees
         Negative: (point: DeepReadonly<IPoint>): IPoint => ({ x: -point.x, y: -point.y }),
         // rotates the point randomly in the range given about the center, or the origin if it is not defined
-        Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>): IPoint => Geometry.Point.Rotate(point, angleRangeMax * (random() - 0.5), center),
+        Wiggle: (point: DeepReadonly<IPoint>, angleRangeMax: number, center?: DeepReadonly<IPoint>, _rng?: RNG): IPoint => Geometry.Point.Rotate(point, angleRangeMax * ((_rng ?? rng)?.random() - 0.5), center),
         // Returns how much a (as a vector) faces in the direction of b (as a vector)
         // -1 = a faces opposite the direction of b
         // 0 = a faces perpendicular to the direction of b
@@ -715,9 +716,9 @@ export class Geometry {
             w: rectangle.w + 2 * wAmount,
             h: rectangle.h + 2 * hAmount
         }),
-        RandomPointInside: (rectangle: DeepReadonly<IRectangle>): IPoint => ({
-            x: rectangle.x + random() * rectangle.w,
-            y: rectangle.y + random() * rectangle.h
+        RandomPointInside: (rectangle: DeepReadonly<IRectangle>, _rng?: RNG): IPoint => ({
+            x: rectangle.x + (_rng ?? rng)?.random() * rectangle.w,
+            y: rectangle.y + (_rng ?? rng)?.random() * rectangle.h
         }),
         // Returns the closest point to "position" that is on or outside of "rectangle"
         ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint): IPoint => {
@@ -858,7 +859,7 @@ export class Geometry {
         Area: (circle: DeepReadonly<ICircle>): number => Math.PI * circle.r * circle.r,
         Circumference: (circle: DeepReadonly<ICircle>): number => tau * circle.r,
         Hash: (circle: DeepReadonly<ICircle>): string => `${Geometry.Point.Hash(circle)},${circle.r.toFixed(Geometry.HashDecimalDigits)}`,
-        RandomPointInside: (circle: DeepReadonly<ICircle>): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r * random(), tau * random())),
+        RandomPointInside: (circle: DeepReadonly<ICircle>, _rng?: RNG): IPoint => Geometry.Point.Add(circle, Geometry.Point.Vector(circle.r * (_rng ?? rng)?.random(), tau * (_rng ?? rng)?.random())),
         Translate: (circle: DeepReadonly<ICircle>, translation: DeepReadonly<IPoint>): ICircle => ({ x: circle.x + translation.x, y: circle.y + translation.y, r: circle.r }),
         Rotate: (circle: DeepReadonly<ICircle>, angle: number, center?: DeepReadonly<IPoint>): ICircle => ({
             ...Geometry.Point.Rotate(circle, angle, center),

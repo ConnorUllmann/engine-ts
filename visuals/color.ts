@@ -1,4 +1,5 @@
-import { clamp, DeepReadonly, random } from '../core/utils';
+import { RNG } from '@engine-ts/core/rng';
+import { clamp, DeepReadonly, rng } from '../core/utils';
 
 export class Color {
     public static red: DeepReadonly<Color>;
@@ -39,8 +40,8 @@ export class Color {
         return Color.ToString(this);
     }
 
-    public static get Random(): Color {
-        return new Color(Math.floor(random() * 256), Math.floor(random() * 256), Math.floor(random() * 256));
+    public static Random(_rng?: RNG): Color {
+        return new Color(Math.floor((_rng ?? rng).random() * 256), Math.floor((_rng ?? rng).random() * 256), Math.floor((_rng ?? rng).random() * 256));
     }
 
     public static Create(color: DeepReadonly<Color>, alpha: number | null=null): Color {

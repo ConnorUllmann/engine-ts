@@ -1,4 +1,5 @@
-import { random } from "@engine-ts/core/utils";
+import { RNG } from "@engine-ts/core/rng";
+import { rng } from "@engine-ts/core/utils";
 
 interface Weightable<T> {
     value: T,
@@ -76,7 +77,7 @@ export class WeightRange<T> {
         return index != null ? this._range[index].value : null;
     }
 
-    public sample(): T | null {
-        return this.value(random());
+    public sample(_rng?: RNG): T | null {
+        return this.value((_rng ?? rng).random());
     }
 }

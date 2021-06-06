@@ -1,3 +1,5 @@
+import { RNG } from "./rng";
+
 export function log(text: string, level = "info") {
     let d = new Date();
     let dateString = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2) + "." + ("00" + d.getMilliseconds()).slice(-3) + " UTC" + (d.getTimezoneOffset() > 0 ? "-" : "+") + Math.abs(d.getTimezoneOffset() / 60);
@@ -55,6 +57,7 @@ export function saveFile(text: string, fileName: string, contentType: string='te
 }
 
 export const tau: number = Math.PI * 2;
+export const goldenAngle = 2.39996322972865332;
 
 // TODO: remove in favor of Geometry.distanceSq/distance
 export function distanceSq(x0: number, y0: number, x1: number, y1: number): number {
@@ -110,36 +113,19 @@ export function spiral(n: number): { x: number, y: number } | null {
 export function moduloSafe(value: number, modulo: number) { return ((value % modulo) + modulo) % modulo; }
 
 // https://stackoverflow.com/a/55365334
-export function getGuidPart(): string {
-    return (((1 + random()) * 0x10000) | 0).toString(16).substring(1);
+export function getGuidPart(_rng?: RNG): string {
+    return (((1 + (_rng ?? rng).random()) * 0x10000) | 0).toString(16).substring(1);
 }
 export function getGuid(): string {
     return `${getGuidPart()}${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}${getGuidPart()}${getGuidPart()}`;
 }
 
-export function getRandomNumberGenerator(seed: number): () => number {
-    return () => { 
-        seed = Math.sin(seed) * 10000;
-        return seed - Math.floor(seed);
-    };
-}
-
-export const goldenAngle = 2.39996322972865332;
-
-export const randomSeed = Math.random();
-console.log(`Random seed: ${randomSeed}`);
-export const random = getRandomNumberGenerator(randomSeed);
-
-export const randomSign = (): number => random() >= 0.5 ? 1 : -1;
-export const randomSignWithZero: () => number = () => {
-    const value = random();
-    return value >= 0.6666666 ? 1 : value >= 0.3333333 ? -1 : 0;
-}
-
-// inclusive of lower bound, exclusive of upper bound
-export const randomRange = (min: number, max: number): number => random() * (max - min) + min
-
-export const randomChoice = <T>(...options: T[]): T => options.sample();
+export const rng: RNG = new RNG(0.25556983597218164);
+console.log(`Random seed: ${rng.seed}`);
+export const random = () => rng.random();
+export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
+export const randomRange = (min: number, max: number) => rng.randomRange(min, max);
+export const randomChoice = <T>(...options: T[]): T => rng.randomChoice(...options);
 
 export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
     const array: T[] = [];
@@ -236,10 +222,10 @@ declare global {
         removeFirstWhere(valueGetter: (o: T, i: number) => boolean): T | null;
         removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
         reversed(): T[];
-        sample(): T;
-        samples(count: number): T[];
-        shuffle(): T[];
-        shuffled(): T[];
+        sample(_rng?: RNG): T;
+        samples(count: number, _rng?: RNG): T[];
+        shuffle(_rng?: RNG): T[];
+        shuffled(_rng?: RNG): T[];
         flattened(): T;
         unflattened(width: number): T[][];
         batchify(batchSize: number): T[][];
@@ -268,9 +254,9 @@ declare global {
 
     interface ReadonlyArray<T> {
         reversed(): T[];
-        sample(): T;
-        samples(count: number): T[];
-        shuffled(): T[];
+        sample(_rng?: RNG): T;
+        samples(count: number, _rng?: RNG): T[];
+        shuffled(_rng?: RNG): T[];
         flattened(): T;
         unflattened(width: number): T[][];
         batchify(batchSize: number): T[][];
@@ -306,6 +292,8 @@ Array.prototype.insert = function<T>(index: number, ...items: T[]): void {
 
 Array.prototype.remove = function<T>(item: T): number | null
 {
+    if(item == null)
+        return null;
     const index = this.indexOf(item);
     if(index == -1)
         return null;
@@ -365,35 +353,35 @@ Array.prototype.reversed = function<T>(): T[]
 };
 
 //Returns a random element of the array
-Array.prototype.sample = function<T>(): T | null
+Array.prototype.sample = function<T>(_rng:RNG=rng): T | null
 {
     return this.length > 0
-        ? this[Math.floor(random() * this.length)]
+        ? this[Math.floor(_rng.random() * this.length)]
         : null;
 };
 
 //Returns random (different) elements of the array.
 //Fastest when you're going to end up selecting most of the array.
-Array.prototype.samples = function<T>(count: number): T[]
+Array.prototype.samples = function<T>(count: number, _rng:RNG=rng): T[]
 {
     if(count <= 0 || this.length <= 0)
         return [];
     if(count >= this.length) 
-        return this.shuffled();
+        return this.shuffled(_rng);
     const tempList = this.clone();
     while(tempList.length > count)
-        tempList.removeAt(Math.floor(random() * tempList.length));
+        tempList.removeAt(Math.floor(_rng.random() * tempList.length));
     return tempList;
 };
 
 // Fisher-Yates shuffle
 // https://bost.ocks.org/mike/shuffle/
-Array.prototype.shuffle = function<T>(): T[]
+Array.prototype.shuffle = function<T>(_rng:RNG=rng): T[]
 {
     let j = this.length;
     let i = 0;
     while (j > 0) {
-      i = Math.floor(random() * j);
+      i = Math.floor(_rng.random() * j);
       j--;
       this.swap(i, j);
     }  
@@ -401,10 +389,10 @@ Array.prototype.shuffle = function<T>(): T[]
 }
 
 //Returns a new array that is a shuffled version of the given array
-Array.prototype.shuffled = function<T>(): T[]
+Array.prototype.shuffled = function<T>(_rng: RNG=rng): T[]
 {
     const list = this.clone();
-    list.shuffle();
+    list.shuffle(_rng);
     return list;
 }
 

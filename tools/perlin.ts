@@ -1,17 +1,18 @@
-import { clamp, random as utilsRandom } from '@engine-ts/core/utils';
+import { clamp, rng } from '@engine-ts/core/utils';
 import { PixelGrid } from './pixel-grid';
 import { Color } from '@engine-ts/visuals/color';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { World } from '@engine-ts/core/world';
 import { createCanvas } from '@engine-ts/visuals/create-canvas';
+import { RNG } from '@engine-ts/core/rng';
 
 export class Perlin {
     private noiseCanvas: HTMLCanvasElement;
     private perlinCanvas: HTMLCanvasElement;
     private perlinPixelGrid: PixelGrid;
 
-    constructor(public readonly w: number, public readonly h: number, alpha: number=1, scale?: number, private readonly random: () => number=utilsRandom) {
+    constructor(public readonly w: number, public readonly h: number, alpha: number=1, scale?: number, private readonly rng?: RNG) {
         this.noiseCanvas = createCanvas(w, h);
         this.perlinCanvas = createCanvas(w, h);
         this.refreshRandomNoise(alpha);
@@ -27,7 +28,7 @@ export class Perlin {
         const pixels = imageData.data;
         for(let i = 0; i < pixels.length; i += 4) {
             // greyscale so set all rgb to the same value
-            pixels[i] = pixels[i+1] = pixels[i+2] = (this.random() * 256) | 0;
+            pixels[i] = pixels[i+1] = pixels[i+2] = ((this.rng ?? rng).random() * 256) | 0;
             pixels[i+3] = alpha * 255;
         }
         context.putImageData(imageData, x, y);
@@ -50,8 +51,8 @@ export class Perlin {
         for (let size = 4; size <= scale; size *= 2) {
             const w = size * canvasSource.width/scale;
             const h = size * canvasSource.height/scale;
-            let x = (this.random() * (canvasSource.width - w)) | 0;
-            let y = (this.random() * (canvasSource.height - h)) | 0;
+            let x = ((this.rng ?? rng).random() * (canvasSource.width - w)) | 0;
+            let y = ((this.rng ?? rng).random() * (canvasSource.height - h)) | 0;
             contextDestination.globalAlpha = 4 / size;
             contextDestination.drawImage(canvasSource, x, y, w, h, 0, 0, canvasSource.width, canvasSource.height);
         }
