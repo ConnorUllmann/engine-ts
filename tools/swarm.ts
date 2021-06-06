@@ -1,8 +1,9 @@
 import { IRectangle, IPoint } from '@engine-ts/geometry/interfaces';
 import { Geometry } from '@engine-ts/geometry/geometry';
 import { Point } from '@engine-ts/geometry/point';
-import { random, tau } from '@engine-ts/core/utils';
+import { rng, tau } from '@engine-ts/core/utils';
 import { Entity } from '@engine-ts/core/entity';
+import { RNG } from '@engine-ts/core/rng';
 
 export class Swarm {
     // TODO: make this a dictionary keyed by entityId instead of just a list
@@ -20,20 +21,20 @@ export class Swarm {
     }
 
     public getAngle(swarmer: Entity): number {
-        return this.swarmInstincts.first(o => o.swarmer === swarmer).angle;
+        return this.swarmInstincts.length <= 0 ? 0 : this.swarmInstincts.first(o => o.swarmer === swarmer)!.angle;
     }
 
     public isAvoidingPredator(swarmer: Entity): boolean {
-        return this.swarmInstincts.first(o => o.swarmer === swarmer).isAvoidingPredator;
+        return this.swarmInstincts.length <= 0 ? false : this.swarmInstincts.first(o => o.swarmer === swarmer)!.isAvoidingPredator;
     }
 
     public isRepulsed(swarmer: Entity): boolean {
-        return this.swarmInstincts.first(o => o.swarmer === swarmer).isRepulsed;
+        return this.swarmInstincts.length <= 0 ? false : this.swarmInstincts.first(o => o.swarmer === swarmer)!.isRepulsed;
     }
 }
 
 class SwarmInstinct {
-    public angle: number = random() * tau;
+    public angle: number;
 
     public isRepulsed: boolean = false;
     public isAvoidingPredator: boolean = false;
@@ -58,7 +59,12 @@ class SwarmInstinct {
         };
     }
 
-    constructor(public readonly swarmer: Entity) {}
+    private readonly rng: RNG | undefined;
+
+    constructor(public readonly swarmer: Entity, _rng?: RNG) {
+        this.rng = _rng;
+        this.angle = (this.rng ?? rng).random() * tau;
+    }
 
     public updateAngle(swarmInstincts: SwarmInstinct[], predators: Entity[]) {
         const predatorAvoidanceRadiusSq = this.predatorAvoidanceRadius * this.predatorAvoidanceRadius;
@@ -90,7 +96,7 @@ class SwarmInstinct {
         if(isRepulsed)
             this.isRepulsed = true;
         return distanceSquared < 0.001
-            ? Point.Vector(this.repulsionMultiplier, random() * tau)
+            ? Point.Vector(this.repulsionMultiplier, (this.rng ?? rng).random() * tau)
             : isRepulsed
                 ? position.subtract(neighborPosition).normalize(this.repulsionMultiplier)
                 : distanceSquared <= this.alignmentRadius * this.alignmentRadius

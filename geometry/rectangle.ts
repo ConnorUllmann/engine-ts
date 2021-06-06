@@ -1,8 +1,9 @@
 import { Segment } from './segment';
-import { random } from '@engine-ts/core/utils';
+import { rng } from '@engine-ts/core/utils';
 import { Geometry } from './geometry';
 import { Point } from './point';
 import { IRectangle, IPolygon, ITriangle, ICircle, IPoint, ILine, PointPairType, IRay, ISegment, IPointPair } from './interfaces';
+import { RNG } from '@engine-ts/core/rng';
 
 // TODO: decide if this should extend Point or just implement IPoint via IRectangle
 export class Rectangle extends Point implements IRectangle, IPolygon {
@@ -90,7 +91,7 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
         return this.setTo(Geometry.Rectangle.Scale(this, scalar, center))
     };
 
-    public get randomPointInside(): Point {
-        return new Point(random() * this.w + this.x, random() * this.h + this.y);
+    public randomPointInside(_rng?: RNG): Point {
+        return new Point((_rng ?? rng)?.random() * this.w + this.x, (_rng ?? rng)?.random() * this.h + this.y);
     }
 }
