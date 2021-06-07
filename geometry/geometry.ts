@@ -210,6 +210,12 @@ export class Geometry {
     public static AngleDifference(to: number, from: number): number {
         return moduloSafe(to - from - Math.PI, tau) - Math.PI;
     }
+    public static ReflectAngleOverXAxis(angle: number): number {
+        return moduloSafe(-angle, tau);
+    }
+    public static ReflectAngleOverYAxis(angle: number): number {
+        return moduloSafe(Math.PI - angle, tau);
+    }
 
     public static Point: IPointStatic = {
         Zero: { x: 0, y: 0 },
