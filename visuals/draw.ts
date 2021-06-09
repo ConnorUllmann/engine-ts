@@ -496,6 +496,36 @@ export class Draw {
         context.stroke();
     };
 
+    // TODO: add closePath argument
+    public static bezierPath(world: CameraContext, points: DeepReadonly<IPoint[]>, strokeStyle: StrokeStyle=null, lineWidth: number=1) {
+        if(lineWidth <= 0 || points.length <= 0)
+            return;
+        const context = world.context;
+        context.beginPath();
+        context.moveTo(points[0].x - world.camera.x, points[0].y - world.camera.y);
+        for(let i = 1; i < points.length-1; i++) {
+            const previous = points[i-1];
+            const current = points[i];
+            const next = points[i+1];
+            const xPreviousMid = (previous.x + current.x) / 2;
+            const yPreviousMid = (previous.y + current.y) / 2;
+            const xNextMid = (next.x + current.x) / 2;
+            const yNextMid = (next.y + current.y) / 2;
+            context.bezierCurveTo(
+                xPreviousMid - world.camera.x, yPreviousMid - world.camera.y,
+                current.x - world.camera.x, current.y - world.camera.y,
+                xNextMid - world.camera.x, yNextMid - world.camera.y
+            );
+            if(i === points.length-2) {
+                context.lineTo(next.x - world.camera.x, next.y - world.camera.y);
+            }
+        }
+        if(strokeStyle)
+            context.strokeStyle = this.styleToString(strokeStyle);
+        context.lineWidth = lineWidth;
+        context.stroke();
+    };
+
     public static text(world: CameraContext, text: string, position: DeepReadonly<IPoint>, fillStyle: FillStyle=null, font: string | null=null, halign:HalignAll="left", valign:ValignAll="top", angle: number=0, center?: DeepReadonly<IPoint>) {
         const context = world.context;
         Draw.textStyle(world, fillStyle, font, halign, valign);
