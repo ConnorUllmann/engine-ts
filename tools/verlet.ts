@@ -7,6 +7,12 @@ export interface IVerletPoint extends IPoint {
     update(): void,
 }
 
+export interface IVerletStick<P extends IVerletPoint> {
+    a: P,
+    b: P,
+    update(): void,
+}
+
 export class VerletPoint implements IPoint {
     public readonly previous = { x: 0, y: 0 };
     public readonly gravity = { x: 0, y: 1 };
@@ -34,11 +40,11 @@ export class VerletPoint implements IPoint {
     };
 }
 
-export class VerletStick implements ISegment {
+export class VerletStick implements IVerletStick<VerletPoint> {
     public equilibriumLength: number;
 
     // When length is null, the distance between the two points at the point of the stick's creation is used
-    constructor(public a: IVerletPoint, public b: IVerletPoint, length: number | null=null, public stiffness: number=2) {
+    constructor(public a: VerletPoint, public b: VerletPoint, length: number | null=null, public stiffness: number=2) {
         this.equilibriumLength = length ?? Geometry.Point.Distance(a, b);    
     }
 
@@ -72,13 +78,13 @@ export class VerletStick implements ISegment {
     };
 }
 
-export class VerletSystem {
-    public readonly verletPointSet = new Set<IVerletPoint>();
-    public readonly verletStickSet = new Set<VerletStick>();
+export class VerletSystem<P extends IVerletPoint, S extends IVerletStick<P>> {
+    public readonly verletPointSet = new Set<P>();
+    public readonly verletStickSet = new Set<S>();
 
     constructor() {}
 
-    addStick(verletStick: VerletStick): this {
+    addStick(verletStick: S): this {
         this.verletStickSet.add(verletStick);
         this.verletPointSet.add(verletStick.a);
         this.verletPointSet.add(verletStick.b);
