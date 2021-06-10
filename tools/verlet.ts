@@ -63,13 +63,13 @@ export class VerletStick implements IVerletStick<VerletPoint> {
         const massTotal = this.a.mass + this.b.mass;
     
         if(this.a.canMove) {
-            const massNormalA = this.a.mass / massTotal;
+            const massNormalA = this.b.mass / massTotal;
             this.a.x -= xOffset * massNormalA;
             this.a.y -= yOffset * massNormalA;
         }
     
         if(this.b.canMove) {
-            const massNormalB = this.b.mass / massTotal;
+            const massNormalB = this.a.mass / massTotal;
             this.b.x += xOffset * massNormalB;
             this.b.y += yOffset * massNormalB;
         }
