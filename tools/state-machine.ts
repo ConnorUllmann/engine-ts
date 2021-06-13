@@ -1,4 +1,4 @@
-export interface StateGeneric<T extends any[]> {
+export interface StateGeneric<T extends any[]=any[]> {
     name: string,
     start?: (...args: T) => any,
     update?: (...args: T) => any,
@@ -10,7 +10,7 @@ export interface State extends StateGeneric<[]> {
     finish?: () => any, // do not call .changeState() inside a finish function
 }
 
-export class StateMachineGeneric<T extends any[]> {
+export class StateMachineGeneric<T extends any[]=any[]> {
     private readonly args: T;
     constructor(...args: T) {
         this.args = args;
