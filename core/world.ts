@@ -8,6 +8,8 @@ import { Sounds } from './sounds';
 import { Images } from './images';
 import { IComponent } from './component';
 import { DeepReadonly } from './utils';
+import { IPoint } from '@engine-ts/geometry/interfaces';
+import { Geometry } from '@engine-ts/geometry/geometry';
 
 export class World {
     public readonly canvas: HTMLCanvasElement;
@@ -235,6 +237,17 @@ export class World {
 
     public entityOfId(id: number): Entity | null {
         return this.entityById[id] ?? null;
+    }
+
+    public closestEntityOfClasses<T extends new(...args: any[]) => Entity>(_classes: T[], position: IPoint, boolCheck: (t: InstanceType<T>) => boolean): InstanceType<T> | null {
+        const entities: InstanceType<T>[] = [];
+        for(let _class of _classes) {
+            for(let entity of this.entitiesOfClass(_class)) {
+                if(boolCheck(entity))
+                    entities.push(entity);
+            }
+        }
+        return entities.minOf(entity => Geometry.Point.DistanceSq(entity.position, position)) ?? null;
     }
 
     public firstEntityOfClasses<T extends new(...args: any[]) => Entity>(_classes: T[], boolCheck: (t: InstanceType<T>) => boolean): InstanceType<T> | null {
