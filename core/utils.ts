@@ -57,15 +57,14 @@ export function saveFile(text: string, fileName: string, contentType: string='te
 }
 
 export const tau: number = Math.PI * 2;
-export const goldenAngle = 2.39996322972865332;
-
-// TODO: remove in favor of Geometry.distanceSq/distance
-export function distanceSq(x0: number, y0: number, x1: number, y1: number): number {
-    return (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1);
-}
-export function distance(x0: number, y0: number, x1: number, y1: number): number {
-    return Math.sqrt(distanceSq(x0, y0, x1, y1));
-}
+export const angle360: number = tau;
+export const angle180: number = tau/2;
+export const angle90: number = tau/4;
+export const angle60: number = tau/6;
+export const angle45: number = tau/8;
+export const angle30: number = tau/12;
+export const angle15: number = tau/24;
+export const angleGolden = 2.39996322972865332;
 
 export function binomialCoefficient(n: number, k: number) {
     let result = 1;
@@ -120,7 +119,7 @@ export function getGuid(): string {
     return `${getGuidPart()}${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}-${getGuidPart()}${getGuidPart()}${getGuidPart()}`;
 }
 
-export const rng: RNG = new RNG(0.25556983597218164);
+export const rng = new RNG();
 console.log(`Random seed: ${rng.seed}`);
 export const random = () => rng.random();
 export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
