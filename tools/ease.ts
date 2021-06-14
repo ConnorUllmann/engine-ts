@@ -1,4 +1,4 @@
-import { tau } from '@engine-ts/core/utils';
+import { tau, angle90 } from '@engine-ts/core/utils';
 
 type Easer = (t: number) => number;
 
@@ -19,9 +19,9 @@ export class Ease {
 
     public static Linear(t: number): number { return t; }
 
-    public static SineIn(t: number): number { return 1 - Math.cos(tau/4 * t); }
-    public static SineOut(t: number): number { return Math.sin(tau/4 * t); }
-    public static SineInOut(t: number): number { return 0.5 - 0.5 * Math.cos(tau/4 * t); }
+    public static SineIn(t: number): number { return 1 - Math.cos(angle90 * t); }
+    public static SineOut(t: number): number { return Math.sin(angle90 * t); }
+    public static SineInOut(t: number): number { return 0.5 - 0.5 * Math.cos(angle90 * t); }
 
     public static QuadIn(t: number): number { return t * t; }
     public static QuadOut = Ease.Invert(Ease.QuadIn);

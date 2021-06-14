@@ -1,5 +1,5 @@
 import { RNG } from '@engine-ts/core/rng';
-import { tau, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly, rng } from '@engine-ts/core/utils';
+import { tau, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly, rng, angle90 } from '@engine-ts/core/utils';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
@@ -216,6 +216,9 @@ export class Geometry {
     public static ReflectAngleOverYAxis(angle: number): number {
         return moduloSafe(Math.PI - angle, tau);
     }
+    public static AngleUpwardness(angle: number): number {
+        return Math.abs(Geometry.AngleDifference(angle, angle90)) / (angle90) / 2
+    }
 
     public static Point: IPointStatic = {
         Zero: { x: 0, y: 0 },
@@ -350,7 +353,7 @@ export class Geometry {
             const sqrt = v2 * v2 - g * (g * diff.x * diff.x + 2 * diff.y * v2);
     
             if(diff.x === 0 && sqrt === 0)
-                return [Geometry.Point.Vector(Math.sign(diff.x) * v, -tau/4)];
+                return [Geometry.Point.Vector(Math.sign(diff.x) * v, -angle90)];
     
             if(diff.x === 0)
                 return diff.y > 0
@@ -526,7 +529,7 @@ export class Geometry {
                     midpoint, 
                     Geometry.Point.Rotate(
                         Geometry.Point.Subtract(segment.b, segment.a),
-                        tau/4))
+                        angle90))
             };
         },
         SharedVertex: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>): IPoint | null =>
