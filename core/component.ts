@@ -6,7 +6,6 @@ export interface IComponent {
     active: boolean,
     removed: boolean,
     update?: () => any,
-    render?: () => any,
     remove?: () => any,
 }
 
