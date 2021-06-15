@@ -359,15 +359,21 @@ export class Draw {
         context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
     };
     
-    public static circleArcGradient(world: CameraContext, circle: DeepReadonly<ICircle>, colorStopArray: DeepReadonly<ColorStopArray>, startAngle: number=0, endAngle: number=tau) {
+    public static circleArcGradient(world: CameraContext, circle: DeepReadonly<ICircle>, colorStopArray: DeepReadonly<ColorStopArray>, startAngle: number=0, endAngle: number=tau, alpha: number=1) {
         const context = world.context;
         const diff = new Point(circle.x, circle.y).subtract(world.camera);
+
+        const globalAlphaPrevious = context.globalAlpha;
+        context.globalAlpha = alpha;
+
         const gradient = context.createRadialGradient(diff.x, diff.y, 0, diff.x, diff.y, circle.r);
         ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
         context.beginPath();
         context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
         context.fill();
+
+        context.globalAlpha = globalAlphaPrevious;        
     };
 
     private static rectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number, center: DeepReadonly<IPoint> | undefined, lineWidth: number, outlinePlacement: OutlinePlacement) {
