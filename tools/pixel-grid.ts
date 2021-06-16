@@ -8,14 +8,14 @@ import { CompassDirection, CompassDirectionGroup } from '@engine-ts/geometry/com
 import { DeepReadonly } from '@engine-ts/core/utils';
 
 export class PixelGrid implements IGrid<Color> {
-    private context: CanvasRenderingContext2D;
+    public context: CanvasRenderingContext2D;
     private imageData: ImageData;
     public imageSmoothingEnabled: boolean = false;
 
     public get w(): number { return this.canvas.width; }
     public get h(): number { return this.canvas.height; }
 
-    constructor(private readonly canvas: HTMLCanvasElement) {
+    constructor(public readonly canvas: HTMLCanvasElement) {
         this.context = canvas.getContext("2d")!;
         this.refreshImageData();
     }

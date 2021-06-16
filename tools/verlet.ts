@@ -1,5 +1,5 @@
 import { Geometry } from "@engine-ts/geometry/geometry";
-import { IPoint, ISegment } from "@engine-ts/geometry/interfaces";
+import { IPoint } from "@engine-ts/geometry/interfaces";
 
 export interface IVerletPoint extends IPoint {
     mass: number,
