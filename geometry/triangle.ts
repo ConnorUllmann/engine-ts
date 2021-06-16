@@ -1,5 +1,4 @@
 import { Segment } from './segment';
-import { tau } from '@engine-ts/core/utils';
 import { Geometry } from './geometry';
 import { ITriangle, IPolygon, ICircle, IRectangle, IPoint, ILine, PointPairType, IRay, ISegment, IPointPair } from './interfaces';
 import { Point } from './point';
@@ -27,6 +26,6 @@ export class Triangle implements ITriangle, IPolygon {
         return Geometry.Triangle.Segments(triangle)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
             .filter(point => point != null)
-            .map(point => Point.Create(point));
+            .map(point => Point.Create(point)!);
     }    
 }

@@ -16,7 +16,7 @@ export class Polygon implements IPolygon {
     }
 
     public static segments(polygon: IPolygon): Segment[] { 
-        const segments = [];
+        const segments: Segment[] = [];
         for(let i = 0; i < polygon.vertices.length; i++) {
             const j = (i + 1) % polygon.vertices.length;
             segments.push(new Segment(Point.Create(polygon.vertices[i]), Point.Create(polygon.vertices[j])));
@@ -25,7 +25,7 @@ export class Polygon implements IPolygon {
     }
     public get segments(): Segment[] { return Polygon.segments(this); }
     public static segmentsWithNormals(polygon: IPolygon): { a: IPoint, b: IPoint, normal: IPoint }[] {
-        const segments = [];
+        const segments: { a: IPoint, b: IPoint, normal: IPoint }[] = [];
         for(let i = 0; i < polygon.vertices.length; i++) {
             const j = (i + 1) % polygon.vertices.length;
             const a = polygon.vertices[i];
@@ -37,9 +37,9 @@ export class Polygon implements IPolygon {
     }
     public segmentsWithNormals(): { a: IPoint, b: IPoint, normal: IPoint }[] { return Polygon.segmentsWithNormals(this); }
     public get bounds(): IRectangle { return Geometry.Polygon.Bounds(this); }
-    public get area(): number { return this.triangulation.map(o => Geometry.Triangle.Area(o)).sum(); }
+    public get area(): number { return this.triangulation.map(o => Geometry.Triangle.Area(o)).sum() ?? 0; }
     public get triangulation(): ITriangle[] { return Geometry.Polygon.Triangulation(this); }
-    public get circumcircle(): ICircle { return Geometry.Points.Circumcircle(this.vertices); }
+    public get circumcircle(): ICircle | null { return Geometry.Points.Circumcircle(this.vertices); }
     public collidesPoint(point: Point): boolean { return Geometry.Collide.PolygonPoint(this, point); }
     
     public lineIntersections(line: ILine): Point[] { return Polygon.intersections(this, line, PointPairType.LINE); }
@@ -49,7 +49,7 @@ export class Polygon implements IPolygon {
         return Polygon.segments(polygon)
             .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
             .filter(point => point != null)
-            .map(point => Point.Create(point));
+            .map(point => Point.Create(point)!);
     }
     
 
