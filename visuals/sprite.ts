@@ -154,7 +154,7 @@ export class Sprite {
         alpha:number=1,
         cameraContext: ImagesCameraContext=this.world,
     ) {
-        Draw.imagePart(
+        Draw.ImagePart(
             cameraContext,
             this.imageName,
             position,
