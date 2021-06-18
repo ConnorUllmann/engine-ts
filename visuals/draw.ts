@@ -311,30 +311,33 @@ export class Draw {
     
     public static RectangleGradientVertical(world: CameraContext, rectangle: DeepReadonly<IRectangle>, colorStopArray: DeepReadonly<ColorStopArray>) {
         const context = world.context;
-        const diff = new Point(rectangle.x, rectangle.y).subtract(world.camera);
-        const gradient = context.createLinearGradient(diff.x, diff.y, diff.x, diff.y + rectangle.h);
+        const xDiff = rectangle.x - world.camera.x;
+        const yDiff = rectangle.y - world.camera.y;
+        const gradient = context.createLinearGradient(xDiff, yDiff, xDiff, yDiff + rectangle.h);
         ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
-        context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
+        context.fillRect(xDiff, yDiff, rectangle.w, rectangle.h);
     };
     
     public static RectangleGradientHorizontal(world: CameraContext, rectangle: DeepReadonly<IRectangle>, colorStopArray: DeepReadonly<ColorStopArray>) {
         const context = world.context;
-        const diff = new Point(rectangle.x, rectangle.y).subtract(world.camera);
-        const gradient = context.createLinearGradient(diff.x, diff.y, diff.x + rectangle.w, diff.y);
+        const xDiff = rectangle.x - world.camera.x;
+        const yDiff = rectangle.y - world.camera.y;
+        const gradient = context.createLinearGradient(xDiff, yDiff, xDiff + rectangle.w, yDiff);
         ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
-        context.fillRect(diff.x, diff.y, rectangle.w, rectangle.h);
+        context.fillRect(xDiff, yDiff, rectangle.w, rectangle.h);
     };
     
     public static CircleArcGradient(world: CameraContext, circle: DeepReadonly<ICircle>, colorStopArray: DeepReadonly<ColorStopArray>, startAngle: number=0, endAngle: number=tau, alpha: number=1) {
         const context = world.context;
-        const diff = new Point(circle.x, circle.y).subtract(world.camera);
 
         const globalAlphaPrevious = context.globalAlpha;
         context.globalAlpha = alpha;
 
-        const gradient = context.createRadialGradient(diff.x, diff.y, 0, diff.x, diff.y, circle.r);
+        const xDiff = circle.x - world.camera.x;
+        const yDiff = circle.y - world.camera.y;
+        const gradient = context.createRadialGradient(xDiff, yDiff, 0, xDiff, yDiff, circle.r);
         ColorStopArray.ApplyToGradient(colorStopArray, gradient);
         context.fillStyle = gradient;
         context.beginPath();
@@ -343,6 +346,30 @@ export class Draw {
 
         context.globalAlpha = globalAlphaPrevious;        
     };
+
+    public static CircleArcOutlineGradient(world: CameraContext, circle: DeepReadonly<ICircle>, colorStopArray: DeepReadonly<ColorStopArray>, startAngle: number, endAngle: number, alpha: number=1, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.Default) {
+        if(lineWidth <= 0)
+            return;
+        const r = this.ApplyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
+        if(r <= 0)
+            return;
+        const context = world.context;
+
+        const globalAlphaPrevious = context.globalAlpha;
+        context.globalAlpha = alpha;
+
+        const xDiff = circle.x - world.camera.x;
+        const yDiff = circle.y - world.camera.y;
+        const gradient = context.createRadialGradient(xDiff, yDiff, r - lineWidth/2, xDiff, yDiff, r + lineWidth/2);
+        ColorStopArray.ApplyToGradient(colorStopArray, gradient);
+        context.strokeStyle = gradient;
+        context.beginPath();
+        context.arc(circle.x - world.camera.x, circle.y - world.camera.y, r, startAngle, endAngle);
+        context.lineWidth = lineWidth;
+        context.stroke();
+
+        context.globalAlpha = globalAlphaPrevious;    
+    }
 
     private static RectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number, center: DeepReadonly<IPoint> | undefined, lineWidth: number, outlinePlacement: OutlinePlacement) {
         const context = world.context;
