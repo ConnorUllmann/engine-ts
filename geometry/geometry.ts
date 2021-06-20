@@ -1079,6 +1079,12 @@ export class Geometry {
     }
 
     public static CollideExplicit = {
+        RectanglePoint: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number): boolean => {
+            return bx >= ax
+                && by >= ay
+                && bx < ax + aw
+                && by < ay + ah;
+        },
         RectangleRectangle: (ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number,): boolean => {
             return ax + aw > bx 
                 && ay + ah > by 
