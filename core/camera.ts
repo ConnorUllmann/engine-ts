@@ -1,6 +1,6 @@
 import { Rectangle } from '../geometry/rectangle';
 import { Point } from '../geometry/point';
-import { IRectangle } from '@engine-ts/geometry/interfaces';
+import { IPoint, IRectangle } from '@engine-ts/geometry/interfaces';
 import { Geometry } from '@engine-ts/geometry/geometry';
 
 export class Camera extends Rectangle {
@@ -13,9 +13,6 @@ export class Camera extends Rectangle {
         super(0, 0, canvas.width, canvas.height);
     }
 
-    public rectangleIsVisible(rectangle: Rectangle): boolean { return this.collidesRectangle(rectangle); }
-    public pointIsVisible(point: Point): boolean { return this.collidesPoint(point); }
-
     public get canvasScale(): Point {
         return new Point(
             this.w / this.canvas.clientWidth,
@@ -23,16 +20,27 @@ export class Camera extends Rectangle {
         );
     }
 
-    public isColliding(rectangle: IRectangle, padding: number): boolean {
+    public isRectangleVisible(rectangle: IRectangle, margin: number=0): boolean {
         return Geometry.CollideExplicit.RectangleRectangle(
-            this.x - padding,
-            this.y - padding,
-            this.w + 2 * padding,
-            this.h + 2 * padding,
+            this.x - margin,
+            this.y - margin,
+            this.w + 2 * margin,
+            this.h + 2 * margin,
             rectangle.x,
             rectangle.y,
             rectangle.w,
             rectangle.h
+        )
+    }
+    
+    public isPointVisible(position: IPoint, margin: number=0): boolean {
+        return Geometry.CollideExplicit.RectanglePoint(
+            this.x - margin,
+            this.y - margin,
+            this.w + 2 * margin,
+            this.h + 2 * margin,
+            position.x,
+            position.y,
         )
     }
 }
