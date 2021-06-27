@@ -105,16 +105,22 @@ interface ICircleStatic extends IGeometryStatic<ICircle> {
 }
 
 interface IPointStatic extends IGeometryStatic<IPoint> {
-    readonly Zero: DeepReadonly<IPoint>,
-    readonly One: DeepReadonly<IPoint>,
-    readonly Up: DeepReadonly<IPoint>,
-    readonly Down: DeepReadonly<IPoint>,
-    readonly Left: DeepReadonly<IPoint>,
-    readonly Right: DeepReadonly<IPoint>,
-    readonly UpRight: DeepReadonly<IPoint>,
-    readonly UpLeft: DeepReadonly<IPoint>,
-    readonly DownRight: DeepReadonly<IPoint>,
-    readonly DownLeft: DeepReadonly<IPoint>,
+    readonly Zero: DeepReadonly<{ x: 0, y: 0 }>,
+    readonly One: DeepReadonly<{ x: 1, y: 1 }>,
+    readonly Up: DeepReadonly<{ x: 0, y: -1 }>,
+    readonly Down: DeepReadonly<{ x: 0, y: 1 }>,
+    readonly Left: DeepReadonly<{ x: -1, y: 0 }>,
+    readonly Right: DeepReadonly<{ x: 1, y: 0 }>,
+    readonly UpRight: DeepReadonly<{ x: 1, y: -1 }>,
+    readonly UpLeft: DeepReadonly<{ x: -1, y: -1 }>,
+    readonly DownRight: DeepReadonly<{ x: 1, y: 1 }>,
+    readonly DownLeft: DeepReadonly<{ x: -1, y: 1 }>,
+    readonly CardinalDirections: DeepReadonly<[
+        { x: 1, y: 0 },
+        { x: 0, y: -1 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+    ]>,
     AreEqual: (a?: DeepReadonly<IPoint> | null, b?: DeepReadonly<IPoint> | null) => boolean,
     DistanceSq: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
     Distance: (a: DeepReadonly<IPoint>, b: DeepReadonly<IPoint>) => number,
@@ -231,6 +237,12 @@ export class Geometry {
         UpLeft: { x: -1, y: -1 },
         DownRight: { x: 1, y: 1 },
         DownLeft: { x: -1, y: 1 },
+        CardinalDirections: [
+            { x: 1, y: 0 },
+            { x: 0, y: -1 },
+            { x: -1, y: 0 },
+            { x: 0, y: 1 },
+        ],
         AreEqual: (a?: DeepReadonly<IPoint> | null, b?: DeepReadonly<IPoint> | null) => {
             if(a == null && b == null)
                 return true;
