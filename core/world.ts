@@ -250,9 +250,9 @@ export class World {
         return entities.minOf(entity => Geometry.Point.DistanceSq(entity.position, position)) ?? null;
     }
 
-    public firstEntityOfClasses<T extends new(...args: any[]) => Entity>(_classes: T[], boolCheck: (t: InstanceType<T>) => boolean): InstanceType<T> | null {
+    public firstEntityOfClasses<T extends new(...args: any[]) => Entity>(_classes: T[], boolCheck?: (t: InstanceType<T>) => boolean): InstanceType<T> | null {
         for(let _class of _classes) {
-            const result = this.entitiesOfClass(_class).first(entity => boolCheck(entity));
+            const result = this.entitiesOfClass(_class).first(boolCheck);
             if(result != null)
                 return result;
         }
