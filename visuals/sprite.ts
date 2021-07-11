@@ -84,7 +84,7 @@ export class Sprite {
     }
 
     constructor(
-        private readonly world: World,
+        public readonly world: World,
         public readonly imageName: string,
         public readonly wFrame: number,
         public readonly hFrame: number,
