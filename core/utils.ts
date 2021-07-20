@@ -48,6 +48,11 @@ export async function sleep(milliseconds: number) {
     await new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+// https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript/3561711#3561711
+export function escapeRegex(text: string): string {
+    return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 export function saveFile(text: string, fileName: string, contentType: string='text/plain') {
     var a = document.createElement("a");
     var file = new Blob([text], {type: contentType});
