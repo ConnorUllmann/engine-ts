@@ -1,14 +1,14 @@
 import { Color } from './color';
-import { tau, Halign, Valign, DeepReadonly, enumToList } from '@engine-ts/core/utils';
+import { tau, DeepReadonly, enumToList } from '@engine-ts/core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
 import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon, PointPairType } from '@engine-ts/geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '@engine-ts/geometry/point';
 import { Geometry, Shape } from '@engine-ts/geometry/geometry';
-import { Images } from '@engine-ts/core/images';
 import { CameraContext, ImagesCameraContext } from './camera-context';
 import { Rectangle } from '@engine-ts/geometry/rectangle';
+import { Halign, Valign } from './align';
 
 export type FillStyle = DeepReadonly<Color> | string | null;
 export type StrokeStyle = FillStyle;

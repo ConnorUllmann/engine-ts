@@ -1,5 +1,6 @@
 import { RNG } from '@engine-ts/core/rng';
-import { tau, clamp, moduloSafe, binomialCoefficient, Halign, Valign, DeepReadonly, rng, angle90 } from '@engine-ts/core/utils';
+import { tau, clamp, moduloSafe, binomialCoefficient, DeepReadonly, rng, angle90 } from '@engine-ts/core/utils';
+import { Halign, Valign } from '@engine-ts/visuals/align';
 import { ISegment, IPoint, ICircle, ITriangle, IRectangle, IPointPair, IPolygon, ILine, PointPairType, IRay, IRaycastResult } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;

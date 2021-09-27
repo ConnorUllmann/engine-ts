@@ -17,18 +17,6 @@ export function log(text: string, level = "info") {
     }
 };
 
-export enum Halign {
-    LEFT = 'left',
-    CENTER = 'center',
-    RIGHT = 'right'
-}
-
-export enum Valign {
-    TOP = 'top',
-    MIDDLE = 'middle',
-    BOTTOM = 'bottom'
-}
-
 export function clamp(value: number, min: number, max: number) {
     return value <= min
         ? min
