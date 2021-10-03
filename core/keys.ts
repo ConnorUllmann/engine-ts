@@ -411,9 +411,7 @@ export function KeysForKeyCode(keyCode: number, code?: string): Key[] {
                 result.push(Key.DELETE);
             break;
         default:
-            if(!(keyCode in KeysByKeyCode))
-                console.log(keyCode);
-            else
+            if(keyCode in KeysByKeyCode)
                 result.push(...KeysByKeyCode[keyCode]);
             break;
     }
