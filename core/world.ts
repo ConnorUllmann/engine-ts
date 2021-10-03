@@ -175,7 +175,7 @@ export class World {
         this._lastUpdatePerformanceTimestamp = now;
     }
 
-    private updateEntities(): void {
+    public flushAdded() {
         for(const id in this.entityToAddById) {
             const entity = this.entityToAddById[id];
             delete this.entityToAddById[id];
@@ -186,19 +186,9 @@ export class World {
                 this.entitiesByClass[entity.class] = [];
             this.entitiesByClass[entity.class].push(entity);
         }
+    }
 
-        this.sortEntitiesByUpdateOrder();
-
-        if(this.singletonEntity)
-            this.updateEntity(this.singletonEntity);
-        else
-            this.entities.forEach(this.updateEntity);
-
-        if(this.singletonEntity)
-            this.postUpdateEntity(this.singletonEntity);
-        else
-            this.entities.forEach(this.postUpdateEntity);
-
+    public flushRemoved() {
         for(const id in this.entityToRemoveById) {
             const entity = this.entityToRemoveById[id];
             delete this.entityToRemoveById[id];
@@ -212,6 +202,24 @@ export class World {
                 delete this.entitiesByClass[entity.class];
             entity.removed = true;
         }
+    }
+
+    private updateEntities(): void {
+        this.flushAdded();
+
+        this.sortEntitiesByUpdateOrder();
+
+        if(this.singletonEntity)
+            this.updateEntity(this.singletonEntity);
+        else
+            this.entities.forEach(this.updateEntity);
+
+        if(this.singletonEntity)
+            this.postUpdateEntity(this.singletonEntity);
+        else
+            this.entities.forEach(this.postUpdateEntity);
+
+        this.flushRemoved();
     }
 
     private drawEntities() {

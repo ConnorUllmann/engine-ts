@@ -37,6 +37,10 @@ export class IdSet<U> /*ES6: extends Set<U>*/ implements Iterable<U>, Set<U> {
         return this.getId(obj) in this.dict;
     }
 
+    get(id: string | number): U | null {
+        return this.dict[id] ?? null;
+    }
+
     // TODO: track this value in add/delete/clear instead of by creating a new array so repeated accesses are less memory-intensive
     get size(): number {
         return Object.keys(this.dict).length;
