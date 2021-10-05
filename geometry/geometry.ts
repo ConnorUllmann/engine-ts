@@ -682,7 +682,12 @@ export class Geometry {
                 { a: corners[0], b: corners[3], c: corners[2] }
             ];
         },
-        Bounds: (rectangle: DeepReadonly<IRectangle>): IRectangle => rectangle,
+        Bounds: (rectangle: DeepReadonly<IRectangle>): IRectangle => ({
+            x: rectangle.x,
+            y: rectangle.y,
+            w: rectangle.w,
+            h: rectangle.h
+        }),
         BoundsRectangles: (rectangles: DeepReadonly<IRectangle>[]) => {
             if(rectangles == null || rectangles.length <= 0)
                 return { x: 0, y: 0, w: 0, h: 0 };
