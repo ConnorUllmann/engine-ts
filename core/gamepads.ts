@@ -15,14 +15,19 @@ export class Gamepads {
 
     public active = true;
 
+    private readonly gamepadIndices = [0, 1, 2, 3];
+
     private static readonly TriggerBuffer: number = 0.1;
     private static readonly DeadzoneDefault = 0.3;
     private get gamepads(): { [gamepadId: number]: Gamepad } {
         const gamepadsRaw = navigator.getGamepads();
-        // since navigator.getGamepads() doesn't seem to return an actual array, access the controllers individually
-        return ([gamepadsRaw[0], gamepadsRaw[1], gamepadsRaw[2], gamepadsRaw[3]]
-            .filter(o => o != null && o.connected) as Gamepad[])
-            .mappedByUnique(o => o.index.toString());
+        const connectedGamepadByIndex: { [gamepadId: number]: Gamepad } = {};
+        for(let index of this.gamepadIndices) {
+            const gamepad = gamepadsRaw[index]
+            if(gamepad != null && gamepad.connected)
+                connectedGamepadByIndex[index] = gamepad;
+        }
+        return connectedGamepadByIndex;
     }
 
     public static get AreAvailable(): boolean { return !!(navigator.getGamepads); };
@@ -45,6 +50,8 @@ export class Gamepads {
         15: [Button.RIGHT],
         // 16 - ???
     };
+
+    public hasInputThisFrame = false;
 
     constructor() {}
 
@@ -75,6 +82,8 @@ export class Gamepads {
             for(let button in value)
                 value[button] = false;
         }
+
+        this.hasInputThisFrame = false;
     }
 
     // only works in chrome
@@ -91,7 +100,12 @@ export class Gamepads {
     }
 
     public update() {
-        if(!Gamepads.AreAvailable || !this.active)
+        if(!this.active)
+            return;
+        
+        this.hasInputThisFrame = false;
+
+        if(!Gamepads.AreAvailable)
             return;
 
         const gamepads = this.gamepads;
@@ -133,6 +147,9 @@ export class Gamepads {
                     this.pressedByIndex[gamepadId][button] = isPressed;
                     this.releasedByIndex[gamepadId][button] = isReleased;
                 }
+
+                if(isDown)
+                    this.hasInputThisFrame = true;
             }
 
             for(let button of AnalogDirectionButtons) {
@@ -147,6 +164,9 @@ export class Gamepads {
                 this.downByIndex[gamepadId][button] = isDown;
                 this.pressedByIndex[gamepadId][button] = isPressed;
                 this.releasedByIndex[gamepadId][button] = isReleased;
+
+                if(isDown)
+                    this.hasInputThisFrame = true;
             }
         }
     };

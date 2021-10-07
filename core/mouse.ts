@@ -88,6 +88,8 @@ export class Mouse extends Point implements IMouse {
 
     public active = true;
 
+    public hasInputThisFrame = false;
+
     public get onCanvas(): boolean {
         return this.focus 
             && this.x != null 
@@ -130,6 +132,7 @@ export class Mouse extends Point implements IMouse {
             }
         }
         this.moved = true;
+        this.hasInputThisFrame = true;
     }
     public touchStartHandler = (touchEvent: TouchEvent) => {
         if(!this.active)
@@ -173,18 +176,21 @@ export class Mouse extends Point implements IMouse {
         if(!this.active)
             return;
         
+        this.hasInputThisFrame = true;
         this.focus = false;
     }
     public mouseOverHandler = (mouseEvent: MouseEvent) => {
         if(!this.active)
             return;
         
+        this.hasInputThisFrame = true;
         this.focus = true;
     }
     public wheelHandler = (wheelEvent: WheelEvent) => {
         if(!this.active)
             return;
         
+        this.hasInputThisFrame = true;
         this.scroll.y = wheelEvent.deltaY;
     }
 
@@ -249,6 +255,9 @@ export class Mouse extends Point implements IMouse {
     }
 
     public update(): void {
+        if(!this.active)
+            return;
+        
         this.leftReleased = false;
         this.leftPressed = false;
         this.rightReleased = false;
@@ -258,6 +267,7 @@ export class Mouse extends Point implements IMouse {
         this.scroll.x = 0;
         this.scroll.y = 0;
         this.moved = false;
+        this.hasInputThisFrame = false;
     }
 
     public allPressed(): (MouseButton | MouseScroll)[] {
@@ -300,21 +310,25 @@ export class Mouse extends Point implements IMouse {
     }
 
     private leftMouseDownEvent(): void {
+        this.hasInputThisFrame = true;
         this.leftPressed = true;
         this.leftDown = true;
     };
 
     private leftMouseUpEvent(): void {
+        this.hasInputThisFrame = true;
         this.leftReleased = true;
         this.leftDown = false;
     };
 
     private rightMouseDownEvent(): void {
+        this.hasInputThisFrame = true;
         this.rightPressed = true;
         this.rightDown = true;
     };
 
     private rightMouseUpEvent(): void {
+        this.hasInputThisFrame = true;
         this.rightReleased = true;
         this.rightDown = false;
     };

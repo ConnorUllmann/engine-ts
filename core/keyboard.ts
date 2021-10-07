@@ -42,6 +42,7 @@ export class Keyboard {
 
     constructor() {}
 
+    public hasInputThisFrame = false;
     private started = false;
 
     destroy() {
@@ -93,9 +94,13 @@ export class Keyboard {
         for(const property in this.repeatingKeyCode)
             if(this.repeatingKeyCode.hasOwnProperty(property))
                 delete this.repeatingKeyCode[property];
+        
+        this.hasInputThisFrame = false;
     };
 
     setKeyDown(keyCode: number, code?: string, repeating: boolean=false) {
+        this.hasInputThisFrame = true;
+
         const keys = Keyboard.keysForKeyEvent(keyCode, code);
 
         if(repeating) {
@@ -117,6 +122,8 @@ export class Keyboard {
     };
 
     setKeyUp(keyCode: number, code?: string) {
+        this.hasInputThisFrame = true;
+
         this.releasedKeyCode[keyCode] = true;
         if(this.downKeyCode.hasOwnProperty(keyCode))
             delete this.downKeyCode[keyCode];
