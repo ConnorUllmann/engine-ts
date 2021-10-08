@@ -54,7 +54,7 @@ export class Point implements IPoint {
 }
 
 export class NullablePoint {
-    private _value = new Point();
+    private _value = { x: 0, y: 0 };
     private _hasValue = false;
 
     public get value(): IPoint | null {

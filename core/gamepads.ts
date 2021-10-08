@@ -115,8 +115,8 @@ export class Gamepads {
             if (gamepad == null)
                 return;
 
-            this.leftAnalogStickByIndex[gamepadId] = new Point(this.applyDeadzone(gamepad.axes[0]), this.applyDeadzone(gamepad.axes[1]));
-            this.rightAnalogStickByIndex[gamepadId] = new Point(this.applyDeadzone(gamepad.axes[2]), this.applyDeadzone(gamepad.axes[3]));
+            this.leftAnalogStickByIndex[gamepadId] = this.applyDeadzone(new Point(gamepad.axes[0], gamepad.axes[1]));
+            this.rightAnalogStickByIndex[gamepadId] = this.applyDeadzone(new Point(gamepad.axes[2], gamepad.axes[3]));
             this.leftTriggerByIndex[gamepadId] = gamepad.buttons[6].value;
             this.rightTriggerByIndex[gamepadId] = gamepad.buttons[7].value;
 
@@ -191,11 +191,11 @@ export class Gamepads {
         return value;
     };
 
-    private applyDeadzone(value: number, deadzone: number | null=null) {
+    private applyDeadzone(value: Point, deadzone: number | null=null) {
         const deadzoneFinal = deadzone != null ? deadzone : Gamepads.DeadzoneDefault;
-        return Math.abs(value) >= deadzoneFinal
-            ? Math.sign(value) * (Math.abs(value) - deadzoneFinal) / (1 - deadzoneFinal)
-            : 0;
+        if(Geometry.Point.DistanceSq(value, Geometry.Point.Zero) < deadzoneFinal * deadzoneFinal)
+            value.x = value.y = 0;
+        return value;
     };
 
     private getButtonValue(
