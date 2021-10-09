@@ -40,11 +40,11 @@ export class VerletPoint implements IPoint {
     };
 }
 
-export class VerletStick implements IVerletStick<VerletPoint> {
+export class VerletStick implements IVerletStick<IVerletPoint> {
     public equilibriumLength: number;
 
     // When length is null, the distance between the two points at the point of the stick's creation is used
-    constructor(public a: VerletPoint, public b: VerletPoint, length: number | null=null, public stiffness: number=2) {
+    constructor(public a: IVerletPoint, public b: IVerletPoint, length: number | null=null, public stiffness: number=2) {
         this.equilibriumLength = length ?? Geometry.Point.Distance(a, b);    
     }
 
