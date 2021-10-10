@@ -11,6 +11,11 @@ import { DeepReadonly } from './utils';
 import { IPoint } from '@engine-ts/geometry/interfaces';
 import { Geometry } from '@engine-ts/geometry/geometry';
 
+export enum InputType {
+    Gamepad,
+    Keyboard,
+}
+
 export class World {
     public readonly canvas: HTMLCanvasElement;
     public readonly context: CanvasRenderingContext2D;
@@ -57,6 +62,8 @@ export class World {
     public singletonEntity: Entity | null = null;
 
     private interval: any | null = null;
+
+    public lastInputTypeUsed = InputType.Keyboard;
 
     // create in ngOnInit and not in the component's constructor
     constructor(
@@ -141,15 +148,25 @@ export class World {
         const startMs = Date.now();
         
         this.updateDelta();
+
+        // gamepad inputs update before the entities because all inputs are received simultaneously during its update
+        // unlike keyboard & mouse which are streamed in via events (and then reset by their update methods)
+        this.gamepads.update();
+
         const canUpdateEntities = this.canUpdateEntities == null || this.canUpdateEntities()
         if(canUpdateEntities) {
             this.updateEntities();
             this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
             this.drawEntities();
         }
+
+        if(this.keyboard.hasInputThisFrame || this.mouse.hasInputThisFrame)
+            this.lastInputTypeUsed = InputType.Keyboard;
+        else if(this.gamepads.hasInputThisFrame)
+            this.lastInputTypeUsed = InputType.Gamepad;
+
         this._mouse.update();
         this.keyboard.update();
-        this.gamepads.update();
 
         this._isFirstFrame = false;
 
