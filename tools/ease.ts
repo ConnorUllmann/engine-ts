@@ -1,4 +1,4 @@
-import { tau, angle90 } from '@engine-ts/core/utils';
+import { angle90 } from '@engine-ts/core/utils';
 
 type Easer = (t: number) => number;
 
@@ -100,4 +100,32 @@ export class Ease {
             return (7.5625 * (t - Ease.B5) * (t - Ease.B5) + .9375) / 2 + .5;
         return (7.5625 * (t - Ease.B6) * (t - Ease.B6) + .984375) / 2 + .5;
     };
+
+
+    // a > 0 bends "upward" towards 1 (acts similarly to x^y where y is between 0 and 1)
+    // a < 0 bends "downward" towards 0 (acts similarly to x^a)
+    // a == 0 is a line
+    public static Bend(t: number, a: number): number {
+        return a === 0
+                ? t
+                : a < 0
+                    ? 1 - (1 - 1 / ((1 - t) * -a + 1)) * (1 + 1 / -a)
+                    : (1 - 1 / (t * a + 1)) * (1 + 1 / a);
+    }
+
+    public static GetBendEaser(a: number): (t: number) => number { return (t: number) => Ease.Bend(t, a) }
+    public static BendUp1 = Ease.GetBendEaser(1);
+    public static BendUp2 = Ease.GetBendEaser(2);
+    public static BendUp5 = Ease.GetBendEaser(5);
+    public static BendUp10 = Ease.GetBendEaser(10);
+    public static BendUp25 = Ease.GetBendEaser(25);
+    public static BendUp100 = Ease.GetBendEaser(100);
+    public static BendUp1000 = Ease.GetBendEaser(1000);
+    public static BendDown1 = Ease.GetBendEaser(-1);
+    public static BendDown2 = Ease.GetBendEaser(-2);
+    public static BendDown5 = Ease.GetBendEaser(-5);
+    public static BendDown10 = Ease.GetBendEaser(-10);
+    public static BendDown25 = Ease.GetBendEaser(-25);
+    public static BendDown100 = Ease.GetBendEaser(-100);
+    public static BendDown1000 = Ease.GetBendEaser(-1000);
 }
