@@ -171,7 +171,7 @@ export class Gamepads {
         }
     };
 
-    private isAnalogDirectionDownByButton: { [key in AnalogDirectionButton]: (gamepadId: number) => boolean } = {
+    private isAnalogDirectionDownByButton: { [key in AnalogDirectionButton]: (gamepadId: string | number) => boolean } = {
         [Button.LEFT_ANALOG_UP]: gamepadId => this.leftAnalogStickByIndex[gamepadId].y < 0,
         [Button.LEFT_ANALOG_RIGHT]: gamepadId => this.leftAnalogStickByIndex[gamepadId].x > 0,
         [Button.LEFT_ANALOG_DOWN]: gamepadId => this.leftAnalogStickByIndex[gamepadId].y > 0,

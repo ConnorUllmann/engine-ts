@@ -29,15 +29,6 @@ export enum Button {
 };
 export const Buttons = enumToList(Button);
 
-export type AnalogDirectionButton = 
-    Button.LEFT_ANALOG_UP |
-    Button.LEFT_ANALOG_RIGHT |
-    Button.LEFT_ANALOG_DOWN |
-    Button.LEFT_ANALOG_LEFT |
-    Button.RIGHT_ANALOG_UP |
-    Button.RIGHT_ANALOG_RIGHT |
-    Button.RIGHT_ANALOG_DOWN |
-    Button.RIGHT_ANALOG_LEFT;
 export const AnalogDirectionButtons = [
     Button.LEFT_ANALOG_UP,
     Button.LEFT_ANALOG_RIGHT,
@@ -47,4 +38,5 @@ export const AnalogDirectionButtons = [
     Button.RIGHT_ANALOG_RIGHT,
     Button.RIGHT_ANALOG_DOWN,
     Button.RIGHT_ANALOG_LEFT,
-];
+] as const;
+export type AnalogDirectionButton = (typeof AnalogDirectionButtons)[number];
