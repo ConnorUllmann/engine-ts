@@ -20,6 +20,7 @@ interface IPointListStatic<T> extends IGeometryStatic<T> {
     Supertriangle: (t: DeepReadonly<T>) => ITriangle | null,
     Triangulation: (t: DeepReadonly<T>) => ITriangle[],
     Bounds: (t: DeepReadonly<T>) => IRectangle,
+    SetRectangleToBounds: (t: DeepReadonly<T>, r: IRectangle) => void,
     Hash: (t: DeepReadonly<T>) => string
 }
 
@@ -94,11 +95,12 @@ interface IPolygonStatic extends IShapeStatic<IPolygon> {
 
 interface ICircleStatic extends IGeometryStatic<ICircle> {
     Circumcircle: (circle: DeepReadonly<ICircle>) => ICircle,
-    Supertriangle: (o: DeepReadonly<ICircle>) => ITriangle,
-    Midpoint: (o: DeepReadonly<ICircle>) => IPoint,
-    Area: (o: DeepReadonly<ICircle>) => number,
-    Circumference: (o: DeepReadonly<ICircle>) => number,
-    Bounds: (o: DeepReadonly<ICircle>) => IRectangle,
+    Supertriangle: (circle: DeepReadonly<ICircle>) => ITriangle,
+    Midpoint: (circle: DeepReadonly<ICircle>) => IPoint,
+    Area: (circle: DeepReadonly<ICircle>) => number,
+    Circumference: (circle: DeepReadonly<ICircle>) => number,
+    Bounds: (circle: DeepReadonly<ICircle>) => IRectangle,
+    SetRectangleToBounds: (circle: DeepReadonly<ICircle>, rectangle: IRectangle) => void,
     RandomPointInside: (circle: DeepReadonly<ICircle>, rng?: RNG) => IPoint,
     Rotate: (circle: DeepReadonly<ICircle>, angle: number, center?: DeepReadonly<IPoint>) => ICircle,
     // returns the points on 'circle' that are tangent when they form a segment with 'point'
@@ -194,6 +196,7 @@ interface ISegmentStatic extends IPointPairStatic<ISegment> {
     PerpendicularBisector: (segment: DeepReadonly<ISegment>) => ILine,
     SharedVertex: (segmentA: DeepReadonly<ISegment>, segmentB: DeepReadonly<ISegment>) => IPoint | null,
     Bounds: (segment: DeepReadonly<ISegment>) => IRectangle,
+    SetRectangleToBounds: (segment: DeepReadonly<ISegment>, rectangle: IRectangle) => void,
 }
 
 export class Geometry {
@@ -551,12 +554,16 @@ export class Geometry {
                 : Geometry.Point.AreEqual(segmentA.b, segmentB.a) || Geometry.Point.AreEqual(segmentA.b, segmentB.b)
                     ? segmentA.b
                     : null,
-        Bounds: (segment: DeepReadonly<ISegment>): IRectangle => { 
-            const x = Math.min(segment.a.x, segment.b.x);
-            const y = Math.min(segment.a.y, segment.b.y);
-            const w = Math.max(segment.a.x, segment.b.x) - x;
-            const h = Math.max(segment.a.y, segment.b.y) - y;
-            return { x, y, w, h };
+        Bounds: (segment: DeepReadonly<ISegment>): IRectangle => {
+            const temp = { x: 0, y: 0, w: 0, h: 0 };
+            Geometry.Segment.SetRectangleToBounds(segment, temp);
+            return temp;
+        },
+        SetRectangleToBounds: (segment: DeepReadonly<ISegment>, rectangle: IRectangle): void => {
+            rectangle.x = Math.min(segment.a.x, segment.b.x);
+            rectangle.y = Math.min(segment.a.y, segment.b.y);
+            rectangle.w = Math.max(segment.a.x, segment.b.x) - rectangle.x;
+            rectangle.h = Math.max(segment.a.y, segment.b.y) - rectangle.y;
         }
     };
 
@@ -584,6 +591,7 @@ export class Geometry {
         Supertriangle: (triangle: DeepReadonly<ITriangle>): ITriangle => triangle,
         Triangulation: (triangle: DeepReadonly<ITriangle>): ITriangle[] => [triangle],
         Bounds: (triangle: DeepReadonly<ITriangle>): IRectangle => Geometry.Points.Bounds(Geometry.Triangle.Vertices(triangle)),
+        SetRectangleToBounds: (triangle: DeepReadonly<ITriangle>, rectangle: IRectangle): void => Geometry.Points.SetRectangleToBounds(Geometry.Triangle.Vertices(triangle), rectangle),
         Midpoint: (triangle: DeepReadonly<ITriangle>): IPoint => Geometry.Point.Midpoint(...Geometry.Triangle.Vertices(triangle))!,
         Area: (triangle: DeepReadonly<ITriangle>): number => Math.abs(Geometry.Triangle.AreaSigned(triangle)),
         AreaSigned: (triangle: DeepReadonly<ITriangle>): number => 0.5 * (
@@ -682,12 +690,17 @@ export class Geometry {
                 { a: corners[0], b: corners[3], c: corners[2] }
             ];
         },
-        Bounds: (rectangle: DeepReadonly<IRectangle>): IRectangle => ({
-            x: rectangle.x,
-            y: rectangle.y,
-            w: rectangle.w,
-            h: rectangle.h
-        }),
+        Bounds: (rectangle: DeepReadonly<IRectangle>): IRectangle => {
+            const temp = { x: 0, y: 0, w: 0, h: 0 }
+            Geometry.Rectangle.SetRectangleToBounds(rectangle, temp)
+            return temp;
+        },
+        SetRectangleToBounds: (rectangle: DeepReadonly<IRectangle>, rectangleToChange: IRectangle): void => {
+            rectangleToChange.x = rectangle.x;
+            rectangleToChange.y = rectangle.y;
+            rectangleToChange.w = rectangle.w;
+            rectangleToChange.h = rectangle.h;
+        },
         BoundsRectangles: (rectangles: DeepReadonly<IRectangle>[]) => {
             if(rectangles == null || rectangles.length <= 0)
                 return { x: 0, y: 0, w: 0, h: 0 };
@@ -838,6 +851,7 @@ export class Geometry {
         Supertriangle: (polygon: DeepReadonly<IPolygon>): ITriangle | null => Geometry.Points.Supertriangle(polygon.vertices),
         Triangulation: (polygon: DeepReadonly<IPolygon>): ITriangle[] => Geometry.Points.Triangulation(polygon.vertices),
         Bounds: (polygon: DeepReadonly<IPolygon>): IRectangle => Geometry.Points.Bounds(polygon.vertices),
+        SetRectangleToBounds: (polygon: DeepReadonly<IPolygon>, rectangle: IRectangle): void => Geometry.Points.SetRectangleToBounds(polygon.vertices, rectangle),
         Midpoint: (polygon: DeepReadonly<IPolygon>): IPoint | null => Geometry.Point.Midpoint(...polygon.vertices),
         Area: (polygon: DeepReadonly<IPolygon>): number => Geometry.Polygon.Triangulation(polygon).map(o => Geometry.Triangle.Area(o)).sum() ?? 0,
         Rotate: (polygon: DeepReadonly<IPolygon>, angle: number, center?: DeepReadonly<IPoint>): IPolygon => ({ vertices: polygon.vertices.map(o => Geometry.Point.Rotate(o, angle, center)) }),
@@ -876,12 +890,17 @@ export class Geometry {
             b: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau/3), circle.r * 2), circle),
             c: Geometry.Point.Add(Geometry.Point.Scale(Geometry.Point.Rotate(Geometry.Point.Up, tau*2/3), circle.r * 2), circle)
         }),
-        Bounds: (circle: DeepReadonly<ICircle>): IRectangle => ({
-            x: circle.x - circle.r,
-            y: circle.y - circle.r,
-            w: circle.r * 2,
-            h: circle.r * 2
-        }),
+        Bounds: (circle: DeepReadonly<ICircle>): IRectangle => {
+            const temp = { x: 0, y: 0, w: 0, h: 0 };
+            Geometry.Circle.SetRectangleToBounds(circle, temp);
+            return temp;
+        },
+        SetRectangleToBounds: (circle: DeepReadonly<ICircle>, rectangle: IRectangle): void => {
+            rectangle.x = circle.x - circle.r;
+            rectangle.y = circle.y - circle.r;
+            rectangle.w = circle.r * 2;
+            rectangle.h = circle.r * 2;
+        },
         Midpoint: (circle: DeepReadonly<ICircle>): IPoint => circle,
         Area: (circle: DeepReadonly<ICircle>): number => Math.PI * circle.r * circle.r,
         Circumference: (circle: DeepReadonly<ICircle>): number => tau * circle.r,
@@ -1014,13 +1033,27 @@ export class Geometry {
             return triangles;
         },
         Bounds: (points: DeepReadonly<DeepReadonly<IPoint>[]>): IRectangle => {
-            if(points == null)
-                return { x: 0, y: 0, w: 0, h: 0 };
+            const temp = { x: 0, y: 0, w: 0, h: 0 };
+            Geometry.Points.SetRectangleToBounds(points, temp);
+            return temp;
+        },
+        SetRectangleToBounds: (points: DeepReadonly<DeepReadonly<IPoint>[]>, rectangle: IRectangle): void => {
+            if(points == null) {
+                rectangle.x = 0;
+                rectangle.y = 0;
+                rectangle.w = 0;
+                rectangle.h = 0;
+                return;
+            }
+
             const xMin = points.minOf(o => o.x)?.x ?? 0;
             const yMin = points.minOf(o => o.y)?.y ?? 0;
             const xMax = points.maxOf(o => o.x)?.x ?? 0;
             const yMax = points.maxOf(o => o.y)?.y ?? 0;
-            return { x: xMin, y: yMin, w: xMax - xMin, h: yMax - yMin };
+            rectangle.x = xMin;
+            rectangle.y = yMin;
+            rectangle.w = xMax - xMin;
+            rectangle.h = yMax - yMin;
         },
         Hash: (points: DeepReadonly<DeepReadonly<IPoint>[]>): string => points.clone()
             .sort((a, b) => a.y == b.y ? a.x - b.x : a.y - b.y)
@@ -1077,23 +1110,38 @@ export class Geometry {
     public static Bounds(shape?: DeepReadonly<BoundableShape>): IRectangle
     public static Bounds(shape?: DeepReadonly<BoundableShape> | null): IRectangle | null
     public static Bounds(shape?: DeepReadonly<BoundableShape> | null): IRectangle | null {
-        if(!shape)
-            null;
+        if(shape == null)
+            return null;
         
+        const temp = { x: 0, y: 0, w: 0, h: 0 };
+        Geometry.SetRectangleToBounds(shape, temp);
+        return temp;
+    }
+
+    public static SetRectangleToBounds(shape: DeepReadonly<BoundableShape>, rect: IRectangle): void {
         if(Geometry.IsRectangle(shape)) {
-            return Geometry.Rectangle.Bounds(shape);
+            Geometry.Rectangle.SetRectangleToBounds(shape, rect);
+            return;
         } else if(Geometry.IsCircle(shape)) {
-            return Geometry.Circle.Bounds(shape);
+            Geometry.Circle.SetRectangleToBounds(shape, rect);
+            return;
         } else if(Geometry.IsTriangle(shape)) {
-            return Geometry.Triangle.Bounds(shape);
+            Geometry.Triangle.SetRectangleToBounds(shape, rect);
+            return;
         } else if(Geometry.IsPolygon(shape)) {
-            return Geometry.Polygon.Bounds(shape);
+            Geometry.Polygon.SetRectangleToBounds(shape, rect);
+            return;
         } else if(Geometry.IsSegment(shape)) {
-            return Geometry.Segment.Bounds(shape);
+            Geometry.Segment.SetRectangleToBounds(shape, rect);
+            return;
         } else if(Geometry.IsPoint(shape)) {
-            return { x: shape.x, y: shape.y, w: 0, h: 0 };
+            rect.x = shape.x;
+            rect.y = shape.y;
+            rect.w = 0;
+            rect.h = 0;
+            return;
         } 
-        return null;
+        throw new Error('No shape recognized when trying to SetRectangleToBounds');
     }
 
     public static CollideExplicit = {

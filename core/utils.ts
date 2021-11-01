@@ -113,7 +113,7 @@ console.log(`Random seed: ${rng.seed}`);
 export const random = () => rng.random();
 export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
 export const randomRange = (min: number, max: number) => rng.randomRange(min, max);
-export const randomChoice = <T>(...options: T[]): T => rng.randomChoice(...options);
+export const randomChoice = <T>(...options: T[]): T | null => rng.randomChoice(...options);
 
 export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
     const array: T[] = [];
@@ -210,7 +210,7 @@ declare global {
         removeFirstWhere(valueGetter: (o: T, i: number) => boolean): T | null;
         removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
         reversed(): T[];
-        sample(_rng?: RNG): T;
+        sample(_rng?: RNG): T | null;
         samples(count: number, _rng?: RNG): T[];
         shuffle(_rng?: RNG): T[];
         shuffled(_rng?: RNG): T[];
@@ -242,7 +242,7 @@ declare global {
 
     interface ReadonlyArray<T> {
         reversed(): T[];
-        sample(_rng?: RNG): T;
+        sample(_rng?: RNG): T | null;
         samples(count: number, _rng?: RNG): T[];
         shuffled(_rng?: RNG): T[];
         flattened(): T;

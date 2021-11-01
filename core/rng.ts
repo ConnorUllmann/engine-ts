@@ -26,7 +26,7 @@ export class RNG {
         return this.random() * (max - min) + min;
     }
 
-    randomChoice<T>(...options: T[]): T {
+    randomChoice<T>(...options: T[]): T | null {
         return options.sample(this);
     }
 }

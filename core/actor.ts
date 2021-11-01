@@ -29,10 +29,15 @@ export class Actor extends Entity {
     public readonly velocity: Point = new Point();
     public readonly acceleration: Point = new Point();
 
+    public positionPrevious = { x: 0, y: 0 };
+
     constructor(world: World, position: IPoint, shape: BoundableShape, mask: number) {
         super(world, position);
         this.collider = new Collider(mask, shape);
         this.addComponent(this.collider);
+
+        this.positionPrevious.x = this.position.x;
+        this.positionPrevious.y = this.position.y;
     }
 
     update() {
@@ -45,6 +50,11 @@ export class Actor extends Entity {
             .scale(1 - this.friction);
     }
 
+    protected updatePreviousPosition() {
+        this.positionPrevious.x = this.position.x;
+        this.positionPrevious.y = this.position.y;
+    }
+
     protected updatePosition() {
         this.position
             .add(this.frameVelocity);
@@ -52,6 +62,7 @@ export class Actor extends Entity {
 
     protected updatePhysics() {
         this.updateVelocity();
+        this.updatePreviousPosition();
         this.updatePosition();
     }
 

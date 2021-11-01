@@ -18,7 +18,7 @@ export interface ITriangle {
     c: IPoint;
 }
 
-// omitting the "type" field will default to treating the IPointPair like a segmen
+// omitting the "type" field will default to treating the IPointPair like a segment
 // in ambiguous circumstances (i.e. when in use as the shape for a Collider)
 export interface IPointPair {
     a: IPoint,

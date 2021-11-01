@@ -1,21 +1,20 @@
 import { Geometry, BoundableShape } from "@engine-ts/geometry/geometry";
 import { IRectangle } from "@engine-ts/geometry/interfaces";
-import { Rectangle } from "@engine-ts/geometry/rectangle";
 import { Component } from "./component";
 import { DeepReadonly } from "./utils";
 
 // TODO: add "shape" property which translates shapeLocal to the position of the entity
 export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
-    private readonly _boundsLocal: IRectangle;
-    private readonly _bounds: Rectangle;
+    private readonly _boundsLocal: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
+    private readonly _bounds: IRectangle;
 
     constructor(
         public mask: number,
         private readonly _shapeLocal: T
     ) {
         super();
-        this._boundsLocal = Geometry.Bounds(_shapeLocal);
-        this._bounds = new Rectangle();
+        Geometry.SetRectangleToBounds(_shapeLocal, this._boundsLocal);
+        this._bounds = { x: 0, y: 0, w: 0, h: 0 };
     }
 
     public get shapeLocal(): DeepReadonly<T> {
@@ -32,6 +31,11 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         this._bounds.w = this._boundsLocal.w;
         this._bounds.h = this._boundsLocal.h;
         return this._bounds;
+    }
+
+    public updateShapeLocal(updateShapeLocal: (shapeLocal: T) => void) {
+        updateShapeLocal(this._shapeLocal);
+        Geometry.SetRectangleToBounds(this._shapeLocal, this._boundsLocal);
     }
 
     public firstBoundsCollision(mask: number, xOffset: number=0, yOffset: number=0): Collider<BoundableShape> | null {
@@ -103,6 +107,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
         const rectangleBy = collider._boundsLocal.y + (collider.entity?.position.y ?? 0);
         const rectangleBw = collider._boundsLocal.w;
         const rectangleBh = collider._boundsLocal.h;
+        // TODO: doesn't seem like this will work for point/point collisions
         return rectangleAx + rectangleAw > rectangleBx 
             && rectangleAy + rectangleAh > rectangleBy 
             && rectangleAx < rectangleBx + rectangleBw 
@@ -110,11 +115,11 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     }
 
     // does not consider active/inactive status
+    private _offset = { x: 0, y: 0 }
     public collideShape<U extends BoundableShape>(collider: Collider<U>, xOffset: number=0, yOffset: number=0): Collider<U> | null {
-        const aOffset = xOffset != 0 || yOffset != 0
-            ? { x: (this.entity?.position.x ?? 0) + xOffset, y: (this.entity?.position.y ?? 0) + yOffset }
-            : this.entity?.position ?? Geometry.Point.Zero;
-        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, aOffset, collider.entity?.position ?? Geometry.Point.Zero)
+        this._offset.x = this.entity?.position.x ?? 0 + xOffset;
+        this._offset.y = this.entity?.position.y ?? 0 + yOffset;
+        return Geometry.Collide.AnyAny(this.shapeLocal as DeepReadonly<BoundableShape>, collider.shapeLocal as DeepReadonly<BoundableShape>, this._offset, collider.entity?.position ?? Geometry.Point.Zero)
             ? collider
             : null;
     }
