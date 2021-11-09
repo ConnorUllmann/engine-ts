@@ -1516,11 +1516,59 @@ export class Geometry {
             : (Math.sign(cx - ax) === Math.sign(bx - ax) || Geometry.IsWithinToleranceOf(ax, cx) || Geometry.IsWithinToleranceOf(ax, bx));
     }
 
+    public static IntersectionExplicit = {
+        CircleCircle: (ax: number, ay: number, ar: number, bx: number, by: number, br: number): [IPoint, IPoint] | [IPoint] | [] => {
+            const angle = Geometry.Angle(bx - ax, by - ay);
+            const d2 = Geometry.DistanceSq(ax, ay, bx, by);
+            
+            // the circles are on top of one another, so either they have infinite points touching (circles are the same) or they have none (they aren't the same)
+            // either way, no possible return value
+            if(d2 <= 0) 
+                return [];
+            
+            const d = Math.sqrt(d2);
+
+            // the circle are too far apart to intersect
+            if(d > ar + br)
+                return [];
+            
+            const a = (ar * ar - br * br + d2) / (2 * d);
+            const h2 = ar * ar - a * a;
+
+            // one circle is inside the other
+            if(h2 < 0)
+                return [];
+            
+            const h = Math.sqrt(h2);
+            const xm = ax + a * Math.cos(angle);
+            const ym = ay + a * Math.sin(angle);
+
+            // circles are tangentially touching each other
+            if(h <= 0)
+                return [{ x: xm, y: ym }];            
+                
+            const xh = h * (by - ay) / d;
+            const yh = h * (bx - ax) / d;
+
+            // circles have two intersection points
+            return [
+                {
+                    x: xm + xh,
+                    y: ym - yh
+                },
+                {
+                    x: xm - xh,
+                    y: ym + yh
+                },
+            ];
+        },
+    }
+
     // TODO:
     //  1. test what happens when the lines/rays/segments are directly atop one another
     //  2. add shape vs. shape intersections as well
     public static Intersection = {
-        CirclePointPair: (circle: DeepReadonly<ICircle>, pair: DeepReadonly<IPointPair>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pairOffset?: DeepReadonly<IPoint>): IPoint[] => {
+        CirclePointPair: (circle: DeepReadonly<ICircle>, pair: DeepReadonly<IPointPair>, circleOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, pairOffset?: DeepReadonly<IPoint>): [IPoint, IPoint] | [IPoint] | [] => {
             if(pairOffset)
                 pair = {
                     a: {
@@ -1571,6 +1619,15 @@ export class Geometry {
                     Geometry.isSameSideOfPoint(segment.a, segment.b, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset) && 
                     Geometry.isSameSideOfPoint(segment.b, segment.a, o, segmentOffset ?? Geometry.Point.Zero, segmentOffset ?? Geometry.Point.Zero, circleOffset)
                 ),
+        CircleCircle: (circleA: DeepReadonly<ICircle>, circleB: DeepReadonly<ICircle>, circleAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, circleBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): [IPoint, IPoint] | [IPoint] | [] => 
+            Geometry.IntersectionExplicit.CircleCircle(
+                circleA.x + circleAOffset?.x ?? 0,
+                circleA.y + circleAOffset?.y ?? 0,
+                circleA.r,
+                circleB.x + circleBOffset?.x ?? 0,
+                circleB.y + circleBOffset?.y ?? 0,
+                circleB.r
+            ),
         LineLine: (lineA: DeepReadonly<ILine>, lineB: DeepReadonly<ILine>, lineAOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, lineBOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
             Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE, lineAOffset, lineBOffset),
         LineRay: (line: DeepReadonly<ILine>, ray: DeepReadonly<IRay>, lineOffset: DeepReadonly<IPoint>=Geometry.Point.Zero, rayOffset: DeepReadonly<IPoint>=Geometry.Point.Zero): IPoint | null =>
