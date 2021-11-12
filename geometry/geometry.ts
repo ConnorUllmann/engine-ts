@@ -217,6 +217,9 @@ export class Geometry {
     public static Angle(x: number, y: number): number {
         return Math.atan2(y, x);
     }
+    public static AngleTo(xTo: number, yTo: number, xFrom: number, yFrom: number): number {
+        return Math.atan2(yTo - yFrom, xTo - xFrom);
+    }
     public static AngleDifference(to: number, from: number): number {
         return moduloSafe(to - from - Math.PI, tau) - Math.PI;
     }

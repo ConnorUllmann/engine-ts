@@ -54,6 +54,9 @@ export const angle45: number = tau/8;
 export const angle30: number = tau/12;
 export const angle15: number = tau/24;
 export const angleGolden = 2.39996322972865332;
+export const sqrt2 = Math.sqrt(2);
+export const sqrt3 = Math.sqrt(3);
+export const sqrt5 = Math.sqrt(5);
 
 export function binomialCoefficient(n: number, k: number) {
     let result = 1;
