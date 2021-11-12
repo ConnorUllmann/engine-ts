@@ -31,11 +31,7 @@ export class Pool<T extends IPoolable> {
 
     // adds an object to the pool, or adds a newly-generated object if no argument is given
     add(poolable?: T): boolean {
-        if(this.isFull)
-            return false;
-        
-        this.poolables.add(poolable ?? this.generate());
-        return true;
+        return !this.isFull && !!this.poolables.add(poolable ?? this.generate());
     }
 
     // returns true if the pool is currently at capacity (returns false if there is no capacity limit)
