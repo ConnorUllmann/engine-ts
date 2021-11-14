@@ -27,6 +27,90 @@ export const OutlinePlacements = enumToList(OutlinePlacement);
 // TODO: remove world from this doc and instead create a world.draw property which has all these
 // same functions and simply calls the below functions after applying the world's camera position, zoom level, etc.
 export class Draw {
+    static readonly Explicit = {
+        // x/y refers to the top-left corner of the image in world space
+        // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
+        Image: (
+            world: ImagesCameraContext,
+            imageName: string,
+            x: number,
+            y: number,
+            xScale: number=1,
+            yScale: number=1,
+            angle: number=0,
+            xCenter?: number,
+            yCenter?: number,
+            alpha:number=1
+        ) => {
+            const context = world.context;
+            const image = world.images.get(imageName);
+            if(!image)
+                return;
+
+            const w = Math.abs(xScale * (image.width as number));
+            const h = Math.abs(yScale * (image.height as number));
+
+            const globalAlphaPrevious = context.globalAlpha;
+            context.globalAlpha = alpha;
+
+            const cx = (xCenter ?? (x + w/2)) - world.camera.x;
+            const cy = (yCenter ?? (y + h/2)) - world.camera.y;
+            const px = x + w/2 - world.camera.x;
+            const py = y + h/2 - world.camera.y;
+            context.translate(cx, cy);
+            if(angle !== 0)
+                context.rotate(angle);
+            context.scale(Math.sign(xScale), Math.sign(yScale));
+            context.translate(px - cx, py - cy);
+            context.drawImage(image, -w/2, -h/2, w, h);
+            context.resetTransform();
+
+            context.globalAlpha = globalAlphaPrevious;
+        },
+        // x/y refers to the top-left corner of the image in world space
+        // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
+        ImagePart: (
+            world: ImagesCameraContext,
+            imageName: string,
+            x: number,
+            y: number,
+            sx: number,
+            sy: number,
+            sw: number,
+            sh: number,
+            xScale: number=1,
+            yScale: number=1,
+            angle: number=0,
+            xCenter?: number,
+            yCenter?: number,
+            alpha:number=1
+        ) => {
+            const context = world.context;
+            const image = world.images.get(imageName);
+            if(!image)
+                return;
+            
+            const w = Math.abs(xScale * sw);
+            const h = Math.abs(yScale * sh);
+    
+            const globalAlphaPrevious = context.globalAlpha;
+            context.globalAlpha = alpha;
+    
+            const cx = (xCenter ?? (x + w/2)) - world.camera.x;
+            const cy = (yCenter ?? (y + h/2)) - world.camera.y;
+            const px = x + w/2 - world.camera.x;
+            const py = y + h/2 - world.camera.y;
+            context.translate(cx, cy);
+            if(angle !== 0)
+                context.rotate(angle);
+            context.scale(Math.sign(xScale), Math.sign(yScale));
+            context.translate(px - cx, py - cy);
+            context.drawImage(image, sx, sy, sw, sh, -w/2, -h/2, w, h);
+            context.resetTransform();
+    
+            context.globalAlpha = globalAlphaPrevious;
+        }
+    }
     // TODO: add generic shape-drawing function
     // public static Shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
 
@@ -34,60 +118,39 @@ export class Draw {
     // "position" refers to the top-left corner of the image in world space
     // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
     public static Image(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
-        const context = world.context;
-        const image = world.images.get(imageName);
-        if(!image) {
-            return;
-        }
-
-        const w = Math.abs(scale.x * (image.width as number));
-        const h = Math.abs(scale.y * (image.height as number));
-
-        const globalAlphaPrevious = context.globalAlpha;
-        context.globalAlpha = alpha;
-
-        const cx = (center?.x ?? (position.x + w/2)) - world.camera.x;
-        const cy = (center?.y ?? (position.y + h/2)) - world.camera.y;
-        const px = position.x + w/2 - world.camera.x;
-        const py = position.y + h/2 - world.camera.y;
-        context.translate(cx, cy);
-        if(angle !== 0)
-            context.rotate(angle);
-        context.scale(Math.sign(scale.x), Math.sign(scale.y));
-        context.translate(px - cx, py - cy);
-        context.drawImage(image, -w/2, -h/2, w, h);
-        context.resetTransform();
-
-        context.globalAlpha = globalAlphaPrevious;
+        Draw.Explicit.Image(
+            world,
+            imageName,
+            position.x,
+            position.y,
+            scale.x,
+            scale.y,
+            angle,
+            center?.x,
+            center?.y,
+            alpha,
+        );
     }
     
     // "position" refers to the top-left corner of the image in world space
     // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
     public static ImagePart(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, sx: number, sy: number, sw: number, sh: number, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
-        const context = world.context;
-        const image = world.images.get(imageName);
-        if(!image) {
-            return;
-        }
-        const w = Math.abs(scale.x * sw);
-        const h = Math.abs(scale.y * sh);
-
-        const globalAlphaPrevious = context.globalAlpha;
-        context.globalAlpha = alpha;
-
-        const cx = (center?.x ?? (position.x + w/2)) - world.camera.x;
-        const cy = (center?.y ?? (position.y + h/2)) - world.camera.y;
-        const px = position.x + w/2 - world.camera.x;
-        const py = position.y + h/2 - world.camera.y;
-        context.translate(cx, cy);
-        if(angle !== 0)
-            context.rotate(angle);
-        context.scale(Math.sign(scale.x), Math.sign(scale.y));
-        context.translate(px - cx, py - cy);
-        context.drawImage(image, sx, sy, sw, sh, -w/2, -h/2, w, h);
-        context.resetTransform();
-
-        context.globalAlpha = globalAlphaPrevious;
+        Draw.Explicit.ImagePart(
+            world,
+            imageName,
+            position.x,
+            position.y,
+            sx,
+            sy,
+            sw,
+            sh,
+            scale.x,
+            scale.y,
+            angle,
+            center?.x,
+            center?.y,
+            alpha,
+        );
     }
 
     public static CircleArc(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
