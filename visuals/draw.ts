@@ -149,19 +149,22 @@ export class Draw {
         Draw.CircleOutline(world, { x: position.x, y: position.y, r: radius }, strokeStyle, lineWidth);
     };
 
-    public static OvalArc(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0) {
+    public static OvalArc(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, startAngle: number, endAngle: number, fillStyle: FillStyle=null, angle: number=0, center: DeepReadonly<IPoint>=position) {
         if(xRadius <= 0 || yRadius <= 0)
             return;
         const context = world.context;
+        context.translate(center.x - world.camera.x, center.y - world.camera.y);
+        context.rotate(angle);
         context.beginPath();
-        context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, startAngle, endAngle);
+        context.ellipse(position.x - center.x, position.y - center.y, xRadius, yRadius, 0, startAngle, endAngle);
         if(fillStyle)
             context.fillStyle = this.StyleToString(fillStyle);
         context.fill();
+        context.resetTransform();
     };
 
-    public static Oval(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0) {
-        this.OvalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle);
+    public static Oval(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, fillStyle: FillStyle=null, angle: number=0, center: DeepReadonly<IPoint>=position) {
+        this.OvalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle, center);
     };
 
     public static OvalOutline(world: CameraContext, position: DeepReadonly<IPoint>, xRadius: number, yRadius: number, strokeStyle: StrokeStyle=null, angle: number=0, lineWidth: number=1, outlinePlacement: OutlinePlacement=OutlinePlacement.Default) {
