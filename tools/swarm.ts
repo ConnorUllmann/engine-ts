@@ -13,7 +13,11 @@ export class Swarm {
     public addPredator(predator: Entity) { this.predators.push(predator); }
     public removePredator(predator: Entity) { this.predators.remove(predator); }
     public addSwarmer(swarmer: Entity) { this.swarmInstincts.push(new SwarmInstinct(swarmer)); }
-    public removeSwarmer(swarmer: Entity) { this.swarmInstincts.remove(this.swarmInstincts.first(o => o.swarmer === swarmer)); }
+    public removeSwarmer(swarmer: Entity) { 
+        const swarmerFound = this.swarmInstincts.first(o => o.swarmer === swarmer)
+        if(swarmerFound)
+            this.swarmInstincts.remove(swarmerFound);
+    }
 
     public update() {
         for(const swarmInstinct of this.swarmInstincts)
