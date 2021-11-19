@@ -1,9 +1,9 @@
 import { Entity } from './entity';
 import { World } from './world';
-import { IRectangle, IPoint } from '@engine-ts/geometry/interfaces';
-import { Point } from '@engine-ts/geometry/point';
+import { IRectangle, IPoint } from '../geometry/interfaces';
+import { Point } from '../geometry/point';
 import { Collider } from './collider';
-import { BoundableShape } from '@engine-ts/geometry/geometry';
+import { BoundableShape } from '../geometry/geometry';
 
 export class Actor extends Entity {
     public readonly collider: Collider<any>;

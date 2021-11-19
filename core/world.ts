@@ -8,8 +8,8 @@ import { Sounds } from './sounds';
 import { Images } from './images';
 import { IComponent } from './component';
 import { DeepReadonly } from './utils';
-import { IPoint } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { IPoint } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
 
 export enum InputType {
     Gamepad,

@@ -1,9 +1,9 @@
-import { Actor } from "@engine-ts/core/actor";
-import { Entity } from "@engine-ts/core/entity";
-import { clamp, DeepReadonly } from "@engine-ts/core/utils";
-import { World } from "@engine-ts/core/world";
-import { Geometry } from "@engine-ts/geometry/geometry";
-import { IRectangle } from "@engine-ts/geometry/interfaces";
+import { Actor } from "../core/actor";
+import { Entity } from "../core/entity";
+import { clamp, DeepReadonly } from "../core/utils";
+import { World } from "../core/world";
+import { Geometry } from "../geometry/geometry";
+import { IRectangle } from "../geometry/interfaces";
 import { IPoolable, Pool } from "./pool";
 
 export class QuadTree {

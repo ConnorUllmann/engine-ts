@@ -1,7 +1,7 @@
 import { Rectangle } from '../geometry/rectangle';
 import { Point } from '../geometry/point';
-import { IPoint, IRectangle } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { IPoint, IRectangle } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
 
 export class Camera extends Rectangle {
     public get w(): number { return this.canvas.width; }

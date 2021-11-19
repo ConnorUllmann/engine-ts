@@ -1,5 +1,5 @@
-import { Geometry, BoundableShape } from "@engine-ts/geometry/geometry";
-import { IRectangle } from "@engine-ts/geometry/interfaces";
+import { Geometry, BoundableShape } from "../geometry/geometry";
+import { IRectangle } from "../geometry/interfaces";
 import { Component } from "./component";
 import { DeepReadonly } from "./utils";
 

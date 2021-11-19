@@ -1,10 +1,10 @@
-import { clamp, rng } from '@engine-ts/core/utils';
+import { clamp, rng } from '../core/utils';
 import { PixelGrid } from './pixel-grid';
-import { Color } from '@engine-ts/visuals/color';
-import { IPoint } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
-import { RNG } from '@engine-ts/core/rng';
-import { CameraContext } from '@engine-ts/visuals/camera-context';
+import { Color } from '../visuals/color';
+import { IPoint } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
+import { RNG } from '../core/rng';
+import { CameraContext } from '../visuals/camera-context';
 
 export class Perlin {
     private noiseCanvas: OffscreenCanvas;

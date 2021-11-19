@@ -1,7 +1,7 @@
 import { World } from './world';
-import { Point } from '@engine-ts/geometry/point';
-import { IPoint } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { Point } from '../geometry/point';
+import { IPoint } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
 import { IComponent } from './component';
 
 export class Entity {

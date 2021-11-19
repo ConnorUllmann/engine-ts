@@ -1,4 +1,4 @@
-import { clamp } from '@engine-ts/core/utils';
+import { clamp } from '../core/utils';
 
 export class Healthbar {
     public get isDead(): boolean { return this.health <= 0; }

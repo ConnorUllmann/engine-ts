@@ -1,10 +1,10 @@
-import { RNG } from '@engine-ts/core/rng';
-import { clamp, DeepReadonly, rng } from '@engine-ts/core/utils';
-import { World } from '@engine-ts/core/world';
-import { Geometry } from '@engine-ts/geometry/geometry';
-import { IPoint } from '@engine-ts/geometry/interfaces';
-import { LoopTimer, Timer } from '@engine-ts/tools/timer';
-import { WeightRange } from '@engine-ts/tools/weight-range';
+import { RNG } from '../core/rng';
+import { clamp, DeepReadonly, rng } from '../core/utils';
+import { World } from '../core/world';
+import { Geometry } from '../geometry/geometry';
+import { IPoint } from '../geometry/interfaces';
+import { LoopTimer, Timer } from '../tools/timer';
+import { WeightRange } from '../tools/weight-range';
 import { ImagesCameraContext } from './camera-context';
 import { Draw } from './draw';
 

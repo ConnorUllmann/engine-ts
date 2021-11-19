@@ -1,4 +1,4 @@
-import { tau, moduloSafe } from '@engine-ts/core/utils';
+import { tau, moduloSafe } from '../core/utils';
 import { Geometry } from './geometry';
 import { Point } from './point';
 import { IPoint, ITriangle, ICircle } from './interfaces';

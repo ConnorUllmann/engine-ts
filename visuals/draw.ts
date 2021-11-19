@@ -1,13 +1,13 @@
 import { Color } from './color';
-import { tau, DeepReadonly, enumToList } from '@engine-ts/core/utils';
+import { tau, DeepReadonly, enumToList } from '../core/utils';
 import { ColorStopArray } from './color-stop-array';
 import { BlendMode } from './blend-mode';
-import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon, PointPairType } from '@engine-ts/geometry/interfaces';
+import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon, PointPairType } from '../geometry/interfaces';
 // TODO: use IPoint everywhere instead
-import { Point } from '@engine-ts/geometry/point';
-import { Geometry, Shape } from '@engine-ts/geometry/geometry';
+import { Point } from '../geometry/point';
+import { Geometry, Shape } from '../geometry/geometry';
 import { CameraContext, ImagesCameraContext } from './camera-context';
-import { Rectangle } from '@engine-ts/geometry/rectangle';
+import { Rectangle } from '../geometry/rectangle';
 import { Halign, Valign } from './align';
 
 export type FillStyle = DeepReadonly<Color> | string | null;

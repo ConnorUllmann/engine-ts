@@ -1,5 +1,5 @@
-import { Images } from "@engine-ts/core/images";
-import { IRectangle } from "@engine-ts/geometry/interfaces";
+import { Images } from "../core/images";
+import { IRectangle } from "../geometry/interfaces";
 
 export interface CameraContext {
     camera: IRectangle,

@@ -1,9 +1,9 @@
-import { IRectangle, IPoint } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
-import { Point } from '@engine-ts/geometry/point';
-import { rng, tau } from '@engine-ts/core/utils';
-import { Entity } from '@engine-ts/core/entity';
-import { RNG } from '@engine-ts/core/rng';
+import { IRectangle, IPoint } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
+import { Point } from '../geometry/point';
+import { rng, tau } from '../core/utils';
+import { Entity } from '../core/entity';
+import { RNG } from '../core/rng';
 
 export class Swarm {
     // TODO: make this a dictionary keyed by entityId instead of just a list

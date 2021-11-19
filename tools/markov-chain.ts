@@ -1,5 +1,5 @@
-import { RNG } from '@engine-ts/core/rng';
-import { rng } from '@engine-ts/core/utils';
+import { RNG } from '../core/rng';
+import { rng } from '../core/utils';
 
 export class MarkovChain {
     private current: MarkovLink | null;

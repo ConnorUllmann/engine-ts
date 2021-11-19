@@ -1,5 +1,5 @@
 import { Segment } from './segment';
-import { tau } from '@engine-ts/core/utils';
+import { tau } from '../core/utils';
 import { Geometry } from './geometry';
 import { IPolygon, IPoint, IRectangle, ICircle, ILine, PointPairType, IRay, ISegment, IPointPair, ITriangle } from './interfaces';
 import { Point } from './point';

@@ -1,4 +1,4 @@
-import { angle90 } from '@engine-ts/core/utils';
+import { angle90 } from '../core/utils';
 
 type Easer = (t: number) => number;
 

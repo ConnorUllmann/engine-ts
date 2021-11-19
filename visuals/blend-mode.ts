@@ -1,4 +1,4 @@
-import { enumToList } from "@engine-ts/core/utils";
+import { enumToList } from "../core/utils";
 
   export enum BlendMode {
     Default = 'source-over',

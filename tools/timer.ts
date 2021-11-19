@@ -1,4 +1,4 @@
-import { clamp, moduloSafe } from '@engine-ts/core/utils';
+import { clamp, moduloSafe } from '../core/utils';
 
 export class Timer {
     public value: number = 0;

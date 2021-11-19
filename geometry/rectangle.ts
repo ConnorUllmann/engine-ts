@@ -1,9 +1,9 @@
 import { Segment } from './segment';
-import { rng } from '@engine-ts/core/utils';
+import { rng } from '../core/utils';
 import { Geometry } from './geometry';
 import { Point } from './point';
 import { IRectangle, IPolygon, ITriangle, ICircle, IPoint, ILine, PointPairType, IRay, ISegment, IPointPair } from './interfaces';
-import { RNG } from '@engine-ts/core/rng';
+import { RNG } from '../core/rng';
 
 // TODO: decide if this should extend Point or just implement IPoint via IRectangle
 export class Rectangle extends Point implements IRectangle, IPolygon {

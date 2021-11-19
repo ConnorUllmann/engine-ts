@@ -1,5 +1,5 @@
 import { Point } from '../geometry/point';
-import { IPoint } from '@engine-ts/geometry/interfaces';
+import { IPoint } from '../geometry/interfaces';
 import { Camera } from './camera';
 import { DeepReadonly, enumToList } from './utils';
 

@@ -1,8 +1,8 @@
 import { IPoint } from './interfaces';
 import { Point } from './point';
 import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup as CompassDirectionsByGroup } from './compass';
-import { Stack } from '@engine-ts/tools/stack';
-import { IdSet } from '@engine-ts/tools/id-set';
+import { Stack } from '../tools/stack';
+import { IdSet } from '../tools/id-set';
 
 export interface IGrid<T> {
     w: number;

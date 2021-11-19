@@ -1,7 +1,7 @@
-import { Point } from '@engine-ts/geometry/point';
-import { IPoint } from '@engine-ts/geometry/interfaces';
+import { Point } from '../geometry/point';
+import { IPoint } from '../geometry/interfaces';
 import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons } from './buttons';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { Geometry } from '../geometry/geometry';
 
 export class Gamepads {
     private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};

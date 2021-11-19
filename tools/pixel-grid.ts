@@ -1,11 +1,11 @@
-import { Color } from '@engine-ts/visuals/color';
-import { IPoint, IRectangle } from '@engine-ts/geometry/interfaces';
-import { Geometry } from '@engine-ts/geometry/geometry';
-import { IGrid, Grid } from '@engine-ts/geometry/grid';
-import { Point } from '@engine-ts/geometry/point';
-import { CompassDirection, CompassDirectionGroup } from '@engine-ts/geometry/compass';
-import { DeepReadonly } from '@engine-ts/core/utils';
-import { CameraContext } from '@engine-ts/visuals/camera-context';
+import { Color } from '../visuals/color';
+import { IPoint, IRectangle } from '../geometry/interfaces';
+import { Geometry } from '../geometry/geometry';
+import { IGrid, Grid } from '../geometry/grid';
+import { Point } from '../geometry/point';
+import { CompassDirection, CompassDirectionGroup } from '../geometry/compass';
+import { DeepReadonly } from '../core/utils';
+import { CameraContext } from '../visuals/camera-context';
 
 export class PixelGrid implements IGrid<Color> {
     public context: OffscreenCanvasRenderingContext2D;

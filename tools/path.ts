@@ -1,9 +1,9 @@
-import { IGrid, Grid } from "@engine-ts/geometry/grid";
-import { IPoint } from '@engine-ts/geometry/interfaces';
-import { CompassDirectionGroup } from '@engine-ts/geometry/compass';
-import { Geometry } from '@engine-ts/geometry/geometry';
+import { IGrid, Grid } from "../geometry/grid";
+import { IPoint } from '../geometry/interfaces';
+import { CompassDirectionGroup } from '../geometry/compass';
+import { Geometry } from '../geometry/geometry';
 import { Heap } from './heap';
-import { clamp, DeepReadonly } from '@engine-ts/core/utils';
+import { clamp, DeepReadonly } from '../core/utils';
 
 export class PathMap<T> {
     private readonly gridPath: IGrid<PathTile<T>>;

@@ -71,6 +71,12 @@ export class NullablePoint {
         this._hasValue = true;
     }
 
+    public set(x: number, y: number) {
+        this._hasValue = true;
+        this._value.x = x;
+        this._value.y = y;
+    }
+
     constructor(_value: IPoint | null=null) {
         this.value = _value;
     }

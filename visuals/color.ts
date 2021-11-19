@@ -1,4 +1,4 @@
-import { RNG } from '@engine-ts/core/rng';
+import { RNG } from '../core/rng';
 import { clamp, DeepReadonly, rng } from '../core/utils';
 
 export class Color {
