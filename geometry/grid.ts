@@ -1,77 +1,39 @@
 import { IPoint } from './interfaces';
-import { Point } from './point';
 import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup as CompassDirectionsByGroup } from './compass';
 import { Stack } from '../tools/stack';
 import { IdSet } from '../tools/id-set';
+import { repeat } from '../core/utils';
 
 export interface IGrid<T> {
     w: number;
     h: number;
     set: (position: IPoint, tile: T) => void;
     get: (position: IPoint) => T | null;
-    getNeighbors: (position: IPoint, relativePoints: IPoint[]) => { position: IPoint, tile: T | null }[]
-    getCompassDirectionNeighbors: (position: IPoint, compassDirections: CompassDirection[]) => { position: IPoint, tile: T | null }[]
-    getCompassDirectionGroupNeighbors: (position: IPoint, directionalNeighbors: CompassDirectionGroup) => { position: IPoint, tile: T | null }[]
-    isInside: (position: IPoint) => boolean;
-    forEach: (tileCall: (tile: T, position?: IPoint) => void) => void;
-    setEach: (tileGetter: (position: IPoint) => T) => void;
 }
 
 export class GridView<T> implements IGrid<T> {
     public readonly w: number;
     public readonly h: number;
-    constructor(private readonly tiles: T[][]) {
+    constructor(public readonly tiles: T[][]) {
         this.h = this.tiles.length;
         this.w = this.tiles.first()?.length ?? 0;
     }
 
-    public isInside({ x, y }: IPoint): boolean {
-        return y >= 0 && y < this.h && x >= 0 && x < this.w;
-    }
-
     public set(position: IPoint, tile: T): void {
-        if(this.isInside(position))
+        if(Grid.IsInside(this, position))
             this.tiles[position.y][position.x] = tile;
     }
 
     public get(position: IPoint): T | null {
-        return this.isInside(position) ? this.tiles[position.y][position.x] : null;
+        return Grid.IsInside(this, position) ? this.tiles[position.y][position.x] : null;
     }
-
-    public getNeighbors(position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: T | null }[] {
-        return Grid.GetNeighbors(this, position, relativePoints);
-    }
-
-    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: T | null }[] {
-        return Grid.GetCompassDirectionNeighbors(this, position, compassDirections);
-    }
-
-    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): { position: IPoint, tile: T | null }[] {
-        return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
-    }
-
-    public setEach(tileGetter: (position: IPoint) => T): void {
-        const position = new Point();
-        for(let y = 0; y < this.h; y++)
-        for(let x = 0; x < this.w; x++) {
-            position.setToXY(x, y);
-            this.set(position, tileGetter(position));
-        }
-    };
-
-    public forEach(tileCall: (tile: T, position: IPoint) => void): void {
-        const position = new Point();
-        for(let y = 0; y < this.h; y++)
-        for(let x = 0; x < this.w; x++) {
-            position.setToXY(x, y);
-            const tile = this.get(position);
-            if(tile !== null)
-                tileCall(tile, position);
-        }
-    };
 }
 
-export class Grid<T> implements IGrid<T> {
+export class Grid<T> extends GridView<T> implements IGrid<T> {
+    public static IsInside<T>(grid: IGrid<T>, { x, y }: IPoint): boolean {
+        return y >= 0 && y < grid.h && x >= 0 && x < grid.w;
+    }
+    
     public static GetNeighbors<T>(grid: IGrid<T>, position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: T | null }[] {
         return relativePoints.map(o => {
             const positionTemp = { x: position.x + o.x, y: position.y + o.y };
@@ -90,9 +52,13 @@ export class Grid<T> implements IGrid<T> {
     };
 
     // https://lodev.org/cgtutor/floodfill.html
-    // TODO: use a single temp point instead of creating so many extra points
     public static GetRegion<T>(grid: IGrid<T>, position: IPoint, getValue: (t: T) => any): IdSet<{ x: number, y: number, tile: T }> {
-        return this.GetRegionByPosition(grid, position, (x, y) => getValue(grid.get({ x, y })!));
+        const temp = { x: 0, y: 0 }
+        return this.GetRegionByPosition(grid, position, (x, y) => {
+            temp.x = x;
+            temp.y = y;
+            return getValue(grid.get(temp)!)
+        });
     };
     
     public static GetRegionByPosition<T>(grid: IGrid<T>, position: IPoint, getValue: (x: number, y: number) => any): IdSet<{ x: number, y: number, tile: T }> {
@@ -161,87 +127,52 @@ export class Grid<T> implements IGrid<T> {
         return region;
     };
 
-    public readonly tiles: T[][];
-    public readonly h: number;
-    public readonly w: number;
-
-    constructor(w: number, h: number, private tileGetter: (position: IPoint) => T) {
-        this.h = Math.ceil(h);
-        this.w = Math.ceil(w);
-
-        const position = new Point();
-        this.tiles = [];
-        for(let y = 0; y < this.h; y++) {
-            const row: T[] = [];
-            for(let x = 0; x < this.w; x++) {
-                row.push(this.tileGetter(position.setToXY(x, y)));
-            }
-            this.tiles.push(row);
-        }
-    }
-
-    public reset(): void {
-        const position = new Point();
-        for(let y = 0; y < this.h; y++) {
-            for(let x = 0; x < this.w; x++) {
-                this.tiles[y][x] = this.tileGetter(position.setToXY(x, y));
-            }
-        }
-    }
-
-    public isInside({ x, y }: IPoint): boolean {
-        return y >= 0 && y < this.h && x >= 0 && x < this.w;
-    }
-
-    public set(position: IPoint, tile: T): void {
-        if(this.isInside(position))
-            this.tiles[position.y][position.x] = tile;
-    }
-
-    public get(position: IPoint): T | null {
-        return this.isInside(position) ? this.tiles[position.y][position.x] : null;
-    }
-
-    public getNeighbors(position: IPoint, relativePoints: IPoint[]): { position: IPoint, tile: T | null }[] {
-        return Grid.GetNeighbors(this, position, relativePoints);
-    }
-
-    public getCompassDirectionNeighbors(position: IPoint, compassDirections: CompassDirection[]): { position: IPoint, tile: T | null }[] {
-        return Grid.GetCompassDirectionNeighbors(this, position, compassDirections);
-    }
-
-    public getCompassDirectionGroupNeighbors(position: IPoint, directionalNeighbors: CompassDirectionGroup=CompassDirectionGroup.CARDINAL): { position: IPoint, tile: T | null }[] {
-        return Grid.GetCompassDirectionGroupNeighbors(this, position, directionalNeighbors);
-    }
-
-    public setEach(tileGetter: (position: IPoint) => T): void {
-        const position = new Point();
-        for(let y = 0; y < this.h; y++)
-        for(let x = 0; x < this.w; x++) {
-            position.setToXY(x, y);
-            this.set(position, tileGetter(position));
+    public static SetEach<T>(grid: IGrid<T>, tileGetter: (position: IPoint) => T): void {
+        const position = { x: 0, y: 0 }
+        for(position.y = 0; position.y < grid.h; position.y++)
+        for(position.x = 0; position.x < grid.w; position.x++) {
+            grid.set(position, tileGetter(position));
         }
     };
 
-    public forEach(tileCall: (tile: T, position: IPoint) => void): void {
-        const position = new Point();
-        for(let y = 0; y < this.h; y++)
-        for(let x = 0; x < this.w; x++) {
-            position.setToXY(x, y);
-            const tile = this.get(position);
+    public static ForEach<T>(grid: IGrid<T>, tileCall: (tile: T, position: IPoint) => void): void {
+        const position = { x: 0, y: 0 }
+        for(position.y = 0; position.y < grid.h; position.y++)
+        for(position.x = 0; position.x < grid.w; position.x++) {
+            const tile = grid.get(position);
             if(tile !== null)
                 tileCall(tile, position);
         }
     };
 
-    public map<U>(valueGetter: (tile: T, position: IPoint) => U): U[] {
+    public static Map<T, U>(grid: IGrid<T>, valueGetter: (tile: T, position: IPoint) => U): U[] {
         const results: U[] = [];
-        const position = new Point();
-        for(let y = 0; y < this.h; y++)
-        for(let x = 0; x < this.w; x++) {
-            position.setToXY(x, y);
-            results.push(valueGetter(this.tiles[position.y][position.x], position));
+        const position = { x: 0, y: 0 }
+        for(position.y = 0; position.y < grid.h; position.y++)
+        for(position.x = 0; position.x < grid.w; position.x++) {
+            const tile = grid.get(position);
+            if(tile)
+                results.push(valueGetter(tile, position));
         }
         return results;
     };
+
+    constructor(w: number, h: number, tileGetter: (position: IPoint) => T) {
+        super(
+            (() => {
+                const temp = { x: 0, y: 0 }
+                return repeat(
+                    Math.ceil(h),
+                    y => repeat(
+                        Math.ceil(w),
+                        x => {
+                            temp.x = x;
+                            temp.y = y;
+                            return tileGetter(temp);
+                        }
+                    )
+                )
+            })()
+        );
+    }
 }

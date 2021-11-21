@@ -5,6 +5,7 @@ import { IPoint } from '../geometry/interfaces';
 import { Geometry } from '../geometry/geometry';
 import { RNG } from '../core/rng';
 import { CameraContext } from '../visuals/camera-context';
+import { Grid } from '../geometry/grid';
 
 export class Perlin {
     private noiseCanvas: OffscreenCanvas;
@@ -59,7 +60,7 @@ export class Perlin {
     };
 
     normalizePerlinNoise(): this {
-        const perlinValues = this.perlinPixelGrid.map((position: IPoint, color: Color) => color.red);
+        const perlinValues = Grid.Map(this.perlinPixelGrid, color => color.red);
         const perlinValuesMin = perlinValues.min() ?? 0;
         const perlinValuesMax = perlinValues.max() ?? 0;
 

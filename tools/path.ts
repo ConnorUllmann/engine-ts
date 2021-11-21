@@ -12,7 +12,7 @@ export class PathMap<T> {
     constructor(private readonly grid: IGrid<T>, private readonly getSolid: (tile: T, position: Readonly<IPoint>) => boolean, canMoveDiagonally=false) {
         this.gridPath = new Grid<PathTile<T>>(this.grid.w, this.grid.h, (position: IPoint) => new PathTile(this.grid, position));
         const compassDirectionGroup = canMoveDiagonally ? CompassDirectionGroup.ALL : CompassDirectionGroup.CARDINAL;
-        this.neighborsCallback = (position: IPoint) => this.gridPath.getCompassDirectionGroupNeighbors(position, compassDirectionGroup).map(o => o.tile);
+        this.neighborsCallback = (position: IPoint) => Grid.GetCompassDirectionGroupNeighbors(this.gridPath, position, compassDirectionGroup).map(o => o.tile);
     }
 
     public reset() {
@@ -23,11 +23,11 @@ export class PathMap<T> {
     // call when references to the tiles that make up the grid we are pathfinding on are updated
     // (basically, any time .set() is called on the grid that was passed into this object)
     public refreshTileReferences() {
-        this.gridPath.forEach(o => o.refreshTileReference());
+        Grid.ForEach(this.gridPath, o => o.refreshTileReference());
     }
 
     private resetHeuristics() {
-        this.gridPath.forEach(o => o.resetHeuristics());
+        Grid.ForEach(this.gridPath, o => o.resetHeuristics());
     };
 
     private distance(tile0: PathTile<T>, tile1: PathTile<T>): number {
