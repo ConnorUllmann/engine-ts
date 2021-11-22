@@ -67,33 +67,6 @@ export function binomialCoefficient(n: number, k: number) {
     return result;
 }
 
-// gives the x,y indices of a spiral along a tiled grid where n is the number of steps along the spiral
-// n = 0 is (0, 0), n = 1 is (0, -1), then proceeds clockwise
-export function spiral(n: number): { x: number, y: number } | null {
-    if(n < 0)
-        return null;
-    
-    n++
-    
-    const k = Math.ceil((Math.sqrt(n) - 1) / 2);
-    let t = 2 * k + 1;
-    let m = t * t;
-    t--;
-
-    if (n >= m - t)
-        return { y: -m + n + k, x: -k };
-    m -= t;
-    
-    if (n >= m - t)
-        return { y: -k, x: m - n - k };
-    m -= t;
-    
-    if (n >= m - t)
-        return { y: m - k - n, x: k };
-    return { y: k, x: -m + n + k + t };
-}
-
-
 // calculates "value % modulo" but wraps negative numbers so the result is always in the range [0, modulo)
 //
 // -270 % 360 = -270

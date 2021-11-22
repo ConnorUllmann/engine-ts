@@ -1,5 +1,5 @@
 import { IPoint } from './interfaces';
-import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup as CompassDirectionsByGroup } from './compass';
+import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup } from './compass';
 import { Stack } from '../tools/stack';
 import { IdSet } from '../tools/id-set';
 import { repeat } from '../core/utils';
