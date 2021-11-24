@@ -45,6 +45,7 @@ export function escapeRegex(text: string): string {
 export const tau: number = Math.PI * 2;
 export const angle360: number = tau;
 export const angle300: number = tau*5/6;
+export const angle270: number = tau*3/4;
 export const angle240: number = tau*2/3;
 export const angle180: number = tau/2;
 export const angle120: number = tau/3;
