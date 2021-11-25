@@ -75,7 +75,9 @@ export class Grid<T> extends GridView<T> implements IGrid<T> {
     
     public static GetRegionGeneric(w: number, h: number, position: IPoint, getValue: (x: number, y: number) => any): IdSet<IPoint> {
         let oldValue = getValue(position.x, position.y);
-        let region = new IdSet((o: IPoint) => o.y * h + o.x);
+        let region = new IdSet((o: IPoint) => o.y * w + o.x);
+        if(position.x < 0 || position.x >= w || position.y < 0 || position.y >= h)
+            return region;
 
         let y1 = 0;
         let spanAbove = false;
