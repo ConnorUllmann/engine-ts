@@ -1,3 +1,4 @@
+import { Images } from '../core/images';
 import { RNG } from '../core/rng';
 import { clamp, DeepReadonly, rng } from '../core/utils';
 import { World } from '../core/world';
@@ -5,8 +6,7 @@ import { Geometry } from '../geometry/geometry';
 import { IPoint } from '../geometry/interfaces';
 import { LoopTimer, Timer } from '../tools/timer';
 import { WeightRange } from '../tools/weight-range';
-import { ImagesCameraContext } from './camera-context';
-import { Draw } from './draw';
+import { CameraContext } from './camera-context';
 
 export interface ISpriteFrame {
     indices: IPoint,
@@ -86,6 +86,7 @@ export class Sprite {
 
     constructor(
         public readonly world: World,
+        public readonly images: Images,
         public readonly imageName: string,
         public readonly wFrame: number,
         public readonly hFrame: number,
@@ -133,7 +134,7 @@ export class Sprite {
         angle: number=0,
         center?:IPoint,
         alpha:number=1,
-        cameraContext: ImagesCameraContext=this.world,
+        cameraContext: CameraContext=this.world,
     ) {
         if(this._currentAnimationName in this.animationByName) {
             const animation = this.animationByName[this._currentAnimationName];
@@ -150,22 +151,25 @@ export class Sprite {
         xIndex: number,
         yIndex: number,
         scale: IPoint=Geometry.Point.One,
-        angle: number=0,
+        angle?: number,
         center?:IPoint,
-        alpha:number=1,
-        cameraContext: ImagesCameraContext=this.world,
+        alpha?:number,
+        cameraContext: CameraContext=this.world,
     ) {
-        Draw.ImagePart(
+        this.images.drawPart(
             cameraContext,
             this.imageName,
-            position,
+            position.x,
+            position.y,
             xIndex * this.wFrame,
             yIndex * this.hFrame,
             this.wFrame,
             this.hFrame,
-            scale,
+            scale.x,
+            scale.y,
             angle,
-            center,
+            center?.x,
+            center?.y,
             alpha
         );
     }

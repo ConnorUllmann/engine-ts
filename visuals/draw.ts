@@ -6,7 +6,7 @@ import { ICircle, IPoint, ITriangle, IRectangle, ILine, IRay, ISegment, IPolygon
 // TODO: use IPoint everywhere instead
 import { Point } from '../geometry/point';
 import { Geometry, Shape } from '../geometry/geometry';
-import { CameraContext, ImagesCameraContext } from './camera-context';
+import { CameraContext } from './camera-context';
 import { Rectangle } from '../geometry/rectangle';
 import { Halign, Valign } from './align';
 
@@ -31,8 +31,8 @@ export class Draw {
         // x/y refers to the top-left corner of the image in world space
         // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
         Image: (
-            world: ImagesCameraContext,
-            imageName: string,
+            cameraContext: CameraContext,
+            image: HTMLImageElement | null,
             x: number,
             y: number,
             xScale: number=1,
@@ -42,8 +42,7 @@ export class Draw {
             yCenter?: number,
             alpha:number=1
         ) => {
-            const context = world.context;
-            const image = world.images.get(imageName);
+            const context = cameraContext.context;
             if(!image)
                 return;
 
@@ -53,10 +52,10 @@ export class Draw {
             const globalAlphaPrevious = context.globalAlpha;
             context.globalAlpha = alpha;
 
-            const cx = (xCenter ?? (x + w/2)) - world.camera.x;
-            const cy = (yCenter ?? (y + h/2)) - world.camera.y;
-            const px = x + w/2 - world.camera.x;
-            const py = y + h/2 - world.camera.y;
+            const cx = (xCenter ?? (x + w/2)) - cameraContext.camera.x;
+            const cy = (yCenter ?? (y + h/2)) - cameraContext.camera.y;
+            const px = x + w/2 - cameraContext.camera.x;
+            const py = y + h/2 - cameraContext.camera.y;
             context.translate(cx, cy);
             if(angle !== 0)
                 context.rotate(angle);
@@ -70,8 +69,8 @@ export class Draw {
         // x/y refers to the top-left corner of the image in world space
         // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
         ImagePart: (
-            world: ImagesCameraContext,
-            imageName: string,
+            cameraContext: CameraContext,
+            image: HTMLImageElement | null,
             x: number,
             y: number,
             sx: number,
@@ -85,8 +84,7 @@ export class Draw {
             yCenter?: number,
             alpha:number=1
         ) => {
-            const context = world.context;
-            const image = world.images.get(imageName);
+            const context = cameraContext.context;
             if(!image)
                 return;
             
@@ -96,10 +94,10 @@ export class Draw {
             const globalAlphaPrevious = context.globalAlpha;
             context.globalAlpha = alpha;
     
-            const cx = (xCenter ?? (x + w/2)) - world.camera.x;
-            const cy = (yCenter ?? (y + h/2)) - world.camera.y;
-            const px = x + w/2 - world.camera.x;
-            const py = y + h/2 - world.camera.y;
+            const cx = (xCenter ?? (x + w/2)) - cameraContext.camera.x;
+            const cy = (yCenter ?? (y + h/2)) - cameraContext.camera.y;
+            const px = x + w/2 - cameraContext.camera.x;
+            const py = y + h/2 - cameraContext.camera.y;
             context.translate(cx, cy);
             if(angle !== 0)
                 context.rotate(angle);
@@ -113,45 +111,6 @@ export class Draw {
     }
     // TODO: add generic shape-drawing function
     // public static Shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
-
-
-    // "position" refers to the top-left corner of the image in world space
-    // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
-    public static Image(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
-        Draw.Explicit.Image(
-            world,
-            imageName,
-            position.x,
-            position.y,
-            scale.x,
-            scale.y,
-            angle,
-            center?.x,
-            center?.y,
-            alpha,
-        );
-    }
-    
-    // "position" refers to the top-left corner of the image in world space
-    // "center" refers to the point in world space around which to rotate the image were it to be drawn at "position"
-    public static ImagePart(world: ImagesCameraContext, imageName: string, position: DeepReadonly<IPoint>, sx: number, sy: number, sw: number, sh: number, scale: DeepReadonly<IPoint>=Geometry.Point.One, angle: number=0, center?:DeepReadonly<IPoint>, alpha:number=1) {
-        Draw.Explicit.ImagePart(
-            world,
-            imageName,
-            position.x,
-            position.y,
-            sx,
-            sy,
-            sw,
-            sh,
-            scale.x,
-            scale.y,
-            angle,
-            center?.x,
-            center?.y,
-            alpha,
-        );
-    }
 
     public static CircleArc(world: CameraContext, circle: DeepReadonly<ICircle>, startAngle: number, endAngle: number, fillStyle: FillStyle=null) {
         if(circle.r <= 0)

@@ -20,7 +20,6 @@ export class World {
     public readonly canvas: HTMLCanvasElement;
     public readonly context: CanvasRenderingContext2D;
 
-    public readonly images: Images;
     public readonly sounds: Sounds;
     public readonly camera: Camera;
     private readonly _mouse: Mouse;
@@ -87,7 +86,6 @@ export class World {
 
         this.setCanvasResolution(canvasResolutionWidth, canvasResolutionHeight);
         
-        this.images = new Images();
         this.sounds = new Sounds();
         this.camera = new Camera(this.canvas);
         this._mouse = new Mouse(this.canvas, this.camera);
