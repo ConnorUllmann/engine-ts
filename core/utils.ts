@@ -88,7 +88,7 @@ export function getGuid(): string {
 }
 
 export const rng = new RNG();
-console.log(`Random seed: ${rng.seed}`);
+console.log(`Global random seed: ${rng.seed}`);
 export const random = () => rng.random();
 export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
 export const randomRange = (min: number, max: number) => rng.randomRange(min, max);
