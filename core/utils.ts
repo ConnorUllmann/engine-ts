@@ -92,7 +92,7 @@ console.log(`Global random seed: ${rng.seed}`);
 export const random = () => rng.random();
 export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
 export const randomRange = (min: number, max: number) => rng.randomRange(min, max);
-export const randomChoice = <T>(...options: T[]): T | null => rng.randomChoice(...options);
+export const randomChoice = <T>(...options: [T, ...T[]]): T => rng.randomChoice(...options);
 
 export const repeat = function<T>(count: number, get: (i: number, count: number) => T): T[] {
     const array: T[] = [];
