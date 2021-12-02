@@ -37,6 +37,7 @@ export class World {
     private nextEntityId: number = 0;
 
     public paused: boolean = false;
+    public framesSinceStart = 0;
     public get millisecondsPerFrame(): number { return 1000 / this.fps; }
     public get millisecondsSinceStart(): number { return this._firstUpdateTimestamp == null ? 0 : (Date.now() - this._firstUpdateTimestamp); }
     private _isFirstFrame: boolean = true;
@@ -169,6 +170,7 @@ export class World {
         this._isFirstFrame = false;
 
         this._millisecondsLastUpdate = Date.now() - startMs;
+        this.framesSinceStart++;
     }
 
     private updateEntity = (o: Entity) => {
