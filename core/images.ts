@@ -20,7 +20,7 @@ export class Images {
         return this.get(name)?.height ?? null;
     }
     
-    protected get(name: string): HTMLImageElement | null {
+    public get(name: string): HTMLImageElement | null {
         return name in this.srcByName && !this.srcsWaitingToLoad.has(this.srcByName[name])
             ? this.getImageBySrc(this.srcByName[name])
             : null;
