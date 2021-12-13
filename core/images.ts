@@ -20,6 +20,12 @@ export class Images {
         return this.get(name)?.height ?? null;
     }
     
+    public getRaw(name: string): HTMLImageElement | null {
+        return name in this.srcByName
+            ? this.getImageBySrc(this.srcByName[name])
+            : null;
+    }
+    
     public get(name: string): HTMLImageElement | null {
         return name in this.srcByName && !this.srcsWaitingToLoad.has(this.srcByName[name])
             ? this.getImageBySrc(this.srcByName[name])
