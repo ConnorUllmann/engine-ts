@@ -1,4 +1,4 @@
-import { angle90 } from '../core/utils';
+import { angle180, angle90 } from '../core/utils';
 
 type Easer = (t: number) => number;
 
@@ -21,7 +21,7 @@ export class Ease {
 
     public static SineIn(t: number): number { return 1 - Math.cos(angle90 * t); }
     public static SineOut(t: number): number { return Math.sin(angle90 * t); }
-    public static SineInOut(t: number): number { return 0.5 - 0.5 * Math.cos(angle90 * t); }
+    public static SineInOut(t: number): number { return 0.5 - 0.5 * Math.cos(angle180 * t); }
 
     public static QuadIn(t: number): number { return t * t; }
     public static QuadOut = Ease.Invert(Ease.QuadIn);
