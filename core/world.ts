@@ -52,7 +52,7 @@ export class World {
     public _millisecondsLastUpdate: number = 0;
     public get millisecondsLastUpdate(): number { return this._millisecondsLastUpdate; }
 
-    public backgroundColor: DeepReadonly<Color> | (() => DeepReadonly<Color>) = Color.lightGrey;
+    public backgroundColor: DeepReadonly<Color> | (() => DeepReadonly<Color>) | null = Color.lightGrey;
 
     // can be set externally to evaluate whether entities should be updated/drawn this frame
     // mouse/keyboard/gamepad updates will still be received during the period this function returns false
