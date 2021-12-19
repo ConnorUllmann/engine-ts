@@ -35,6 +35,7 @@ export class Images {
     public remove(name: string) {
         if(!(name in this.srcByName))
             return;
+        delete this.imageBySrc[this.srcByName[name]];
         delete this.srcByName[name];
     }
 
