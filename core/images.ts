@@ -32,6 +32,12 @@ export class Images {
             : null;
     }
 
+    public remove(name: string) {
+        if(!(name in this.srcByName))
+            return;
+        delete this.srcByName[name];
+    }
+
     public add(name: string, src: string) {
         if(!(name in this.srcByName))
             this.srcByName[name] = src;
