@@ -67,21 +67,21 @@ export class World {
 
     // create in ngOnInit and not in the component's constructor
     constructor(
-        canvasId: string,
+        canvasIdOrElement: string | HTMLCanvasElement,
         canvasResolutionWidth: number = 1280,
         canvasResolutionHeight: number = 960,
         alpha: boolean=true,
         public readonly fps: number=60
     ) {
-        console.log(`World started using canvas with id '${canvasId}'`);
-        this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+        console.log(`World started using canvas with id '${canvasIdOrElement}'`);
+        this.canvas = canvasIdOrElement instanceof HTMLCanvasElement ? canvasIdOrElement : document.getElementById(canvasIdOrElement) as HTMLCanvasElement;
         if(this.canvas == null)
-            throw `Canvas '${canvasId}' does not exist`;
+            throw `Canvas does not exist`;
         if(!this.canvas.getContext)
-            throw `Cannot retrieve canvas context for '${canvasId}'`;
+            throw `Cannot retrieve canvas context'`;
         const context = this.canvas.getContext('2d', { alpha });
         if(context == null)
-            throw `Cannot retrieve 2D rendering context for canvas '${canvasId}'`;
+            throw `Cannot retrieve 2D rendering context for canvas`;
         this.context = context;
         this.canvas.oncontextmenu = () => false;
 
