@@ -45,10 +45,11 @@ export class World {
     public _firstUpdateTimestamp: number | null = null;
     public get firstUpdateTimestamp(): number | null { return this._firstUpdateTimestamp; }
     public _lastUpdatePerformanceTimestamp: number = 0;
-    public _delta: number = 0;
+    public  _delta: number = 0;
     public fixedFrameRate: boolean = true;
     public get delta(): number { return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta; }
     public get deltaNormal(): number { return this.delta / this.millisecondsPerFrame; }
+    public lastFrameFps: number = 0;
     public _millisecondsLastUpdate: number = 0;
     public get millisecondsLastUpdate(): number { return this._millisecondsLastUpdate; }
 
@@ -189,6 +190,7 @@ export class World {
         const now = performance.now();
         if(this._lastUpdatePerformanceTimestamp != 0)
             this._delta = now - this._lastUpdatePerformanceTimestamp;
+        this.lastFrameFps = Math.round(1000 / this._delta);
         this._lastUpdatePerformanceTimestamp = now;
     }
 

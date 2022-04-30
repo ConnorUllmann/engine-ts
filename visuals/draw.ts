@@ -52,8 +52,8 @@ export class Draw {
             const globalAlphaPrevious = context.globalAlpha;
             context.globalAlpha = alpha;
 
-            xCenter ??= x + w/2;
-            yCenter ??= y + h/2;
+            xCenter = xCenter == null ? x + w/2 : xCenter;
+            yCenter = yCenter == null ? y + h/2 : yCenter;
 
             context.translate(
                 xCenter - cameraContext.camera.x,
@@ -99,8 +99,8 @@ export class Draw {
             const globalAlphaPrevious = context.globalAlpha;
             context.globalAlpha = alpha;
 
-            xCenter ??= x + w/2;
-            yCenter ??= y + h/2;
+            xCenter = xCenter == null ? x + w/2 : xCenter;
+            yCenter = yCenter == null ? y + h/2 : yCenter;
 
             context.translate(
                 xCenter - cameraContext.camera.x,
