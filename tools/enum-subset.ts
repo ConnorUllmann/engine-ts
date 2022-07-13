@@ -1,4 +1,3 @@
-
 type IsTupleSubsetOfUnion<Union, Tuple extends Readonly<any[]>> = Tuple extends []
   ? true
   : Tuple extends [infer First, ...infer Rest]
@@ -7,17 +6,20 @@ type IsTupleSubsetOfUnion<Union, Tuple extends Readonly<any[]>> = Tuple extends 
       ? Rest extends []
         ? true
         : Exclude<Union, First> extends never
-          ? false
-          : IsTupleSubsetOfUnion<Exclude<Union, First>, Rest>
-        : false
+        ? false
+        : IsTupleSubsetOfUnion<Exclude<Union, First>, Rest>
       : false
-    : false;
+    : false
+  : false;
 
 type EnumValues<Enum extends Record<any, string | number>> = { [K in keyof Enum]: Enum[K] }[keyof Enum];
 
-export const enumSubset = <Enum extends Record<any, string | number>, T extends Readonly<EnumValues<Enum>[]>>(_enum: Enum, ..._tuple: IsTupleSubsetOfUnion<EnumValues<Enum>, T> extends true ? T : never): T => {
+export const enumSubset = <Enum extends Record<any, string | number>, T extends Readonly<EnumValues<Enum>[]>>(
+  _enum: Enum,
+  ..._tuple: IsTupleSubsetOfUnion<EnumValues<Enum>, T> extends true ? T : never
+): T => {
   return _tuple;
-}
+};
 
 // enum Test {
 //   A = 'a',

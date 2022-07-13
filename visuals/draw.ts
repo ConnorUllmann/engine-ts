@@ -2,25 +2,14 @@ import { DeepReadonly, enumToList, tau } from '../core/utils';
 import { Geometry } from '../geometry/geometry';
 import {
   ICircle,
-
-
-
-  ILine, IPoint,
-
-
-
-
-
-  IPolygon, IRay, IRectangle,
-
-
-  ISegment, ITriangle,
-
-
-
-
-
-  PointPairType
+  ILine,
+  IPoint,
+  IPolygon,
+  IRay,
+  IRectangle,
+  ISegment,
+  ITriangle,
+  PointPairType,
 } from '../geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '../geometry/point';
@@ -72,21 +61,14 @@ export class Draw {
       const globalAlphaPrevious = context.globalAlpha;
       context.globalAlpha = alpha;
 
-      xCenter = xCenter == null ? x + w/2 : xCenter;
-      yCenter = yCenter == null ? y + h/2 : yCenter;
+      xCenter = xCenter == null ? x + w / 2 : xCenter;
+      yCenter = yCenter == null ? y + h / 2 : yCenter;
 
-      context.translate(
-          xCenter - cameraContext.camera.x,
-          yCenter - cameraContext.camera.y,
-      );
-      if(angle !== 0)
-          context.rotate(angle);
+      context.translate(xCenter - cameraContext.camera.x, yCenter - cameraContext.camera.y);
+      if (angle !== 0) context.rotate(angle);
       context.scale(Math.sign(xScale), Math.sign(yScale));
-      context.translate(
-          x + w/2 - xCenter,
-          y + h/2 - yCenter,
-      );
-      context.drawImage(image, -w/2, -h/2, w, h);
+      context.translate(x + w / 2 - xCenter, y + h / 2 - yCenter);
+      context.drawImage(image, -w / 2, -h / 2, w, h);
       context.resetTransform();
 
       context.globalAlpha = globalAlphaPrevious;
@@ -94,51 +76,43 @@ export class Draw {
     // x/y refers to the top-left corner of the image in world space
     // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
     ImagePart: (
-        cameraContext: CameraContext,
-        image: HTMLImageElement | null,
-        x: number,
-        y: number,
-        sx: number,
-        sy: number,
-        sw: number,
-        sh: number,
-        xScale: number=1,
-        yScale: number=1,
-        angle: number=0,
-        xCenter?: number,
-        yCenter?: number,
-        alpha:number=1
+      cameraContext: CameraContext,
+      image: HTMLImageElement | null,
+      x: number,
+      y: number,
+      sx: number,
+      sy: number,
+      sw: number,
+      sh: number,
+      xScale: number = 1,
+      yScale: number = 1,
+      angle: number = 0,
+      xCenter?: number,
+      yCenter?: number,
+      alpha: number = 1
     ) => {
-        const context = cameraContext.context;
-        if(!image)
-            return;
-        
-        const w = Math.abs(xScale * sw);
-        const h = Math.abs(yScale * sh);
+      const context = cameraContext.context;
+      if (!image) return;
 
-        const globalAlphaPrevious = context.globalAlpha;
-        context.globalAlpha = alpha;
+      const w = Math.abs(xScale * sw);
+      const h = Math.abs(yScale * sh);
 
-        xCenter = xCenter == null ? x + w/2 : xCenter;
-        yCenter = yCenter == null ? y + h/2 : yCenter;
+      const globalAlphaPrevious = context.globalAlpha;
+      context.globalAlpha = alpha;
 
-        context.translate(
-            xCenter - cameraContext.camera.x,
-            yCenter - cameraContext.camera.y,
-        );
-        if(angle !== 0)
-            context.rotate(angle);
-        context.scale(Math.sign(xScale), Math.sign(yScale));
-        context.translate(
-            x + w/2 - xCenter,
-            y + h/2 - yCenter,
-        );
-        context.drawImage(image, sx, sy, sw, sh, -w/2, -h/2, w, h);
-        context.resetTransform();
+      xCenter = xCenter == null ? x + w / 2 : xCenter;
+      yCenter = yCenter == null ? y + h / 2 : yCenter;
 
-        context.globalAlpha = globalAlphaPrevious;
-    }
-  }
+      context.translate(xCenter - cameraContext.camera.x, yCenter - cameraContext.camera.y);
+      if (angle !== 0) context.rotate(angle);
+      context.scale(Math.sign(xScale), Math.sign(yScale));
+      context.translate(x + w / 2 - xCenter, y + h / 2 - yCenter);
+      context.drawImage(image, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+      context.resetTransform();
+
+      context.globalAlpha = globalAlphaPrevious;
+    },
+  };
   // TODO: add generic shape-drawing function
   // public static Shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
 
@@ -508,16 +482,21 @@ export class Draw {
     context.globalAlpha = globalAlphaPrevious;
   }
 
-  private static RectangleRoundedPath(world: CameraContext, rectangle: DeepReadonly<IRectangle>, radius: number, angle: number, center: DeepReadonly<IPoint> | undefined, lineWidth: number, outlinePlacement: OutlinePlacement) {
+  private static RectangleRoundedPath(
+    world: CameraContext,
+    rectangle: DeepReadonly<IRectangle>,
+    radius: number,
+    angle: number,
+    center: DeepReadonly<IPoint> | undefined,
+    lineWidth: number,
+    outlinePlacement: OutlinePlacement
+  ) {
     const context = world.context;
     const outlinePlacementDiff = this.ApplyOutlinePlacement(0, lineWidth, outlinePlacement);
     radius += outlinePlacementDiff;
     rectangle = Geometry.Rectangle.Expand(rectangle, outlinePlacementDiff);
     center = center || Geometry.Rectangle.Center(rectangle);
-    context.translate(
-        center.x - world.camera.x,
-        center.y - world.camera.y,
-    );
+    context.translate(center.x - world.camera.x, center.y - world.camera.y);
     context.rotate(angle);
 
     const xOffset = -center.x;
