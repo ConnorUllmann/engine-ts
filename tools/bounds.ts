@@ -1,34 +1,30 @@
-
-export function bounds(searchValue: number, ascendingValues: number[]): { last: number, next: number } | null {
-    let leftIndex = 0;
-    let rightIndex = ascendingValues.length - 1;
-    while(rightIndex > leftIndex) {        
-        const middleIndex = Math.floor((rightIndex + leftIndex) / 2);
-        const middle = ascendingValues[middleIndex];
-        if(searchValue === middle) {
-            return { last: middle, next: middle };
-        }
-        if(rightIndex - leftIndex === 1) {
-            const left = ascendingValues[leftIndex];
-            const right = ascendingValues[rightIndex];
-            if(searchValue === left)
-                return { last: left, next: left };
-            if(searchValue === right)
-                return { last: right, next: right };
-            if(searchValue < left || searchValue > right)
-                return null;
-            return { last: left, next: right };
-        }
-        if(searchValue < middle) {
-            rightIndex = middleIndex;
-            continue;
-        }
-        if(searchValue > middle) {
-            leftIndex = middleIndex;
-            continue;
-        }
+export function bounds(searchValue: number, ascendingValues: number[]): { last: number; next: number } | null {
+  let leftIndex = 0;
+  let rightIndex = ascendingValues.length - 1;
+  while (rightIndex > leftIndex) {
+    const middleIndex = Math.floor((rightIndex + leftIndex) / 2);
+    const middle = ascendingValues[middleIndex];
+    if (searchValue === middle) {
+      return { last: middle, next: middle };
     }
-    return null;
+    if (rightIndex - leftIndex === 1) {
+      const left = ascendingValues[leftIndex];
+      const right = ascendingValues[rightIndex];
+      if (searchValue === left) return { last: left, next: left };
+      if (searchValue === right) return { last: right, next: right };
+      if (searchValue < left || searchValue > right) return null;
+      return { last: left, next: right };
+    }
+    if (searchValue < middle) {
+      rightIndex = middleIndex;
+      continue;
+    }
+    if (searchValue > middle) {
+      leftIndex = middleIndex;
+      continue;
+    }
+  }
+  return null;
 }
 
 // const assert = (searchValue: number, ascendingValues: number[], expected: { last: number, next: number } | null) => {
@@ -45,7 +41,7 @@ export function bounds(searchValue: number, ascendingValues: number[]): { last: 
 //         success = true;
 //     else if(actual != null && expected != null)
 //         success = actual.last === expected.last && actual.next === expected.next;
-    
+
 //     success ? console.log(report) : console.warn(report);
 // }
 
