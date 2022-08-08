@@ -73,7 +73,7 @@ export class WeightRange<T> {
     return index != null ? this._range[index].value : null;
   }
 
-  public sample(_rng?: RNG): T | null {
-    return this.value((_rng ?? rng).random());
+  public sample(_rng: RNG = rng): T | null {
+    return this.value(_rng.random());
   }
 }

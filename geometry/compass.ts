@@ -1,3 +1,4 @@
+import { enumToList, moduloSafe, tau } from '../core/utils';
 import { Geometry } from './geometry';
 import { IPoint } from './interfaces';
 
@@ -11,6 +12,11 @@ export enum CompassDirection {
   S,
   SE,
 }
+export const CompassDirections = enumToList(CompassDirection);
+const IndexByCompassDirection = CompassDirections.reduce((acc, compassDirection, index) => {
+  acc[compassDirection] = index;
+  return acc;
+}, {} as Record<CompassDirection, number>);
 
 export const PointByCompassDirection: { [key in CompassDirection]: IPoint } = {
   [CompassDirection.E]: Geometry.Point.Right,
@@ -49,4 +55,51 @@ export const CompassDirectionsByGroup: {
     CompassDirection.S,
     CompassDirection.SE,
   ],
+};
+
+export const CompassDirectionByPointByGroup: Record<CompassDirectionGroup, (x: number, y: number) => CompassDirection> =
+  {
+    [CompassDirectionGroup.CARDINAL]: (x: number, y: number) => {
+      const isXGreaterThanY = Math.abs(x) > Math.abs(y);
+      return isXGreaterThanY
+        ? Math.sign(x) > 0
+          ? CompassDirection.E
+          : CompassDirection.W
+        : Math.sign(y) > 0
+        ? CompassDirection.S
+        : CompassDirection.N;
+    },
+    [CompassDirectionGroup.INTERCARDINAL]: (x: number, y: number) => {
+      const isEast = x >= 0;
+      const isSouth = y >= 0;
+      return isEast && isSouth
+        ? CompassDirection.SE
+        : isEast
+        ? CompassDirection.NE
+        : isSouth
+        ? CompassDirection.SW
+        : CompassDirection.NW;
+    },
+    [CompassDirectionGroup.ALL]: (x: number, y: number) => {
+      const angle = Geometry.Angle(x, -y); // since (0, -1) is up which should be 90deg
+      // add 0.5 here because 0deg is in the middle of the "east" angle range
+      const index = Math.floor(moduloSafe((angle / tau) * CompassDirections.length + 0.5, CompassDirections.length));
+      return CompassDirections[index];
+    },
+  };
+
+export const GetClosestValidCompassDirection = (
+  point: IPoint,
+  ...validDirections: CompassDirection[]
+): CompassDirection | null => {
+  const minDirection =
+    validDirections.minOf(direction =>
+      Math.abs(
+        Geometry.AngleDifference(
+          ((IndexByCompassDirection[direction] - 0.5) / CompassDirections.length) * tau,
+          Geometry.Angle(point.x, -point.y) // since (0, -1) is up which should be 90deg
+        )
+      )
+    ) ?? null;
+  return minDirection;
 };

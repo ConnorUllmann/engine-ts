@@ -12,7 +12,9 @@ type IsTupleSubsetOfUnion<Union, Tuple extends Readonly<any[]>> = Tuple extends 
     : false
   : false;
 
-type EnumValues<Enum extends Record<any, string | number>> = { [K in keyof Enum]: Enum[K] }[keyof Enum];
+type EnumValues<Enum extends Record<any, string | number>> = {
+  [K in keyof Enum]: Enum[K];
+}[keyof Enum];
 
 export const enumSubset = <Enum extends Record<any, string | number>, T extends Readonly<EnumValues<Enum>[]>>(
   _enum: Enum,

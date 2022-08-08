@@ -114,6 +114,7 @@ export const repeat = function <T>(count: number, get: (i: number, count: number
 };
 
 export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+export type NonEmptyArray<T> = [T, ...T[]];
 
 export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & string>(
   _enum: EnumValue extends Exclude<EnumValue, number> ? Enum : never

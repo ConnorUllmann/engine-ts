@@ -112,6 +112,26 @@ export class Draw {
 
       context.globalAlpha = globalAlphaPrevious;
     },
+
+    CircleArc: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      r: number,
+      startAngle: number,
+      endAngle: number,
+      fillStyle: FillStyle = null
+    ) => {
+      if (r <= 0) return;
+      const context = world.context;
+      context.beginPath();
+      context.arc(x - world.camera.x, y - world.camera.y, r, startAngle, endAngle);
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+    },
+
+    Circle: (world: CameraContext, x: number, y: number, r: number, fillStyle: FillStyle = null) =>
+      Draw.Explicit.CircleArc(world, x, y, r, 0, tau, fillStyle),
   };
   // TODO: add generic shape-drawing function
   // public static Shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
@@ -123,12 +143,7 @@ export class Draw {
     endAngle: number,
     fillStyle: FillStyle = null
   ) {
-    if (circle.r <= 0) return;
-    const context = world.context;
-    context.beginPath();
-    context.arc(circle.x - world.camera.x, circle.y - world.camera.y, circle.r, startAngle, endAngle);
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-    context.fill();
+    Draw.Explicit.CircleArc(world, circle.x, circle.y, circle.r, startAngle, endAngle, fillStyle);
   }
 
   public static CircleArcOutline(
@@ -152,7 +167,7 @@ export class Draw {
   }
 
   public static Circle(world: CameraContext, circle: DeepReadonly<ICircle>, fillStyle: FillStyle = null) {
-    this.CircleArc(world, circle, 0, tau, fillStyle);
+    Draw.Explicit.Circle(world, circle.x, circle.y, circle.r, fillStyle);
   }
 
   public static CircleOutline(

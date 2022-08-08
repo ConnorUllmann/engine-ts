@@ -1,18 +1,18 @@
 import { RNG } from '../core/rng';
-import { tau, clamp, moduloSafe, binomialCoefficient, DeepReadonly, rng, angle90 } from '../core/utils';
+import { angle90, binomialCoefficient, clamp, DeepReadonly, moduloSafe, rng, tau } from '../core/utils';
 import { Halign, Valign } from '../visuals/align';
 import {
-  ISegment,
-  IPoint,
   ICircle,
-  ITriangle,
-  IRectangle,
+  ILine,
+  IPoint,
   IPointPair,
   IPolygon,
-  ILine,
-  PointPairType,
   IRay,
   IRaycastResult,
+  IRectangle,
+  ISegment,
+  ITriangle,
+  PointPairType,
 } from './interfaces';
 
 export type BoundableShape = IPoint | ITriangle | IRectangle | ICircle | IPolygon | ISegment;
