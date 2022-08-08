@@ -1,4 +1,4 @@
-import { Geometry, BoundableShape } from '../geometry/geometry';
+import { BoundableShape, Geometry } from '../geometry/geometry';
 import { IRectangle } from '../geometry/interfaces';
 import { Component } from './component';
 import { DeepReadonly } from './utils';
@@ -15,7 +15,7 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
   }
 
   public get shapeLocal(): DeepReadonly<T> {
-    return this._shapeLocal;
+    return this._shapeLocal as DeepReadonly<T>;
   }
 
   public get boundsLocal(): Readonly<IRectangle> {
