@@ -113,7 +113,17 @@ export const repeat = function <T>(count: number, get: (i: number, count: number
   return array;
 };
 
-export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+// https://stackoverflow.com/a/49670389
+export type DeepReadonly<T> = T extends (infer R)[]
+  ? DeepReadonlyArray<R>
+  : T extends Function
+  ? T
+  : T extends object
+  ? DeepReadonlyObject<T>
+  : T;
+interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
+type DeepReadonlyObject<T> = { readonly [P in keyof T]: DeepReadonly<T[P]> };
+
 export type NonEmptyArray<T> = [T, ...T[]];
 
 export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & string>(
