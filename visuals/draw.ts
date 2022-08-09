@@ -132,7 +132,63 @@ export class Draw {
 
     Circle: (world: CameraContext, x: number, y: number, r: number, fillStyle: FillStyle = null) =>
       Draw.Explicit.CircleArc(world, x, y, r, 0, tau, fillStyle),
+
+    OvalArc: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      xRadius: number,
+      yRadius: number,
+      startAngle: number,
+      endAngle: number,
+      fillStyle: FillStyle = null,
+      angle = 0,
+      xCenter = x,
+      yCenter = y
+    ) => {
+      if (xRadius <= 0 || yRadius <= 0) return;
+      const context = world.context;
+      context.translate(xCenter - world.camera.x, yCenter - world.camera.y);
+      context.rotate(angle);
+      context.beginPath();
+      context.ellipse(x - xCenter, y - yCenter, xRadius, yRadius, 0, startAngle, endAngle);
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+      context.resetTransform();
+    },
+
+    Oval: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      xRadius: number,
+      yRadius: number,
+      fillStyle: FillStyle = null,
+      angle = 0,
+      xCenter = x,
+      yCenter = y
+    ) => Draw.Explicit.OvalArc(world, x, y, xRadius, yRadius, 0, tau, fillStyle, angle, xCenter, yCenter),
+
+    Segment: (
+      world: CameraContext,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1
+    ) => {
+      if (lineWidth <= 0) return;
+      const context = world.context;
+      context.beginPath();
+      context.moveTo(ax - world.camera.x, ay - world.camera.y);
+      context.lineTo(bx - world.camera.x, by - world.camera.y);
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.lineWidth = lineWidth;
+      context.stroke();
+    },
   };
+
   // TODO: add generic shape-drawing function
   // public static Shape(world: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
 
@@ -218,15 +274,19 @@ export class Draw {
     angle: number = 0,
     center: DeepReadonly<IPoint> = position
   ) {
-    if (xRadius <= 0 || yRadius <= 0) return;
-    const context = world.context;
-    context.translate(center.x - world.camera.x, center.y - world.camera.y);
-    context.rotate(angle);
-    context.beginPath();
-    context.ellipse(position.x - center.x, position.y - center.y, xRadius, yRadius, 0, startAngle, endAngle);
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-    context.fill();
-    context.resetTransform();
+    Draw.Explicit.OvalArc(
+      world,
+      position.x,
+      position.y,
+      xRadius,
+      yRadius,
+      startAngle,
+      endAngle,
+      fillStyle,
+      angle,
+      center.x,
+      center.y
+    );
   }
 
   public static Oval(
@@ -238,7 +298,7 @@ export class Draw {
     angle: number = 0,
     center: DeepReadonly<IPoint> = position
   ) {
-    this.OvalArc(world, position, xRadius, yRadius, 0, tau, fillStyle, angle, center);
+    Draw.Explicit.Oval(world, position.x, position.y, xRadius, yRadius, fillStyle, angle, center.x, center.y);
   }
 
   public static OvalOutline(
@@ -625,14 +685,7 @@ export class Draw {
     strokeStyle: StrokeStyle = null,
     lineWidth: number = 1
   ) {
-    if (lineWidth <= 0) return;
-    const context = world.context;
-    context.beginPath();
-    context.moveTo(segment.a.x - world.camera.x, segment.a.y - world.camera.y);
-    context.lineTo(segment.b.x - world.camera.x, segment.b.y - world.camera.y);
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.lineWidth = lineWidth;
-    context.stroke();
+    Draw.Explicit.Segment(world, segment.a.x, segment.a.y, segment.b.x, segment.b.y, strokeStyle, lineWidth);
   }
 
   public static Path(

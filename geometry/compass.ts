@@ -57,6 +57,16 @@ export const CompassDirectionsByGroup: {
   ],
 };
 
+const CardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL]);
+const IntercardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL]);
+
+export const isCompassDirectionCardinal = (compassDirection: CompassDirection): boolean => {
+  return CardinalCompassDirectionSet.has(compassDirection);
+};
+export const isCompassDirectionIntercardinal = (compassDirection: CompassDirection): boolean => {
+  return IntercardinalCompassDirectionSet.has(compassDirection);
+};
+
 export const CompassDirectionByPointByGroup: Record<CompassDirectionGroup, (x: number, y: number) => CompassDirection> =
   {
     [CompassDirectionGroup.CARDINAL]: (x: number, y: number) => {
