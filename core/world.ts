@@ -233,6 +233,9 @@ export class World {
       if (this.entitiesByClass[entity.class].length <= 0) delete this.entitiesByClass[entity.class];
       entity.removed = true;
     }
+
+    // in case any entities are removed as a result of another entity's removal
+    if (Object.keys(this.entityToRemoveById).length > 0) this.flushRemoved();
   }
 
   private updateEntities(): void {

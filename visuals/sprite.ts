@@ -165,7 +165,7 @@ export class Sprite {
     }
   }
 
-  private drawFrame(
+  drawFrame(
     position: IPoint,
     xIndex: number,
     yIndex: number,
