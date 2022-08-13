@@ -110,6 +110,7 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
 interface IPolygonStatic extends IShapeStatic<IPolygon> {
   WindingNumber: (polygon: DeepReadonly<IPolygon>, point: DeepReadonly<IPoint>) => number;
   Rotate: (polygon: DeepReadonly<IPolygon>, angle: number, center?: DeepReadonly<IPoint>) => IPolygon;
+  GetRegularPolygonPoints: (radius: number, sides: number, angle?: number) => IPolygon;
   // TODO: function for creating regular polygons (copy "_getRegularPolygonPoints" in Draw.ts)
 }
 
@@ -1018,6 +1019,11 @@ export class Geometry {
         }
       }
       return windingNumber;
+    },
+    GetRegularPolygonPoints: (radius: number, sides: number, angle: number = 0): IPolygon => {
+      const vertices: IPoint[] = [];
+      for (let i = 0; i < sides; i++) vertices.push(Geometry.Point.Vector(radius, (tau * i) / sides + angle));
+      return { vertices };
     },
   };
 

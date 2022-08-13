@@ -11,8 +11,6 @@ import {
   ITriangle,
   PointPairType,
 } from '../geometry/interfaces';
-// TODO: use IPoint everywhere instead
-import { Point } from '../geometry/point';
 import { Halign, Valign } from './align';
 import { BlendMode } from './blend-mode';
 import { CameraContext } from './camera-context';
@@ -329,6 +327,43 @@ export class Draw {
       context.stroke();
     },
 
+    RegularPolygon: (
+      cameraContext: CameraContext,
+      x: number,
+      y: number,
+      radius: number,
+      sides: number,
+      fillStyle: FillStyle = null,
+      angle: number = 0
+    ) => {
+      if (sides <= 0 || radius <= 0) return;
+      const { context } = cameraContext;
+      context.beginPath();
+      Draw.Explicit.AddRegularPolygonPointsToPath(cameraContext, x, y, radius, sides, angle);
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+    },
+
+    RegularPolygonOutline: (
+      cameraContext: CameraContext,
+      x: number,
+      y: number,
+      radius: number,
+      sides: number,
+      strokeStyle: StrokeStyle = null,
+      angle: number = 0,
+      lineWidth: number = 1
+    ) => {
+      if (sides <= 0 || radius <= 0) return;
+      const { context } = cameraContext;
+      context.beginPath();
+      Draw.Explicit.AddRegularPolygonPointsToPath(cameraContext, x, y, radius, sides, angle);
+      context.lineWidth = lineWidth;
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.closePath();
+      context.stroke();
+    },
+
     Rectangle: (
       { context, camera }: CameraContext,
       x: number,
@@ -533,6 +568,49 @@ export class Draw {
       context.lineWidth = lineWidth;
       context.stroke();
     },
+
+    Text: (
+      { context, camera }: CameraContext,
+      text: string,
+      x: number,
+      y: number,
+      fillStyle: FillStyle = null,
+      font: string | null = null,
+      halign: HalignAll = Halign.LEFT,
+      valign: ValignAll = Valign.TOP,
+      angle: number = 0,
+      xCenter?: number,
+      yCenter?: number
+    ) => {
+      Draw.TextStyle(context, fillStyle, font, halign, valign);
+      if (angle !== 0) {
+        xCenter = (xCenter ?? x + Draw.TextWidth(context, text) / 2) - camera.x;
+        yCenter = (yCenter ?? y + Draw.TextHeight(context) / 2) - camera.y;
+        context.translate(xCenter, yCenter);
+        context.rotate(angle);
+        context.fillText(text, x - camera.x - xCenter, y - camera.y - yCenter);
+        context.resetTransform();
+        return;
+      }
+      context.fillText(text, x - camera.x, y - camera.y);
+    },
+
+    AddRegularPolygonPointsToPath: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      radius: number,
+      sides: number,
+      angle: number
+    ) => {
+      for (let i = 0; i < sides; i++) {
+        const angleToCorner = (tau * i) / sides + angle;
+        const xCorner = radius * Math.cos(angleToCorner) + x - camera.x;
+        const yCorner = radius * Math.sin(angleToCorner) + y - camera.y;
+        if (i === 0) context.moveTo(xCorner, yCorner);
+        else context.lineTo(xCorner, yCorner);
+      }
+    },
   };
 
   // TODO: add generic shape-drawing function
@@ -732,27 +810,18 @@ export class Draw {
   }
 
   public static RegularPolygon(
-    { context, camera }: CameraContext,
+    cameraContext: CameraContext,
     position: DeepReadonly<IPoint>,
     radius: number,
     sides: number,
     fillStyle: FillStyle = null,
     angle: number = 0
   ) {
-    const points = Draw.GetRegularPolygonPoints(position, radius, sides, angle);
-    if (points.length <= 0) return;
-    context.beginPath();
-    for (let i = 0; i < points.length; i++) {
-      const point = points[i].subtract(camera);
-      if (i === 0) context.moveTo(point.x, point.y);
-      else context.lineTo(point.x, point.y);
-    }
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-    context.fill();
+    Draw.Explicit.RegularPolygon(cameraContext, position.x, position.y, radius, sides, fillStyle, angle);
   }
 
   public static RegularPolygonOutline(
-    { context, camera }: CameraContext,
+    cameraContext: CameraContext,
     position: DeepReadonly<IPoint>,
     radius: number,
     sides: number,
@@ -760,19 +829,16 @@ export class Draw {
     angle: number = 0,
     lineWidth: number = 1
   ) {
-    const points = Draw.GetRegularPolygonPoints(position, radius, sides, angle);
-    const pointFirst = points.first();
-    if (pointFirst == null) return;
-    points.push(pointFirst);
-    context.beginPath();
-    for (let i = 0; i < points.length; i++) {
-      const point = points[i].subtract(camera);
-      if (i === 0) context.moveTo(point.x, point.y);
-      else context.lineTo(point.x, point.y);
-    }
-    context.lineWidth = lineWidth;
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.stroke();
+    Draw.Explicit.RegularPolygonOutline(
+      cameraContext,
+      position.x,
+      position.y,
+      radius,
+      sides,
+      strokeStyle,
+      angle,
+      lineWidth
+    );
   }
 
   public static Rectangle(
@@ -1028,9 +1094,9 @@ export class Draw {
   }
 
   public static Text(
-    { context, camera }: CameraContext,
+    cameraContext: CameraContext,
     text: string,
-    position: DeepReadonly<IPoint>,
+    { x, y }: DeepReadonly<IPoint>,
     fillStyle: FillStyle = null,
     font: string | null = null,
     halign: HalignAll = Halign.LEFT,
@@ -1038,17 +1104,7 @@ export class Draw {
     angle: number = 0,
     center?: DeepReadonly<IPoint>
   ) {
-    Draw.TextStyle(context, fillStyle, font, halign, valign);
-    if (angle !== 0) {
-      const xCenter = center != null ? center.x - camera.x : position.x + Draw.TextWidth(context, text) / 2 - camera.x;
-      const yCenter = center != null ? center.y - camera.y : position.y + Draw.TextHeight(context) / 2 - camera.y;
-      context.translate(xCenter, yCenter);
-      context.rotate(angle);
-      context.fillText(text, position.x - camera.x - xCenter, position.y - camera.y - yCenter);
-      context.resetTransform();
-      return;
-    }
-    context.fillText(text, position.x - camera.x, position.y - camera.y);
+    Draw.Explicit.Text(cameraContext, text, x, y, fillStyle, font, halign, valign, angle, center?.x, center?.y);
   }
 
   public static TextStyle(
@@ -1104,22 +1160,6 @@ export class Draw {
     context.shadowOffsetX = previousShadowOffsetX;
     context.shadowOffsetY = previousShadowOffsetY;
     context.shadowBlur = previousShadowBlur;
-  }
-
-  private static GetRegularPolygonPoints(
-    position: DeepReadonly<IPoint>,
-    radius: number,
-    sides: number,
-    angle: number
-  ): Point[] {
-    if (sides <= 0) throw `Cannot create a regular polygon with ${sides} sides`;
-    const points: Point[] = [];
-    for (let i = 0; i < sides; i++) {
-      const angleToCorner = (tau * i) / sides + angle;
-      const point = Point.Vector(radius, angleToCorner).add(position);
-      points.push(point);
-    }
-    return points;
   }
 
   private static ApplyOutlinePlacement(value: number, lineWidth: number, outlinePlacement: OutlinePlacement): number {
