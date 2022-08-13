@@ -477,6 +477,71 @@ export class Draw {
       context.fillRect(xDiff, yDiff, w, h);
     },
 
+    RectangleRounded: (
+      cameraContext: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radius: number,
+      fillStyle: FillStyle = null,
+      angle = 0,
+      xCenter?: number,
+      yCenter?: number
+    ) => {
+      const { context } = cameraContext;
+      context.beginPath();
+      Draw.Explicit.AddRectangleRoundedToPath(
+        cameraContext,
+        x,
+        y,
+        w,
+        h,
+        radius,
+        angle,
+        xCenter,
+        yCenter,
+        1,
+        OutlinePlacement.Default
+      );
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+    },
+
+    RectangleRoundedOutline: (
+      cameraContext: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radius: number,
+      strokeStyle: StrokeStyle = null,
+      angle: number = 0,
+      xCenter?: number,
+      yCenter?: number,
+      lineWidth = 1,
+      outlinePlacement = OutlinePlacement.InnerFirst
+    ) => {
+      const { context } = cameraContext;
+      context.beginPath();
+      Draw.Explicit.AddRectangleRoundedToPath(
+        cameraContext,
+        x,
+        y,
+        w,
+        h,
+        radius,
+        angle,
+        xCenter,
+        yCenter,
+        lineWidth,
+        outlinePlacement
+      );
+      context.lineWidth = lineWidth;
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.stroke();
+    },
+
     Line: (
       { context, camera }: CameraContext,
       ax: number,
@@ -610,6 +675,52 @@ export class Draw {
         if (i === 0) context.moveTo(xCorner, yCorner);
         else context.lineTo(xCorner, yCorner);
       }
+    },
+
+    AddRectangleRoundedToPath: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radius: number,
+      angle: number,
+      xCenter?: number,
+      yCenter?: number,
+      lineWidth = 1,
+      outlinePlacement = OutlinePlacement.Default
+    ) => {
+      const outlinePlacementDiff = Draw.ApplyOutlinePlacement(0, lineWidth, outlinePlacement);
+      radius += outlinePlacementDiff;
+      x -= outlinePlacementDiff;
+      y -= outlinePlacementDiff;
+      w += 2 * outlinePlacementDiff;
+      h += 2 * outlinePlacementDiff;
+
+      xCenter = xCenter ?? x + w / 2;
+      yCenter = yCenter ?? y + h / 2;
+      context.translate(xCenter - camera.x, yCenter - camera.y);
+      context.rotate(angle);
+
+      const xRightHor = x + w - xCenter;
+      const xRightVer = xRightHor - radius;
+      const xLeftHor = x - xCenter;
+      const xLeftVer = xLeftHor + radius;
+      const yTopVer = y - yCenter;
+      const yTopHor = yTopVer + radius;
+      const yBottomVer = y + h - yCenter;
+      const yBottomHor = yBottomVer - radius;
+      context.moveTo(xLeftVer, yTopVer);
+      context.lineTo(xRightVer, yTopVer);
+      context.quadraticCurveTo(xRightHor, yTopVer, xRightHor, yTopHor);
+      context.lineTo(xRightHor, yBottomHor);
+      context.quadraticCurveTo(xRightHor, yBottomVer, xRightVer, yBottomVer);
+      context.lineTo(xLeftVer, yBottomVer);
+      context.quadraticCurveTo(xLeftHor, yBottomVer, xLeftHor, yBottomHor);
+      context.lineTo(xLeftHor, yTopHor);
+      context.quadraticCurveTo(xLeftHor, yTopVer, xLeftVer, yTopVer);
+
+      context.resetTransform();
     },
   };
 
@@ -944,73 +1055,41 @@ export class Draw {
     context.globalAlpha = globalAlphaPrevious;
   }
 
-  private static RectangleRoundedPath(
-    { context, camera }: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
-    radius: number,
-    angle: number,
-    center: DeepReadonly<IPoint> | undefined,
-    lineWidth: number,
-    outlinePlacement: OutlinePlacement
-  ) {
-    const outlinePlacementDiff = this.ApplyOutlinePlacement(0, lineWidth, outlinePlacement);
-    radius += outlinePlacementDiff;
-    rectangle = Geometry.Rectangle.Expand(rectangle, outlinePlacementDiff);
-    center = center || Geometry.Rectangle.Center(rectangle);
-    context.translate(center.x - camera.x, center.y - camera.y);
-    context.rotate(angle);
-
-    const xOffset = -center.x;
-    const yOffset = -center.y;
-    const xRightHor = rectangle.x + rectangle.w + xOffset;
-    const xRightVer = xRightHor - radius;
-    const xLeftHor = rectangle.x + xOffset;
-    const xLeftVer = xLeftHor + radius;
-    const yTopVer = rectangle.y + yOffset;
-    const yTopHor = yTopVer + radius;
-    const yBottomVer = rectangle.y + rectangle.h + yOffset;
-    const yBottomHor = yBottomVer - radius;
-    context.beginPath();
-    context.moveTo(xLeftVer, yTopVer);
-    context.lineTo(xRightVer, yTopVer);
-    context.quadraticCurveTo(xRightHor, yTopVer, xRightHor, yTopHor);
-    context.lineTo(xRightHor, yBottomHor);
-    context.quadraticCurveTo(xRightHor, yBottomVer, xRightVer, yBottomVer);
-    context.lineTo(xLeftVer, yBottomVer);
-    context.quadraticCurveTo(xLeftHor, yBottomVer, xLeftHor, yBottomHor);
-    context.lineTo(xLeftHor, yTopHor);
-    context.quadraticCurveTo(xLeftHor, yTopVer, xLeftVer, yTopVer);
-
-    context.resetTransform();
-  }
-
   public static RectangleRounded(
     cameraContext: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     radius: number,
     fillStyle: FillStyle = null,
     angle: number = 0,
     center?: DeepReadonly<IPoint>
   ) {
-    this.RectangleRoundedPath(cameraContext, rectangle, radius, angle, center, 1, OutlinePlacement.Default);
-    if (fillStyle) cameraContext.context.fillStyle = this.StyleToString(fillStyle);
-    cameraContext.context.fill();
+    Draw.Explicit.RectangleRounded(cameraContext, x, y, w, h, radius, fillStyle, angle, center?.x, center?.y);
   }
 
   public static RectangleRoundedOutline(
     cameraContext: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     radius: number,
     strokeStyle: StrokeStyle = null,
     angle: number = 0,
     center?: DeepReadonly<IPoint>,
-    lineWidth: number = 1,
-    outlinePlacement: OutlinePlacement = OutlinePlacement.InnerFirst
+    lineWidth = 1,
+    outlinePlacement = OutlinePlacement.InnerFirst
   ) {
-    this.RectangleRoundedPath(cameraContext, rectangle, radius, angle, center, lineWidth, outlinePlacement);
-    cameraContext.context.lineWidth = lineWidth;
-    if (strokeStyle) cameraContext.context.strokeStyle = this.StyleToString(strokeStyle);
-    cameraContext.context.stroke();
+    Draw.Explicit.RectangleRoundedOutline(
+      cameraContext,
+      x,
+      y,
+      w,
+      h,
+      radius,
+      strokeStyle,
+      angle,
+      center?.x,
+      center?.y,
+      lineWidth,
+      outlinePlacement
+    );
   }
 
   public static Line(
