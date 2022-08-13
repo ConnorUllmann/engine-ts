@@ -1,7 +1,7 @@
-import { Segment } from './segment';
 import { Geometry } from './geometry';
-import { IRay, ILine, PointPairType, ISegment, IRaycastResult } from './interfaces';
+import { ILine, IRay, IRaycastResult, ISegment, PointPairType } from './interfaces';
 import { Point } from './point';
+import { Segment } from './segment';
 
 export class Ray implements IRay {
   private _b: Point = new Point();
@@ -34,13 +34,15 @@ export class Ray implements IRay {
     return Geometry.Ray.XatY(this, y);
   }
   public lineIntersection(line: ILine): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, line, PointPairType.LINE));
+    return Point.Create(Geometry.Intersection.PointPairPointPair(this, PointPairType.RAY, line, PointPairType.LINE));
   }
   public rayIntersection(ray: IRay): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, ray, PointPairType.RAY));
+    return Point.Create(Geometry.Intersection.PointPairPointPair(this, PointPairType.RAY, ray, PointPairType.RAY));
   }
   public segmentIntersection(segment: ISegment): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.RAY, segment, PointPairType.SEGMENT));
+    return Point.Create(
+      Geometry.Intersection.PointPairPointPair(this, PointPairType.RAY, segment, PointPairType.SEGMENT)
+    );
   }
   public cast<T extends ISegment>(
     segments: T[],

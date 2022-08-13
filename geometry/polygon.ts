@@ -1,19 +1,19 @@
-import { Segment } from './segment';
 import { tau } from '../core/utils';
 import { Geometry } from './geometry';
 import {
-  IPolygon,
-  IPoint,
-  IRectangle,
   ICircle,
   ILine,
-  PointPairType,
-  IRay,
-  ISegment,
+  IPoint,
   IPointPair,
+  IPolygon,
+  IRay,
+  IRectangle,
+  ISegment,
   ITriangle,
+  PointPairType,
 } from './interfaces';
 import { Point } from './point';
+import { Segment } from './segment';
 
 export class Polygon implements IPolygon {
   public vertices: Point[] = [];
@@ -76,7 +76,7 @@ export class Polygon implements IPolygon {
   }
   public static intersections(polygon: IPolygon, pair: IPointPair, pairType: PointPairType): Point[] {
     return Polygon.segments(polygon)
-      .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
+      .map(segment => Geometry.Intersection.PointPairPointPair(pair, pairType, segment, PointPairType.SEGMENT))
       .filter(point => point != null)
       .map(point => Point.Create(point)!);
   }

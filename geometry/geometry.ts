@@ -1941,6 +1941,22 @@ export class Geometry {
   //  b = other endpoint of the same PointPair
   //  c = point being checked against the PointPair)
   // TODO: rename
+  private static isSameSideOfPointExplicit = (
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number,
+    cx: number,
+    cy: number
+  ) => {
+    return Geometry.IsWithinToleranceOf(ax, bx)
+      ? Math.sign(cy - ay) === Math.sign(by - ay) ||
+          Geometry.IsWithinToleranceOf(ay, cy) ||
+          Geometry.IsWithinToleranceOf(ay, by)
+      : Math.sign(cx - ax) === Math.sign(bx - ax) ||
+          Geometry.IsWithinToleranceOf(ax, cx) ||
+          Geometry.IsWithinToleranceOf(ax, bx);
+  };
   private static isSameSideOfPoint = (
     a: DeepReadonly<IPoint>,
     b: DeepReadonly<IPoint>,
@@ -1955,13 +1971,7 @@ export class Geometry {
     const by = b.y + bOffset.y;
     const cx = c.x + cOffset.x;
     const cy = c.y + cOffset.y;
-    return Geometry.IsWithinToleranceOf(ax, bx)
-      ? Math.sign(cy - ay) === Math.sign(by - ay) ||
-          Geometry.IsWithinToleranceOf(ay, cy) ||
-          Geometry.IsWithinToleranceOf(ay, by)
-      : Math.sign(cx - ax) === Math.sign(bx - ax) ||
-          Geometry.IsWithinToleranceOf(ax, cx) ||
-          Geometry.IsWithinToleranceOf(ax, bx);
+    return Geometry.isSameSideOfPointExplicit(ax, ay, bx, by, cx, cy);
   };
 
   public static IntersectionExplicit = {
@@ -2012,6 +2022,139 @@ export class Geometry {
           y: ym + yh,
         },
       ];
+    },
+
+    RectanglePointPair: (
+      rx: number,
+      ry: number,
+      rw: number,
+      rh: number,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      pairType: PointPairType
+    ): IPoint[] => {
+      const xCorner1 = rx;
+      const yCorner1 = ry;
+      const xCorner2 = rx + rw;
+      const yCorner2 = ry;
+      const xCorner3 = rx + rw;
+      const yCorner3 = ry + rh;
+      const xCorner4 = rx;
+      const yCorner4 = ry + rh;
+
+      const intersection1 = Geometry.IntersectionExplicit.PointPairPointPair(
+        ax,
+        ay,
+        bx,
+        by,
+        pairType,
+        xCorner1,
+        yCorner1,
+        xCorner2,
+        yCorner2,
+        PointPairType.SEGMENT
+      );
+      const intersection2 = Geometry.IntersectionExplicit.PointPairPointPair(
+        ax,
+        ay,
+        bx,
+        by,
+        pairType,
+        xCorner2,
+        yCorner2,
+        xCorner3,
+        yCorner3,
+        PointPairType.SEGMENT
+      );
+      const intersection3 = Geometry.IntersectionExplicit.PointPairPointPair(
+        ax,
+        ay,
+        bx,
+        by,
+        pairType,
+        xCorner3,
+        yCorner3,
+        xCorner4,
+        yCorner4,
+        PointPairType.SEGMENT
+      );
+      const intersection4 = Geometry.IntersectionExplicit.PointPairPointPair(
+        ax,
+        ay,
+        bx,
+        by,
+        pairType,
+        xCorner4,
+        yCorner4,
+        xCorner1,
+        yCorner1,
+        PointPairType.SEGMENT
+      );
+
+      const intersections: IPoint[] = [];
+      if (intersection1 != null) intersections.push(intersection1);
+
+      if (intersection2 != null && !Geometry.Point.AreEqual(intersection1, intersection2))
+        intersections.push(intersection2);
+
+      if (
+        intersection3 != null &&
+        !Geometry.Point.AreEqual(intersection1, intersection3) &&
+        !Geometry.Point.AreEqual(intersection2, intersection3)
+      )
+        intersections.push(intersection3);
+
+      if (
+        intersection4 != null &&
+        !Geometry.Point.AreEqual(intersection1, intersection4) &&
+        !Geometry.Point.AreEqual(intersection2, intersection4) &&
+        !Geometry.Point.AreEqual(intersection3, intersection4)
+      )
+        intersections.push(intersection4);
+      return intersections;
+    },
+
+    PointPairPointPair: (
+      Aax: number,
+      Aay: number,
+      Abx: number,
+      Aby: number,
+      Atype: PointPairType,
+      Bax: number,
+      Bay: number,
+      Bbx: number,
+      Bby: number,
+      Btype: PointPairType
+    ): IPoint | null => {
+      const yFirstLineDiff = Aby - Aay;
+      const xFirstLineDiff = Aax - Abx;
+      const cFirst = Abx * Aay - Aax * Aby;
+      const ySecondLineDiff = Bby - Bay;
+      const xSecondLineDiff = Bax - Bbx;
+      const cSecond = Bbx * Bay - Bax * Bby;
+
+      const denominator = yFirstLineDiff * xSecondLineDiff - ySecondLineDiff * xFirstLineDiff;
+      if (denominator === 0) return null;
+      const intersection = {
+        x: (xFirstLineDiff * cSecond - xSecondLineDiff * cFirst) / denominator,
+        y: (ySecondLineDiff * cFirst - yFirstLineDiff * cSecond) / denominator,
+      };
+
+      if (Atype === PointPairType.LINE && Btype === PointPairType.LINE) return intersection;
+
+      const beyondFirstA = !Geometry.isSameSideOfPointExplicit(Aax, Aay, Abx, Aby, intersection.x, intersection.y);
+      const beyondFirstB = !Geometry.isSameSideOfPointExplicit(Abx, Aby, Aax, Aay, intersection.x, intersection.y);
+      const beyondSecondA = !Geometry.isSameSideOfPointExplicit(Bax, Bay, Bbx, Bby, intersection.x, intersection.y);
+      const beyondSecondB = !Geometry.isSameSideOfPointExplicit(Bbx, Bby, Bax, Bay, intersection.x, intersection.y);
+
+      return (Atype === PointPairType.SEGMENT && (beyondFirstA || beyondFirstB)) ||
+        (Atype === PointPairType.RAY && beyondFirstA) ||
+        (Btype === PointPairType.SEGMENT && (beyondSecondA || beyondSecondB)) ||
+        (Btype === PointPairType.RAY && beyondSecondA)
+        ? null
+        : intersection;
     },
   };
 
@@ -2130,21 +2273,28 @@ export class Geometry {
       lineAOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       lineBOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(lineA, PointPairType.LINE, lineB, PointPairType.LINE, lineAOffset, lineBOffset),
+      Geometry.Intersection.PointPairPointPair(
+        lineA,
+        PointPairType.LINE,
+        lineB,
+        PointPairType.LINE,
+        lineAOffset,
+        lineBOffset
+      ),
     LineRay: (
       line: DeepReadonly<ILine>,
       ray: DeepReadonly<IRay>,
       lineOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       rayOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(line, PointPairType.LINE, ray, PointPairType.RAY, lineOffset, rayOffset),
+      Geometry.Intersection.PointPairPointPair(line, PointPairType.LINE, ray, PointPairType.RAY, lineOffset, rayOffset),
     LineSegment: (
       line: DeepReadonly<ILine>,
       segment: DeepReadonly<ISegment>,
       lineOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       segmentOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(
+      Geometry.Intersection.PointPairPointPair(
         line,
         PointPairType.LINE,
         segment,
@@ -2158,21 +2308,35 @@ export class Geometry {
       rayAOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       rayBOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(rayA, PointPairType.RAY, rayB, PointPairType.RAY, rayAOffset, rayBOffset),
+      Geometry.Intersection.PointPairPointPair(
+        rayA,
+        PointPairType.RAY,
+        rayB,
+        PointPairType.RAY,
+        rayAOffset,
+        rayBOffset
+      ),
     RaySegment: (
       ray: DeepReadonly<IRay>,
       segment: DeepReadonly<ISegment>,
       rayOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       segmentOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(ray, PointPairType.RAY, segment, PointPairType.SEGMENT, rayOffset, segmentOffset),
+      Geometry.Intersection.PointPairPointPair(
+        ray,
+        PointPairType.RAY,
+        segment,
+        PointPairType.SEGMENT,
+        rayOffset,
+        segmentOffset
+      ),
     SegmentSegment: (
       segmentA: DeepReadonly<ISegment>,
       segmentB: DeepReadonly<ISegment>,
       segmentAOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       segmentBOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): IPoint | null =>
-      Geometry.Intersection.PointPair(
+      Geometry.Intersection.PointPairPointPair(
         segmentA,
         PointPairType.SEGMENT,
         segmentB,
@@ -2203,63 +2367,25 @@ export class Geometry {
         Geometry.Polygon.Segments(polygonA, polygonAOffset),
         Geometry.Polygon.Segments(polygonB, polygonBOffset)
       ),
-    PointPair: (
+    PointPairPointPair: (
       first: DeepReadonly<IPointPair>,
       firstType: PointPairType,
       second: DeepReadonly<IPointPair>,
       secondType: PointPairType,
       firstOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       secondOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): IPoint | null => {
-      if (firstOffset && !Geometry.Point.AreEqual(firstOffset, Geometry.Point.Zero))
-        first = {
-          a: {
-            x: first.a.x + firstOffset.x,
-            y: first.a.y + firstOffset.y,
-          },
-          b: {
-            x: first.b.x + firstOffset.x,
-            y: first.b.y + firstOffset.y,
-          },
-        };
-      if (secondOffset && !Geometry.Point.AreEqual(secondOffset, Geometry.Point.Zero))
-        second = {
-          a: {
-            x: second.a.x + secondOffset.x,
-            y: second.a.y + secondOffset.y,
-          },
-          b: {
-            x: second.b.x + secondOffset.x,
-            y: second.b.y + secondOffset.y,
-          },
-        };
-      const yFirstLineDiff = first.b.y - first.a.y;
-      const xFirstLineDiff = first.a.x - first.b.x;
-      const cFirst = first.b.x * first.a.y - first.a.x * first.b.y;
-      const ySecondLineDiff = second.b.y - second.a.y;
-      const xSecondLineDiff = second.a.x - second.b.x;
-      const cSecond = second.b.x * second.a.y - second.a.x * second.b.y;
-
-      const denominator = yFirstLineDiff * xSecondLineDiff - ySecondLineDiff * xFirstLineDiff;
-      if (denominator === 0) return null;
-      const intersection = {
-        x: (xFirstLineDiff * cSecond - xSecondLineDiff * cFirst) / denominator,
-        y: (ySecondLineDiff * cFirst - yFirstLineDiff * cSecond) / denominator,
-      };
-
-      if (firstType === PointPairType.LINE && secondType === PointPairType.LINE) return intersection;
-
-      const beyondFirstA = !Geometry.isSameSideOfPoint(first.a, first.b, intersection);
-      const beyondFirstB = !Geometry.isSameSideOfPoint(first.b, first.a, intersection);
-      const beyondSecondA = !Geometry.isSameSideOfPoint(second.a, second.b, intersection);
-      const beyondSecondB = !Geometry.isSameSideOfPoint(second.b, second.a, intersection);
-
-      return (firstType === PointPairType.SEGMENT && (beyondFirstA || beyondFirstB)) ||
-        (firstType === PointPairType.RAY && beyondFirstA) ||
-        (secondType === PointPairType.SEGMENT && (beyondSecondA || beyondSecondB)) ||
-        (secondType === PointPairType.RAY && beyondSecondA)
-        ? null
-        : intersection;
-    },
+    ): IPoint | null =>
+      Geometry.IntersectionExplicit.PointPairPointPair(
+        first.a.x + firstOffset.x,
+        first.a.y + firstOffset.y,
+        first.b.x + firstOffset.x,
+        first.b.y + firstOffset.y,
+        firstType,
+        second.a.x + secondOffset.x,
+        second.a.y + secondOffset.y,
+        second.b.x + secondOffset.x,
+        second.b.y + secondOffset.y,
+        secondType
+      ),
   };
 }

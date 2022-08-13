@@ -1,18 +1,18 @@
-import { Segment } from './segment';
 import { Geometry } from './geometry';
 import {
-  ITriangle,
-  IPolygon,
   ICircle,
-  IRectangle,
-  IPoint,
   ILine,
-  PointPairType,
-  IRay,
-  ISegment,
+  IPoint,
   IPointPair,
+  IPolygon,
+  IRay,
+  IRectangle,
+  ISegment,
+  ITriangle,
+  PointPairType,
 } from './interfaces';
 import { Point } from './point';
+import { Segment } from './segment';
 
 export class Triangle implements ITriangle, IPolygon {
   constructor(public a: Point, public b: Point, public c: Point) {}
@@ -62,7 +62,7 @@ export class Triangle implements ITriangle, IPolygon {
   }
   public static intersections(triangle: ITriangle, pair: IPointPair, pairType: PointPairType): Point[] {
     return Geometry.Triangle.Segments(triangle)
-      .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
+      .map(segment => Geometry.Intersection.PointPairPointPair(pair, pairType, segment, PointPairType.SEGMENT))
       .filter(point => point != null)
       .map(point => Point.Create(point)!);
   }

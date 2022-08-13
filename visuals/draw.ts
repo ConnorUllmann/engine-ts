@@ -13,7 +13,6 @@ import {
 } from '../geometry/interfaces';
 // TODO: use IPoint everywhere instead
 import { Point } from '../geometry/point';
-import { Rectangle } from '../geometry/rectangle';
 import { Halign, Valign } from './align';
 import { BlendMode } from './blend-mode';
 import { CameraContext } from './camera-context';
@@ -441,6 +440,80 @@ export class Draw {
       ColorStopArray.ApplyToGradient(colorStopArray, gradient);
       context.fillStyle = gradient;
       context.fillRect(xDiff, yDiff, w, h);
+    },
+
+    Line: (
+      { context, camera }: CameraContext,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1
+    ) => {
+      if (lineWidth <= 0) return;
+
+      const points = Geometry.IntersectionExplicit.RectanglePointPair(
+        camera.x,
+        camera.y,
+        camera.w,
+        camera.h,
+        ax,
+        ay,
+        bx,
+        by,
+        PointPairType.LINE
+      );
+      if (points.length < 2) return;
+
+      context.beginPath();
+      context.moveTo(points[0].x - camera.x, points[0].y - camera.y);
+      context.lineTo(points[1].x - camera.x, points[1].y - camera.y);
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.lineWidth = lineWidth;
+      context.stroke();
+    },
+
+    Ray: (
+      { context, camera }: CameraContext,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1
+    ) => {
+      if (lineWidth <= 0) return;
+
+      const points = Geometry.IntersectionExplicit.RectanglePointPair(
+        camera.x,
+        camera.y,
+        camera.w,
+        camera.h,
+        ax,
+        ay,
+        bx,
+        by,
+        PointPairType.RAY
+      );
+      if (points.length === 1) {
+        context.beginPath();
+        context.moveTo(ax - camera.x, ay - camera.y);
+        context.lineTo(points[0].x - camera.x, points[0].y - camera.y);
+        if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+        context.lineWidth = lineWidth;
+        context.stroke();
+        return;
+      }
+
+      if (points.length !== 2) return;
+
+      context.beginPath();
+      context.moveTo(points[0].x - camera.x, points[0].y - camera.y);
+      context.lineTo(points[1].x - camera.x, points[1].y - camera.y);
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.lineWidth = lineWidth;
+      context.stroke();
     },
 
     Segment: (
@@ -875,51 +948,21 @@ export class Draw {
   }
 
   public static Line(
-    { context, camera }: CameraContext,
+    cameraContext: CameraContext,
     line: DeepReadonly<ILine>,
     strokeStyle: StrokeStyle = null,
     lineWidth: number = 1
   ) {
-    if (lineWidth <= 0) return;
-
-    const points = Rectangle.intersections(camera, line, PointPairType.LINE);
-    if (points.length < 2) return;
-
-    context.beginPath();
-    context.moveTo(points[0].x - camera.x, points[0].y - camera.y);
-    context.lineTo(points[1].x - camera.x, points[1].y - camera.y);
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.lineWidth = lineWidth;
-    context.stroke();
+    Draw.Explicit.Line(cameraContext, line.a.x, line.a.y, line.b.x, line.b.y, strokeStyle, lineWidth);
   }
 
   public static Ray(
-    { context, camera }: CameraContext,
+    cameraContext: CameraContext,
     ray: DeepReadonly<IRay>,
     strokeStyle: StrokeStyle = null,
     lineWidth: number = 1
   ) {
-    if (lineWidth <= 0) return;
-
-    const points = Rectangle.intersections(camera, ray, PointPairType.RAY);
-    if (points.length === 1) {
-      context.beginPath();
-      context.moveTo(ray.a.x - camera.x, ray.a.y - camera.y);
-      context.lineTo(points[0].x - camera.x, points[0].y - camera.y);
-      if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-      context.lineWidth = lineWidth;
-      context.stroke();
-      return;
-    }
-
-    if (points.length !== 2) return;
-
-    context.beginPath();
-    context.moveTo(points[0].x - camera.x, points[0].y - camera.y);
-    context.lineTo(points[1].x - camera.x, points[1].y - camera.y);
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.lineWidth = lineWidth;
-    context.stroke();
+    Draw.Explicit.Ray(cameraContext, ray.a.x, ray.a.y, ray.b.x, ray.b.y, strokeStyle, lineWidth);
   }
 
   public static Segment(

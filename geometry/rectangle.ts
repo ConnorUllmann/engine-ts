@@ -1,20 +1,20 @@
-import { Segment } from './segment';
+import { RNG } from '../core/rng';
 import { rng } from '../core/utils';
 import { Geometry } from './geometry';
-import { Point } from './point';
 import {
-  IRectangle,
-  IPolygon,
-  ITriangle,
   ICircle,
-  IPoint,
   ILine,
-  PointPairType,
-  IRay,
-  ISegment,
+  IPoint,
   IPointPair,
+  IPolygon,
+  IRay,
+  IRectangle,
+  ISegment,
+  ITriangle,
+  PointPairType,
 } from './interfaces';
-import { RNG } from '../core/rng';
+import { Point } from './point';
+import { Segment } from './segment';
 
 // TODO: decide if this should extend Point or just implement IPoint via IRectangle
 export class Rectangle extends Point implements IRectangle, IPolygon {
@@ -145,27 +145,22 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
   }
 
   public lineIntersections(line: ILine): Point[] {
-    return Rectangle.intersections(this, line, PointPairType.LINE);
+    return Rectangle.Intersections(this, line, PointPairType.LINE);
   }
   public rayIntersections(ray: IRay): Point[] {
-    return Rectangle.intersections(this, ray, PointPairType.RAY);
+    return Rectangle.Intersections(this, ray, PointPairType.RAY);
   }
   public segmentIntersections(segment: ISegment): Point[] {
-    return Rectangle.intersections(this, segment, PointPairType.SEGMENT);
+    return Rectangle.Intersections(this, segment, PointPairType.SEGMENT);
   }
-  public static intersections(rectangle: IRectangle, pair: IPointPair, pairType: PointPairType): Point[] {
-    const intersections = Geometry.Rectangle.Segments(rectangle)
-      .map(segment => Geometry.Intersection.PointPair(pair, pairType, segment, PointPairType.SEGMENT))
-      .filter(point => point != null) as IPoint[];
-    const indicesToRemove = new Set();
-    for (let i = 0; i < intersections.length; i++) {
-      const a = intersections[i];
-      for (let j = i + 1; j < intersections.length; j++) {
-        if (Geometry.Point.AreEqual(a, intersections[j])) indicesToRemove.add(j);
-      }
-    }
-    intersections.removeWhere((o, i) => indicesToRemove.has(i));
-    return intersections.map(point => Point.Create(point));
+  public static Intersections(
+    { x, y, w, h }: IRectangle,
+    { a: { x: ax, y: ay }, b: { x: bx, y: by } }: IPointPair,
+    pairType: PointPairType
+  ): Point[] {
+    return Geometry.IntersectionExplicit.RectanglePointPair(x, y, w, h, ax, ay, bx, by, pairType).map(point =>
+      Point.Create(point)
+    );
   }
 
   public expand(wAmount: number, hAmount?: number): this {
@@ -176,7 +171,7 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
     return this.setTo(Geometry.Rectangle.Scale(this, scalar, center));
   }
 
-  public randomPointInside(_rng?: RNG): Point {
-    return new Point((_rng ?? rng)?.random() * this.w + this.x, (_rng ?? rng)?.random() * this.h + this.y);
+  public randomPointInside(_rng: RNG = rng): Point {
+    return new Point(_rng.random() * this.w + this.x, _rng.random() * this.h + this.y);
   }
 }

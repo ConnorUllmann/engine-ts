@@ -1,5 +1,5 @@
 import { Geometry } from './geometry';
-import { ILine, IPointPair, PointPairType, IRay, ISegment } from './interfaces';
+import { ILine, IRay, ISegment, PointPairType } from './interfaces';
 import { Point } from './point';
 
 export class Line implements ILine {
@@ -19,13 +19,15 @@ export class Line implements ILine {
     return Geometry.Line.XatY(this, y);
   }
   public lineIntersection(line: ILine): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.LINE, line, PointPairType.LINE));
+    return Point.Create(Geometry.Intersection.PointPairPointPair(this, PointPairType.LINE, line, PointPairType.LINE));
   }
   public rayIntersection(ray: IRay): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.LINE, ray, PointPairType.RAY));
+    return Point.Create(Geometry.Intersection.PointPairPointPair(this, PointPairType.LINE, ray, PointPairType.RAY));
   }
   public segmentIntersection(segment: ISegment): Point | null {
-    return Point.Create(Geometry.Intersection.PointPair(this, PointPairType.LINE, segment, PointPairType.SEGMENT));
+    return Point.Create(
+      Geometry.Intersection.PointPairPointPair(this, PointPairType.LINE, segment, PointPairType.SEGMENT)
+    );
   }
 
   constructor(public a: Point, public b: Point) {}

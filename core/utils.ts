@@ -233,6 +233,7 @@ declare global {
     orderBy(getter: (a: T) => number): T[];
     distinct(valueGetter?: (o: T) => string | number): T[];
     distincted(valueGetter?: (o: T) => string | number): T[];
+    exists(): NonNullable<T>[];
 
     // number only
     min(this: Array<number>): number | null;
@@ -261,6 +262,7 @@ declare global {
     copy(other: T[]): void;
     clone(): T[];
     distincted(valueGetter?: (o: T) => string | number): T[];
+    exists(): NonNullable<T>[];
 
     // number only
     min(this: Array<number>): number | null;
@@ -517,6 +519,11 @@ Array.prototype.clone = function <T>(): T[] {
 
 Array.prototype.clear = function <T>(): void {
   this.length = 0;
+};
+
+const existsFilter = (o: any) => o != null;
+Array.prototype.exists = function <T>(): NonNullable<T>[] {
+  return this.filter(existsFilter);
 };
 
 Array.prototype.orderBy = function <T>(getter: (a: T) => number): T[] {
