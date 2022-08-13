@@ -265,6 +265,20 @@ export class Geometry {
   public static AngleUpwardness(angle: number): number {
     return Math.abs(Geometry.AngleDifference(angle, angle90)) / angle90 / 2;
   }
+  public static RotateX(x: number, y: number, angle: number, xCenter?: number, yCenter?: number): number {
+    xCenter = xCenter ?? 0;
+    yCenter = yCenter ?? 0;
+    x = x - xCenter;
+    y = y - yCenter;
+    return xCenter + x * Math.cos(angle) - y * Math.sin(angle);
+  }
+  public static RotateY(x: number, y: number, angle: number, xCenter?: number, yCenter?: number): number {
+    xCenter = xCenter ?? 0;
+    yCenter = yCenter ?? 0;
+    x = x - xCenter;
+    y = y - yCenter;
+    return yCenter + y * Math.cos(angle) + x * Math.sin(angle);
+  }
 
   public static Point: IPointStatic = {
     Zero: { x: 0, y: 0 },
@@ -348,14 +362,10 @@ export class Geometry {
       const temp = (length == undefined ? 1 : length) / Geometry.Point.Length(point);
       return { x: point.x * temp, y: point.y * temp };
     },
-    Rotate: (point: DeepReadonly<IPoint>, angle: number, center?: DeepReadonly<IPoint>): IPoint => {
-      const x = point.x - (center ? center.x : 0);
-      const y = point.y - (center ? center.y : 0);
-      return {
-        x: (center ? center.x : 0) + x * Math.cos(angle) - y * Math.sin(angle),
-        y: (center ? center.y : 0) + y * Math.cos(angle) + x * Math.sin(angle),
-      };
-    },
+    Rotate: (point: DeepReadonly<IPoint>, angle: number, center?: DeepReadonly<IPoint>): IPoint => ({
+      x: Geometry.RotateX(point.x, point.y, angle, center?.x, center?.y),
+      y: Geometry.RotateY(point.x, point.y, angle, center?.x, center?.y),
+    }),
     // same as rotating a vector 180 degrees
     Negative: (point: DeepReadonly<IPoint>): IPoint => ({
       x: -point.x,

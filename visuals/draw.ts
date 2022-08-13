@@ -73,6 +73,7 @@ export class Draw {
 
       context.globalAlpha = globalAlphaPrevious;
     },
+
     // x/y refers to the top-left corner of the image in world space
     // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
     ImagePart: (
@@ -130,8 +131,58 @@ export class Draw {
       context.fill();
     },
 
+    CircleArcOutline: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      r: number,
+      startAngle: number,
+      endAngle: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+    ) => {
+      if (lineWidth <= 0) return;
+      r = Draw.ApplyOutlinePlacement(r, lineWidth, outlinePlacement);
+      const context = world.context;
+      context.beginPath();
+      context.arc(x - world.camera.x, y - world.camera.y, r, startAngle, endAngle);
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.lineWidth = lineWidth;
+      context.stroke();
+    },
+
     Circle: (world: CameraContext, x: number, y: number, r: number, fillStyle: FillStyle = null) =>
       Draw.Explicit.CircleArc(world, x, y, r, 0, tau, fillStyle),
+
+    CircleOutline: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      r: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+    ) => Draw.Explicit.CircleArcOutline(world, x, y, r, 0, tau, strokeStyle, lineWidth, outlinePlacement),
+
+    Ring: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      innerRadius: number,
+      outerRadius: number,
+      strokeStyle: StrokeStyle = null
+    ) => {
+      if (outerRadius < innerRadius) {
+        const temp = outerRadius;
+        outerRadius = innerRadius;
+        innerRadius = temp;
+      }
+      if (outerRadius <= 0) return;
+      const lineWidth = outerRadius - innerRadius;
+      const r = (outerRadius + innerRadius) / 2;
+      Draw.Explicit.CircleOutline(world, x, y, r, strokeStyle, lineWidth);
+    },
 
     OvalArc: (
       world: CameraContext,
@@ -157,6 +208,30 @@ export class Draw {
       context.resetTransform();
     },
 
+    OvalArcOutline: (
+      world: CameraContext,
+      x: number,
+      y: number,
+      xRadius: number,
+      yRadius: number,
+      startAngle: number,
+      endAngle: number,
+      strokeStyle: StrokeStyle = null,
+      angle: number = 0,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+    ) => {
+      xRadius = Draw.ApplyOutlinePlacement(xRadius, lineWidth, outlinePlacement);
+      yRadius = Draw.ApplyOutlinePlacement(yRadius, lineWidth, outlinePlacement);
+      if (xRadius <= 0 || yRadius <= 0) return;
+      const context = world.context;
+      context.beginPath();
+      context.ellipse(x - world.camera.x, y - world.camera.y, xRadius, yRadius, angle, startAngle, endAngle);
+      context.lineWidth = lineWidth;
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.stroke();
+    },
+
     Oval: (
       world: CameraContext,
       x: number,
@@ -169,8 +244,217 @@ export class Draw {
       yCenter = y
     ) => Draw.Explicit.OvalArc(world, x, y, xRadius, yRadius, 0, tau, fillStyle, angle, xCenter, yCenter),
 
-    Segment: (
+    OvalOutline: (
       world: CameraContext,
+      x: number,
+      y: number,
+      xRadius: number,
+      yRadius: number,
+      strokeStyle: StrokeStyle = null,
+      angle: number = 0,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+    ) =>
+      Draw.Explicit.OvalArcOutline(
+        world,
+        x,
+        y,
+        xRadius,
+        yRadius,
+        0,
+        tau,
+        strokeStyle,
+        angle,
+        lineWidth,
+        outlinePlacement
+      ),
+
+    Triangle: (
+      { context, camera }: CameraContext,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      cx: number,
+      cy: number,
+      fillStyle: FillStyle = null
+    ) => {
+      context.beginPath();
+      context.moveTo(ax - camera.x, ay - camera.y);
+      context.lineTo(bx - camera.x, by - camera.y);
+      context.lineTo(cx - camera.x, cy - camera.y);
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+    },
+
+    TriangleOutline: (
+      { context, camera }: CameraContext,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      cx: number,
+      cy: number,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1
+    ) => {
+      context.beginPath();
+      context.moveTo(ax - camera.x, ay - camera.y);
+      context.lineTo(bx - camera.x, by - camera.y);
+      context.lineTo(cx - camera.x, cy - camera.y);
+      context.closePath();
+      context.lineWidth = lineWidth;
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.stroke();
+    },
+
+    Polygon: (world: CameraContext, vertices: DeepReadonly<IPoint[]>, fillStyle: FillStyle = null) => {
+      const vertexFirst = vertices.first();
+      if (vertexFirst == null) return;
+      const context = world.context;
+      context.beginPath();
+      context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
+      for (let i = 1; i < vertices.length; i++)
+        context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
+      context.closePath();
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+      context.fill();
+    },
+
+    PolygonOutline: (
+      world: CameraContext,
+      vertices: DeepReadonly<IPoint[]>,
+      strokeStyle: StrokeStyle = null,
+      lineWidth: number = 1
+    ) => {
+      const vertexFirst = vertices.first();
+      if (vertexFirst == null) return;
+      const context = world.context;
+      context.beginPath();
+      context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
+      for (let i = 1; i < vertices.length; i++)
+        context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
+      context.closePath();
+      context.lineWidth = lineWidth;
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.stroke();
+    },
+
+    Rectangle: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      fillStyle: FillStyle = null,
+      angle: number = 0,
+      xCenter?: number,
+      yCenter?: number
+    ) => {
+      if (fillStyle) context.fillStyle = Draw.StyleToString(fillStyle);
+
+      if (angle === 0) {
+        context.fillRect(x - camera.x, y - camera.y, w, h);
+        return;
+      }
+
+      const cx = (xCenter ?? x + w / 2) - camera.x;
+      const cy = (yCenter ?? y + h / 2) - camera.y;
+      context.translate(cx, cy);
+      context.rotate(angle);
+      context.fillRect(x - camera.x - cx, y - camera.y - cy, w, h);
+      context.resetTransform();
+    },
+
+    RectangleOutline: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      strokeStyle: StrokeStyle = null,
+      angle: number = 0,
+      xCenter?: number,
+      yCenter?: number,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.InnerFirst
+    ) => {
+      const expand = Draw.ApplyOutlinePlacement(0, lineWidth, outlinePlacement);
+
+      x -= expand;
+      y -= expand;
+      w += 2 * expand;
+      h += 2 * expand;
+
+      const xw = x + w;
+      const yh = y + h;
+
+      context.beginPath();
+      if (angle !== 0) {
+        xCenter = xCenter ?? x + w / 2;
+        yCenter = yCenter ?? y + h / 2;
+        context.moveTo(
+          Geometry.RotateX(x, y, angle, xCenter, yCenter) - camera.x,
+          Geometry.RotateY(x, y, angle, xCenter, yCenter) - camera.y
+        );
+        context.lineTo(
+          Geometry.RotateX(xw, y, angle, xCenter, yCenter) - camera.x,
+          Geometry.RotateY(xw, y, angle, xCenter, yCenter) - camera.y
+        );
+        context.lineTo(
+          Geometry.RotateX(xw, yh, angle, xCenter, yCenter) - camera.x,
+          Geometry.RotateY(xw, yh, angle, xCenter, yCenter) - camera.y
+        );
+        context.lineTo(
+          Geometry.RotateX(x, yh, angle, xCenter, yCenter) - camera.x,
+          Geometry.RotateY(x, yh, angle, xCenter, yCenter) - camera.y
+        );
+      } else {
+        context.moveTo(x - camera.x, y - camera.y);
+        context.lineTo(xw - camera.x, y - camera.y);
+        context.lineTo(xw - camera.x, yh - camera.y);
+        context.lineTo(x - camera.x, yh - camera.y);
+      }
+      context.closePath();
+      if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
+      context.lineWidth = lineWidth;
+      context.stroke();
+    },
+
+    RectangleGradientVertical: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      colorStopArray: DeepReadonly<ColorStopArray>
+    ) => {
+      const xDiff = x - camera.x;
+      const yDiff = y - camera.y;
+      const gradient = context.createLinearGradient(xDiff, yDiff, xDiff, yDiff + h);
+      ColorStopArray.ApplyToGradient(colorStopArray, gradient);
+      context.fillStyle = gradient;
+      context.fillRect(xDiff, yDiff, w, h);
+    },
+
+    RectangleGradientHorizontal: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      colorStopArray: DeepReadonly<ColorStopArray>
+    ) => {
+      const xDiff = x - camera.x;
+      const yDiff = y - camera.y;
+      const gradient = context.createLinearGradient(xDiff, yDiff, xDiff + w, yDiff);
+      ColorStopArray.ApplyToGradient(colorStopArray, gradient);
+      context.fillStyle = gradient;
+      context.fillRect(xDiff, yDiff, w, h);
+    },
+
+    Segment: (
+      { context, camera }: CameraContext,
       ax: number,
       ay: number,
       bx: number,
@@ -179,10 +463,9 @@ export class Draw {
       lineWidth: number = 1
     ) => {
       if (lineWidth <= 0) return;
-      const context = world.context;
       context.beginPath();
-      context.moveTo(ax - world.camera.x, ay - world.camera.y);
-      context.lineTo(bx - world.camera.x, by - world.camera.y);
+      context.moveTo(ax - camera.x, ay - camera.y);
+      context.lineTo(bx - camera.x, by - camera.y);
       if (strokeStyle) context.strokeStyle = Draw.StyleToString(strokeStyle);
       context.lineWidth = lineWidth;
       context.stroke();
@@ -211,15 +494,17 @@ export class Draw {
     lineWidth: number = 1,
     outlinePlacement: OutlinePlacement = OutlinePlacement.Default
   ) {
-    if (lineWidth <= 0) return;
-    const r = this.ApplyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
-    if (r <= 0) return;
-    const context = world.context;
-    context.beginPath();
-    context.arc(circle.x - world.camera.x, circle.y - world.camera.y, r, startAngle, endAngle);
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.lineWidth = lineWidth;
-    context.stroke();
+    Draw.Explicit.CircleArcOutline(
+      world,
+      circle.x,
+      circle.y,
+      circle.r,
+      startAngle,
+      endAngle,
+      strokeStyle,
+      lineWidth,
+      outlinePlacement
+    );
   }
 
   public static Circle(world: CameraContext, circle: DeepReadonly<ICircle>, fillStyle: FillStyle = null) {
@@ -233,18 +518,9 @@ export class Draw {
     lineWidth: number = 1,
     outlinePlacement: OutlinePlacement = OutlinePlacement.Default
   ) {
-    if (lineWidth <= 0) return;
-    const r = this.ApplyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
-    if (r <= 0) return;
-    const context = world.context;
-    context.beginPath();
-    context.arc(circle.x - world.camera.x, circle.y - world.camera.y, r, 0, tau);
-    context.lineWidth = lineWidth;
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.stroke();
+    Draw.Explicit.CircleOutline(world, circle.x, circle.y, circle.r, strokeStyle, lineWidth, outlinePlacement);
   }
 
-  // same as circleOutline except you specify the inner and outer radii
   public static Ring(
     world: CameraContext,
     position: DeepReadonly<IPoint>,
@@ -252,15 +528,7 @@ export class Draw {
     outerRadius: number,
     strokeStyle: StrokeStyle = null
   ) {
-    if (outerRadius < innerRadius) {
-      const temp = outerRadius;
-      outerRadius = innerRadius;
-      innerRadius = temp;
-    }
-    if (outerRadius <= 0) return;
-    const lineWidth = outerRadius - innerRadius;
-    const radius = (outerRadius + innerRadius) / 2;
-    Draw.CircleOutline(world, { x: position.x, y: position.y, r: radius }, strokeStyle, lineWidth);
+    Draw.Explicit.Ring(world, position.x, position.y, innerRadius, outerRadius, strokeStyle);
   }
 
   public static OvalArc(
@@ -289,6 +557,33 @@ export class Draw {
     );
   }
 
+  public static OvalArcOutline(
+    world: CameraContext,
+    position: DeepReadonly<IPoint>,
+    xRadius: number,
+    yRadius: number,
+    startAngle: number,
+    endAngle: number,
+    strokeStyle: StrokeStyle = null,
+    angle: number = 0,
+    lineWidth: number = 1,
+    outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+  ) {
+    Draw.Explicit.OvalArcOutline(
+      world,
+      position.x,
+      position.y,
+      xRadius,
+      yRadius,
+      startAngle,
+      endAngle,
+      strokeStyle,
+      angle,
+      lineWidth,
+      outlinePlacement
+    );
+  }
+
   public static Oval(
     world: CameraContext,
     position: DeepReadonly<IPoint>,
@@ -311,25 +606,30 @@ export class Draw {
     lineWidth: number = 1,
     outlinePlacement: OutlinePlacement = OutlinePlacement.Default
   ) {
-    xRadius = this.ApplyOutlinePlacement(xRadius, lineWidth, outlinePlacement);
-    yRadius = this.ApplyOutlinePlacement(yRadius, lineWidth, outlinePlacement);
-    if (xRadius <= 0 || yRadius <= 0) return;
-    const context = world.context;
-    context.beginPath();
-    context.ellipse(position.x - world.camera.x, position.y - world.camera.y, xRadius, yRadius, angle, 0, tau);
-    context.lineWidth = lineWidth;
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.stroke();
+    Draw.Explicit.OvalOutline(
+      world,
+      position.x,
+      position.y,
+      xRadius,
+      yRadius,
+      strokeStyle,
+      angle,
+      lineWidth,
+      outlinePlacement
+    );
   }
 
   public static Triangle(world: CameraContext, triangle: DeepReadonly<ITriangle>, fillStyle: FillStyle = null) {
-    const context = world.context;
-    context.beginPath();
-    context.moveTo(triangle.a.x - world.camera.x, triangle.a.y - world.camera.y);
-    context.lineTo(triangle.b.x - world.camera.x, triangle.b.y - world.camera.y);
-    context.lineTo(triangle.c.x - world.camera.x, triangle.c.y - world.camera.y);
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-    context.fill();
+    Draw.Explicit.Triangle(
+      world,
+      triangle.a.x,
+      triangle.a.y,
+      triangle.b.x,
+      triangle.b.y,
+      triangle.c.x,
+      triangle.c.y,
+      fillStyle
+    );
   }
 
   public static TriangleOutline(
@@ -338,28 +638,21 @@ export class Draw {
     strokeStyle: StrokeStyle = null,
     lineWidth: number = 1
   ) {
-    const context = world.context;
-    context.beginPath();
-    context.moveTo(triangle.a.x - world.camera.x, triangle.a.y - world.camera.y);
-    context.lineTo(triangle.b.x - world.camera.x, triangle.b.y - world.camera.y);
-    context.lineTo(triangle.c.x - world.camera.x, triangle.c.y - world.camera.y);
-    context.closePath();
-    context.lineWidth = lineWidth;
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.stroke();
+    Draw.Explicit.TriangleOutline(
+      world,
+      triangle.a.x,
+      triangle.a.y,
+      triangle.b.x,
+      triangle.b.y,
+      triangle.c.x,
+      triangle.c.y,
+      strokeStyle,
+      lineWidth
+    );
   }
 
   public static Polygon(world: CameraContext, { vertices }: DeepReadonly<IPolygon>, fillStyle: FillStyle = null) {
-    const vertexFirst = vertices.first();
-    if (vertexFirst == null) return;
-    const context = world.context;
-    context.beginPath();
-    context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
-    for (let i = 1; i < vertices.length; i++)
-      context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
-    context.closePath();
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-    context.fill();
+    Draw.Explicit.Polygon(world, vertices, fillStyle);
   }
 
   public static PolygonOutline(
@@ -368,17 +661,7 @@ export class Draw {
     strokeStyle: StrokeStyle = null,
     lineWidth: number = 1
   ) {
-    const vertexFirst = vertices.first();
-    if (vertexFirst == null) return;
-    const context = world.context;
-    context.beginPath();
-    context.moveTo(vertexFirst.x - world.camera.x, vertexFirst.y - world.camera.y);
-    for (let i = 1; i < vertices.length; i++)
-      context.lineTo(vertices[i].x - world.camera.x, vertices[i].y - world.camera.y);
-    context.closePath();
-    context.lineWidth = lineWidth;
-    if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
-    context.stroke();
+    Draw.Explicit.PolygonOutline(world, vertices, strokeStyle, lineWidth);
   }
 
   public static RegularPolygon(
@@ -429,76 +712,52 @@ export class Draw {
 
   public static Rectangle(
     world: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     fillStyle: FillStyle = null,
     angle: number = 0,
     center?: DeepReadonly<IPoint>
   ) {
-    const context = world.context;
-    if (fillStyle) context.fillStyle = this.StyleToString(fillStyle);
-
-    if (angle === 0) {
-      context.fillRect(rectangle.x - world.camera.x, rectangle.y - world.camera.y, rectangle.w, rectangle.h);
-      return;
-    }
-
-    center = center || Geometry.Rectangle.Center(rectangle);
-    center = Geometry.Point.Subtract(center, world.camera);
-    context.translate(center.x, center.y);
-    context.rotate(angle);
-    context.fillRect(
-      rectangle.x - world.camera.x - center.x,
-      rectangle.y - world.camera.y - center.y,
-      rectangle.w,
-      rectangle.h
-    );
-    context.resetTransform();
+    Draw.Explicit.Rectangle(world, x, y, w, h, fillStyle, angle, center?.x, center?.y);
   }
 
   public static RectangleOutline(
     world: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     strokeStyle: StrokeStyle = null,
     angle: number = 0,
+    center?: DeepReadonly<IPoint>,
     lineWidth: number = 1,
     outlinePlacement: OutlinePlacement = OutlinePlacement.InnerFirst
   ) {
-    let points: IPoint[] = Geometry.Rectangle.Vertices(
-      Geometry.Rectangle.Expand(rectangle, this.ApplyOutlinePlacement(0, lineWidth, outlinePlacement))
+    Draw.Explicit.RectangleOutline(
+      world,
+      x,
+      y,
+      w,
+      h,
+      strokeStyle,
+      angle,
+      center?.x,
+      center?.y,
+      lineWidth,
+      outlinePlacement
     );
-    if (angle !== 0) {
-      const center = new Point(rectangle.x + rectangle.w / 2, rectangle.y + rectangle.h / 2);
-      points = points.map(point => Geometry.Point.Rotate(point, angle, center));
-    }
-    Draw.Path(world, points, strokeStyle, lineWidth, true);
   }
 
   public static RectangleGradientVertical(
     world: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     colorStopArray: DeepReadonly<ColorStopArray>
   ) {
-    const context = world.context;
-    const xDiff = rectangle.x - world.camera.x;
-    const yDiff = rectangle.y - world.camera.y;
-    const gradient = context.createLinearGradient(xDiff, yDiff, xDiff, yDiff + rectangle.h);
-    ColorStopArray.ApplyToGradient(colorStopArray, gradient);
-    context.fillStyle = gradient;
-    context.fillRect(xDiff, yDiff, rectangle.w, rectangle.h);
+    Draw.Explicit.RectangleGradientVertical(world, x, y, w, h, colorStopArray);
   }
 
   public static RectangleGradientHorizontal(
     world: CameraContext,
-    rectangle: DeepReadonly<IRectangle>,
+    { x, y, w, h }: DeepReadonly<IRectangle>,
     colorStopArray: DeepReadonly<ColorStopArray>
   ) {
-    const context = world.context;
-    const xDiff = rectangle.x - world.camera.x;
-    const yDiff = rectangle.y - world.camera.y;
-    const gradient = context.createLinearGradient(xDiff, yDiff, xDiff + rectangle.w, yDiff);
-    ColorStopArray.ApplyToGradient(colorStopArray, gradient);
-    context.fillStyle = gradient;
-    context.fillRect(xDiff, yDiff, rectangle.w, rectangle.h);
+    Draw.Explicit.RectangleGradientHorizontal(world, x, y, w, h, colorStopArray);
   }
 
   public static CircleArcGradient(
