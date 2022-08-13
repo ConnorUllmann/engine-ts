@@ -158,6 +158,63 @@ export class Draw {
       outlinePlacement: OutlinePlacement = OutlinePlacement.Default
     ) => Draw.Explicit.CircleArcOutline(cameraContext, x, y, r, 0, tau, strokeStyle, lineWidth, outlinePlacement),
 
+    CircleArcGradient: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      r: number,
+      colorStopArray: DeepReadonly<ColorStopArray>,
+      startAngle: number = 0,
+      endAngle: number = tau,
+      alpha: number = 1
+    ) => {
+      const globalAlphaPrevious = context.globalAlpha;
+      context.globalAlpha = alpha;
+
+      const xDiff = x - camera.x;
+      const yDiff = y - camera.y;
+      const gradient = context.createRadialGradient(xDiff, yDiff, 0, xDiff, yDiff, r);
+      ColorStopArray.ApplyToGradient(colorStopArray, gradient);
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.arc(x - camera.x, y - camera.y, r, startAngle, endAngle);
+      context.fill();
+
+      context.globalAlpha = globalAlphaPrevious;
+    },
+
+    CircleArcOutlineGradient: (
+      { context, camera }: CameraContext,
+      x: number,
+      y: number,
+      r: number,
+      colorStopArray: DeepReadonly<ColorStopArray>,
+      startAngle: number,
+      endAngle: number,
+      alpha: number = 1,
+      lineWidth: number = 1,
+      outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+    ) => {
+      if (lineWidth <= 0) return;
+      r = Draw.ApplyOutlinePlacement(r, lineWidth, outlinePlacement);
+      if (r <= 0) return;
+
+      const globalAlphaPrevious = context.globalAlpha;
+      context.globalAlpha = alpha;
+
+      const xDiff = x - camera.x;
+      const yDiff = y - camera.y;
+      const gradient = context.createRadialGradient(xDiff, yDiff, r - lineWidth / 2, xDiff, yDiff, r + lineWidth / 2);
+      ColorStopArray.ApplyToGradient(colorStopArray, gradient);
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.arc(x - camera.x, y - camera.y, r, startAngle, endAngle);
+      context.lineWidth = lineWidth;
+      context.stroke();
+
+      context.globalAlpha = globalAlphaPrevious;
+    },
+
     Ring: (
       cameraContext: CameraContext,
       x: number,
@@ -773,6 +830,50 @@ export class Draw {
     Draw.Explicit.CircleOutline(cameraContext, circle.x, circle.y, circle.r, strokeStyle, lineWidth, outlinePlacement);
   }
 
+  public static CircleArcGradient(
+    cameraContext: CameraContext,
+    circle: DeepReadonly<ICircle>,
+    colorStopArray: DeepReadonly<ColorStopArray>,
+    startAngle: number = 0,
+    endAngle: number = tau,
+    alpha: number = 1
+  ) {
+    Draw.Explicit.CircleArcGradient(
+      cameraContext,
+      circle.x,
+      circle.y,
+      circle.r,
+      colorStopArray,
+      startAngle,
+      endAngle,
+      alpha
+    );
+  }
+
+  public static CircleArcOutlineGradient(
+    cameraContext: CameraContext,
+    circle: DeepReadonly<ICircle>,
+    colorStopArray: DeepReadonly<ColorStopArray>,
+    startAngle: number,
+    endAngle: number,
+    alpha: number = 1,
+    lineWidth: number = 1,
+    outlinePlacement: OutlinePlacement = OutlinePlacement.Default
+  ) {
+    Draw.Explicit.CircleArcOutlineGradient(
+      cameraContext,
+      circle.x,
+      circle.y,
+      circle.r,
+      colorStopArray,
+      startAngle,
+      endAngle,
+      alpha,
+      lineWidth,
+      outlinePlacement
+    );
+  }
+
   public static Ring(
     cameraContext: CameraContext,
     position: DeepReadonly<IPoint>,
@@ -1002,59 +1103,6 @@ export class Draw {
     Draw.Explicit.RectangleGradientHorizontal(cameraContext, x, y, w, h, colorStopArray);
   }
 
-  public static CircleArcGradient(
-    { context, camera }: CameraContext,
-    circle: DeepReadonly<ICircle>,
-    colorStopArray: DeepReadonly<ColorStopArray>,
-    startAngle: number = 0,
-    endAngle: number = tau,
-    alpha: number = 1
-  ) {
-    const globalAlphaPrevious = context.globalAlpha;
-    context.globalAlpha = alpha;
-
-    const xDiff = circle.x - camera.x;
-    const yDiff = circle.y - camera.y;
-    const gradient = context.createRadialGradient(xDiff, yDiff, 0, xDiff, yDiff, circle.r);
-    ColorStopArray.ApplyToGradient(colorStopArray, gradient);
-    context.fillStyle = gradient;
-    context.beginPath();
-    context.arc(circle.x - camera.x, circle.y - camera.y, circle.r, startAngle, endAngle);
-    context.fill();
-
-    context.globalAlpha = globalAlphaPrevious;
-  }
-
-  public static CircleArcOutlineGradient(
-    { context, camera }: CameraContext,
-    circle: DeepReadonly<ICircle>,
-    colorStopArray: DeepReadonly<ColorStopArray>,
-    startAngle: number,
-    endAngle: number,
-    alpha: number = 1,
-    lineWidth: number = 1,
-    outlinePlacement: OutlinePlacement = OutlinePlacement.Default
-  ) {
-    if (lineWidth <= 0) return;
-    const r = this.ApplyOutlinePlacement(circle.r, lineWidth, outlinePlacement);
-    if (r <= 0) return;
-
-    const globalAlphaPrevious = context.globalAlpha;
-    context.globalAlpha = alpha;
-
-    const xDiff = circle.x - camera.x;
-    const yDiff = circle.y - camera.y;
-    const gradient = context.createRadialGradient(xDiff, yDiff, r - lineWidth / 2, xDiff, yDiff, r + lineWidth / 2);
-    ColorStopArray.ApplyToGradient(colorStopArray, gradient);
-    context.strokeStyle = gradient;
-    context.beginPath();
-    context.arc(circle.x - camera.x, circle.y - camera.y, r, startAngle, endAngle);
-    context.lineWidth = lineWidth;
-    context.stroke();
-
-    context.globalAlpha = globalAlphaPrevious;
-  }
-
   public static RectangleRounded(
     cameraContext: CameraContext,
     { x, y, w, h }: DeepReadonly<IRectangle>,
@@ -1119,6 +1167,20 @@ export class Draw {
     Draw.Explicit.Segment(cameraContext, segment.a.x, segment.a.y, segment.b.x, segment.b.y, strokeStyle, lineWidth);
   }
 
+  public static Text(
+    cameraContext: CameraContext,
+    text: string,
+    { x, y }: DeepReadonly<IPoint>,
+    fillStyle: FillStyle = null,
+    font: string | null = null,
+    halign: HalignAll = Halign.LEFT,
+    valign: ValignAll = Valign.TOP,
+    angle: number = 0,
+    center?: DeepReadonly<IPoint>
+  ) {
+    Draw.Explicit.Text(cameraContext, text, x, y, fillStyle, font, halign, valign, angle, center?.x, center?.y);
+  }
+
   public static Path(
     { context, camera }: CameraContext,
     points: DeepReadonly<IPoint[]>,
@@ -1170,20 +1232,6 @@ export class Draw {
     if (strokeStyle) context.strokeStyle = this.StyleToString(strokeStyle);
     context.lineWidth = lineWidth;
     context.stroke();
-  }
-
-  public static Text(
-    cameraContext: CameraContext,
-    text: string,
-    { x, y }: DeepReadonly<IPoint>,
-    fillStyle: FillStyle = null,
-    font: string | null = null,
-    halign: HalignAll = Halign.LEFT,
-    valign: ValignAll = Valign.TOP,
-    angle: number = 0,
-    center?: DeepReadonly<IPoint>
-  ) {
-    Draw.Explicit.Text(cameraContext, text, x, y, fillStyle, font, halign, valign, angle, center?.x, center?.y);
   }
 
   public static TextStyle(
