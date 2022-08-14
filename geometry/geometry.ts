@@ -280,6 +280,28 @@ export class Geometry {
     y = y - yCenter;
     return yCenter + y * Math.cos(angle) + x * Math.sin(angle);
   }
+  // if result is > 0, then this point is left of the line/segment/ray formed by the two points.
+  // if result is < 0, then this point is right of the line/segment/ray formed by the two points.
+  // if result == 0, then it is colinear with the two points.
+  public static IsLeftCenterRightOf(
+    xTest: number,
+    yTest: number,
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number
+  ): number {
+    return Math.sign((bx - ax) * (yTest - ay) - (by - ay) * (xTest - ax));
+  }
+  public static IsLeftOf(xTest: number, yTest: number, ax: number, ay: number, bx: number, by: number): boolean {
+    return Geometry.IsLeftCenterRightOf(xTest, yTest, ax, ay, bx, by) > 0;
+  }
+  public static IsRightOf(xTest: number, yTest: number, ax: number, ay: number, bx: number, by: number): boolean {
+    return Geometry.IsLeftCenterRightOf(xTest, yTest, ax, ay, bx, by) < 0;
+  }
+  public static IsColinearWith(xTest: number, yTest: number, ax: number, ay: number, bx: number, by: number): boolean {
+    return Geometry.IsWithinToleranceOf(Geometry.IsLeftCenterRightOf(xTest, yTest, ax, ay, bx, by));
+  }
 
   public static Point: IPointStatic = {
     Zero: { x: 0, y: 0 },
@@ -410,11 +432,13 @@ export class Geometry {
     // if result is < 0, then this point is right of the line/segment/ray formed by the two points.
     // if result == 0, then it is colinear with the two points.
     IsLeftCenterRightOf: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>): number =>
-      Math.sign((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)),
-    IsLeftOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean =>
-      Geometry.Point.IsLeftCenterRightOf(point, pair) > 0,
-    IsColinearWith: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean =>
-      Geometry.IsWithinToleranceOf(Geometry.Point.IsLeftCenterRightOf(point, pair)),
+      Geometry.IsLeftCenterRightOf(point.x, point.y, a.x, a.y, b.x, b.y),
+    IsLeftOf: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>): boolean =>
+      Geometry.IsLeftOf(point.x, point.y, a.x, a.y, b.x, b.y),
+    IsRightOf: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>): boolean =>
+      Geometry.IsRightOf(point.x, point.y, a.x, a.y, b.x, b.y),
+    IsColinearWith: (point: DeepReadonly<IPoint>, { a, b }: DeepReadonly<IPointPair>): boolean =>
+      Geometry.IsColinearWith(point.x, point.y, a.x, a.y, b.x, b.y),
     InsideSegmentIfColinear: (point: DeepReadonly<IPoint>, pair: DeepReadonly<ISegment>): boolean => {
       let ap = Geometry.Point.Subtract(point, pair.a);
       let ab = Geometry.Point.Subtract(pair.b, pair.a);
@@ -427,8 +451,6 @@ export class Geometry {
       let v = Geometry.Point.Dot(ap, ab);
       return v >= 0;
     },
-    IsRightOf: (point: DeepReadonly<IPoint>, pair: DeepReadonly<IPointPair>): boolean =>
-      Geometry.Point.IsLeftCenterRightOf(point, pair) < 0,
     // Returns a list of the velocity vectors a projectile would need in order to hit 'target' from 'start'
     // given the speed of the shot and gravity. Returns 0, 1, or 2 Points (if two points, the highest-arching vector is first)
     LaunchVectors: (
@@ -996,23 +1018,13 @@ export class Geometry {
         const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
         if (currentVertex.y <= point.y) {
           if (nextVertex.y > point.y) {
-            if (
-              Geometry.Point.IsLeftOf(point, {
-                a: currentVertex,
-                b: nextVertex,
-              })
-            ) {
+            if (Geometry.IsLeftOf(point.x, point.y, currentVertex.x, currentVertex.y, nextVertex.x, nextVertex.y)) {
               windingNumber++;
             }
           }
         } else {
           if (nextVertex.y <= point.y) {
-            if (
-              Geometry.Point.IsRightOf(point, {
-                a: currentVertex,
-                b: nextVertex,
-              })
-            ) {
+            if (Geometry.IsRightOf(point.x, point.y, currentVertex.x, currentVertex.y, nextVertex.x, nextVertex.y)) {
               windingNumber--;
             }
           }
