@@ -11,6 +11,18 @@ import {
   ITriangle,
   PointPairType,
 } from '../geometry/interfaces';
+import {
+  IsCircle,
+  IsLine,
+  IsPath,
+  IsPoint,
+  IsPolygon,
+  IsRay,
+  IsRectangle,
+  IsSegment,
+  IsTriangle,
+  Shape,
+} from '../geometry/shape-type';
 import { Halign, Valign } from './align';
 import { BlendMode } from './blend-mode';
 import { CameraContext } from './camera-context';
@@ -781,8 +793,27 @@ export class Draw {
     },
   };
 
-  // TODO: add generic shape-drawing function
-  // public static Shape(cameraContext: CameraContext, shape: Shape, fillStyle: FillStyle=null) {}
+  public static Shape(cameraContext: CameraContext, b: Shape, fillStyle: FillStyle = null) {
+    if (IsRectangle(b)) {
+      Draw.Rectangle(cameraContext, b, fillStyle);
+    } else if (IsCircle(b)) {
+      Draw.Circle(cameraContext, b, fillStyle);
+    } else if (IsTriangle(b)) {
+      Draw.Triangle(cameraContext, b, fillStyle);
+    } else if (IsPolygon(b)) {
+      Draw.Polygon(cameraContext, b, fillStyle);
+    } else if (IsPath(b)) {
+      Draw.Path(cameraContext, b, fillStyle);
+    } else if (IsSegment(b)) {
+      Draw.Segment(cameraContext, b, fillStyle);
+    } else if (IsRay(b)) {
+      Draw.Ray(cameraContext, b, fillStyle);
+    } else if (IsLine(b)) {
+      Draw.Line(cameraContext, b, fillStyle);
+    } else if (IsPoint(b)) {
+      Draw.Explicit.Rectangle(cameraContext, b.x, b.y, 1, 1, fillStyle);
+    }
+  }
 
   public static CircleArc(
     cameraContext: CameraContext,

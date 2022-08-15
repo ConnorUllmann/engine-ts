@@ -38,6 +38,8 @@ export interface IPolygon {
   vertices: IPoint[]; // counter-clockwise order
 }
 
+export type IPath = IPoint[];
+
 export enum PointPairType {
   LINE = 'LINE',
   SEGMENT = 'SEGMENT',

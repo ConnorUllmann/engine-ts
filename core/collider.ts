@@ -1,5 +1,6 @@
-import { BoundableShape, Geometry } from '../geometry/geometry';
+import { Geometry } from '../geometry/geometry';
 import { IRectangle } from '../geometry/interfaces';
+import { BoundableShape } from '../geometry/shape-type';
 import { Component } from './component';
 import { DeepReadonly } from './utils';
 
