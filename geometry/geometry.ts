@@ -2224,199 +2224,6 @@ export class Geometry {
   //  1. test all collisions (most ray/segment/line vs shape collisions are untested)
   //  2. create matching functions in Geometry.Intersection that actually returns intersection points, if any
   public static Collide = {
-    SegmentPoint: (
-      a: DeepReadonly<ISegment>,
-      b: DeepReadonly<IPoint>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.SegmentPoint(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        b.x + bOffset.x,
-        b.y + bOffset.y
-      ),
-    TriangleSegment: (
-      a: DeepReadonly<ITriangle>,
-      b: DeepReadonly<ISegment>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.TriangleSegment(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        a.c.x + aOffset.x,
-        a.c.y + aOffset.y,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    CircleSegment: (
-      a: DeepReadonly<ICircle>,
-      b: DeepReadonly<ISegment>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.CircleSegment(
-        a.x + aOffset.x,
-        a.y + aOffset.y,
-        a.r,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    PolygonSegment: (
-      a: DeepReadonly<IPolygon>,
-      b: DeepReadonly<ISegment>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.PolygonSegment(
-        a,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y,
-        aOffset.x,
-        aOffset.y
-      ),
-    RayPoint: (
-      a: DeepReadonly<IRay>,
-      b: DeepReadonly<IPoint>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.RayPoint(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        b.x + bOffset.x,
-        b.y + bOffset.y
-      ),
-    TriangleRay: (
-      a: DeepReadonly<ITriangle>,
-      b: DeepReadonly<IRay>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.TriangleRay(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        a.c.x + aOffset.x,
-        a.c.y + aOffset.y,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    CircleRay: (
-      a: DeepReadonly<ICircle>,
-      b: DeepReadonly<IRay>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.CircleRay(
-        a.x + aOffset.x,
-        a.y + aOffset.y,
-        a.r,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    PolygonRay: (
-      a: DeepReadonly<IPolygon>,
-      b: DeepReadonly<IRay>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.PolygonRay(
-        a,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y,
-        aOffset.x,
-        aOffset.y
-      ),
-    LinePoint: (
-      a: DeepReadonly<ILine>,
-      b: DeepReadonly<IPoint>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.LinePoint(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        b.x + bOffset.x,
-        b.y + bOffset.y
-      ),
-    TriangleLine: (
-      a: DeepReadonly<ITriangle>,
-      b: DeepReadonly<ILine>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.TriangleLine(
-        a.a.x + aOffset.x,
-        a.a.y + aOffset.y,
-        a.b.x + aOffset.x,
-        a.b.y + aOffset.y,
-        a.c.x + aOffset.x,
-        a.c.y + aOffset.y,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    CircleLine: (
-      a: DeepReadonly<ICircle>,
-      b: DeepReadonly<ILine>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.CircleLine(
-        a.x + aOffset.x,
-        a.y + aOffset.y,
-        a.r,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y
-      ),
-    PolygonLine: (
-      a: DeepReadonly<IPolygon>,
-      b: DeepReadonly<ILine>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.PolygonLine(
-        a,
-        b.a.x + bOffset.x,
-        b.a.y + bOffset.y,
-        b.b.x + bOffset.x,
-        b.b.y + bOffset.y,
-        aOffset.x,
-        aOffset.y
-      ),
-    PointPoint: (
-      a: DeepReadonly<IPoint>,
-      b: DeepReadonly<IPoint>,
-      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
-      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
-    ): boolean =>
-      Geometry.CollideExplicit.PointPoint(a.x + aOffset.x, a.y + aOffset.y, b.x + bOffset.x, b.y + bOffset.y),
     RectangleRectangle: (
       rectangleA: DeepReadonly<IRectangle>,
       rectangleB: DeepReadonly<IRectangle>,
@@ -2611,6 +2418,51 @@ export class Geometry {
       aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
       bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): boolean => Geometry.CollideExplicit.CirclePath(a.x + aOffset.x, a.y + aOffset.y, a.r, b, bOffset.x, bOffset.y),
+    CircleSegment: (
+      a: DeepReadonly<ICircle>,
+      b: DeepReadonly<ISegment>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.CircleSegment(
+        a.x + aOffset.x,
+        a.y + aOffset.y,
+        a.r,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
+    CircleRay: (
+      a: DeepReadonly<ICircle>,
+      b: DeepReadonly<IRay>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.CircleRay(
+        a.x + aOffset.x,
+        a.y + aOffset.y,
+        a.r,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
+    CircleLine: (
+      a: DeepReadonly<ICircle>,
+      b: DeepReadonly<ILine>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.CircleLine(
+        a.x + aOffset.x,
+        a.y + aOffset.y,
+        a.r,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
     CirclePoint: (
       circle: DeepReadonly<ICircle>,
       point: DeepReadonly<IPoint>,
@@ -2678,6 +2530,60 @@ export class Geometry {
         bOffset.x,
         bOffset.y
       ),
+    TriangleSegment: (
+      a: DeepReadonly<ITriangle>,
+      b: DeepReadonly<ISegment>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.TriangleSegment(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        a.c.x + aOffset.x,
+        a.c.y + aOffset.y,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
+    TriangleRay: (
+      a: DeepReadonly<ITriangle>,
+      b: DeepReadonly<IRay>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.TriangleRay(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        a.c.x + aOffset.x,
+        a.c.y + aOffset.y,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
+    TriangleLine: (
+      a: DeepReadonly<ITriangle>,
+      b: DeepReadonly<ILine>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.TriangleLine(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        a.c.x + aOffset.x,
+        a.c.y + aOffset.y,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y
+      ),
     TrianglePoint: (
       triangle: DeepReadonly<ITriangle>,
       point: DeepReadonly<IPoint>,
@@ -2715,6 +2621,51 @@ export class Geometry {
       pathOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): boolean =>
       Geometry.CollideExplicit.PolygonPath(polygon, path, polygonOffset.x, polygonOffset.y, pathOffset.x, pathOffset.y),
+    PolygonSegment: (
+      a: DeepReadonly<IPolygon>,
+      b: DeepReadonly<ISegment>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.PolygonSegment(
+        a,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y,
+        aOffset.x,
+        aOffset.y
+      ),
+    PolygonRay: (
+      a: DeepReadonly<IPolygon>,
+      b: DeepReadonly<IRay>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.PolygonRay(
+        a,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y,
+        aOffset.x,
+        aOffset.y
+      ),
+    PolygonLine: (
+      a: DeepReadonly<IPolygon>,
+      b: DeepReadonly<ILine>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.PolygonLine(
+        a,
+        b.a.x + bOffset.x,
+        b.a.y + bOffset.y,
+        b.b.x + bOffset.x,
+        b.b.y + bOffset.y,
+        aOffset.x,
+        aOffset.y
+      ),
     PolygonPoint: (
       polygon: DeepReadonly<IPolygon>,
       point: DeepReadonly<IPoint>,
@@ -2833,6 +2784,20 @@ export class Geometry {
         b.b.x + bOffset.x,
         b.b.y + bOffset.y
       ),
+    SegmentPoint: (
+      a: DeepReadonly<ISegment>,
+      b: DeepReadonly<IPoint>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.SegmentPoint(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        b.x + bOffset.x,
+        b.y + bOffset.y
+      ),
     RayRay: (
       a: DeepReadonly<IRay>,
       b: DeepReadonly<IRay>,
@@ -2865,6 +2830,20 @@ export class Geometry {
         b.b.x + bOffset.x,
         b.b.y + bOffset.y
       ),
+    RayPoint: (
+      a: DeepReadonly<IRay>,
+      b: DeepReadonly<IPoint>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.RayPoint(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        b.x + bOffset.x,
+        b.y + bOffset.y
+      ),
     LineLine: (
       a: DeepReadonly<ILine>,
       b: DeepReadonly<ILine>,
@@ -2881,6 +2860,27 @@ export class Geometry {
         b.b.x + bOffset.x,
         b.b.y + bOffset.y
       ),
+    LinePoint: (
+      a: DeepReadonly<ILine>,
+      b: DeepReadonly<IPoint>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.LinePoint(
+        a.a.x + aOffset.x,
+        a.a.y + aOffset.y,
+        a.b.x + aOffset.x,
+        a.b.y + aOffset.y,
+        b.x + bOffset.x,
+        b.y + bOffset.y
+      ),
+    PointPoint: (
+      a: DeepReadonly<IPoint>,
+      b: DeepReadonly<IPoint>,
+      aOffset: DeepReadonly<IPoint> = Geometry.Point.Zero,
+      bOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
+    ): boolean =>
+      Geometry.CollideExplicit.PointPoint(a.x + aOffset.x, a.y + aOffset.y, b.x + bOffset.x, b.y + bOffset.y),
     SegmentsSegments: (
       segmentsA: DeepReadonly<DeepReadonly<ISegment>[]>,
       segmentsB: DeepReadonly<DeepReadonly<ISegment>[]>
