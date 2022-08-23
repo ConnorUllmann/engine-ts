@@ -793,7 +793,7 @@ export class Draw {
     },
   };
 
-  public static Shape(cameraContext: CameraContext, b: Shape, fillStyle: FillStyle = null) {
+  public static Shape(cameraContext: CameraContext, b: DeepReadonly<Shape>, fillStyle: FillStyle = null) {
     if (IsRectangle(b)) {
       Draw.Rectangle(cameraContext, b, fillStyle);
     } else if (IsCircle(b)) {

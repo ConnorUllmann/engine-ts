@@ -3019,7 +3019,7 @@ export class Geometry {
         } else if (IsPolygon(b)) {
           return Geometry.Collide.PolygonSegment(b, a, bOffset, aOffset);
         } else if (IsPath(b)) {
-          return Geometry.Collide.PathSegment(b, a, aOffset, bOffset);
+          return Geometry.Collide.PathSegment(b, a, bOffset, aOffset);
         } else if (IsSegment(b)) {
           return Geometry.Collide.SegmentSegment(a, b, aOffset, bOffset);
         } else if (IsRay(b)) {
@@ -3042,9 +3042,9 @@ export class Geometry {
         } else if (IsPolygon(b)) {
           return Geometry.Collide.PolygonRay(b, a, bOffset, aOffset);
         } else if (IsPath(b)) {
-          return Geometry.Collide.PathRay(b, a, aOffset, bOffset);
+          return Geometry.Collide.PathRay(b, a, bOffset, aOffset);
         } else if (IsSegment(b)) {
-          return Geometry.Collide.SegmentRay(b, a, aOffset, bOffset);
+          return Geometry.Collide.SegmentRay(b, a, bOffset, aOffset);
         } else if (IsRay(b)) {
           return Geometry.Collide.RayRay(a, b, aOffset, bOffset);
         } else if (IsLine(b)) {
@@ -3065,11 +3065,11 @@ export class Geometry {
         } else if (IsPolygon(b)) {
           return Geometry.Collide.PolygonLine(b, a, bOffset, aOffset);
         } else if (IsPath(b)) {
-          return Geometry.Collide.PathLine(b, a, aOffset, bOffset);
+          return Geometry.Collide.PathLine(b, a, bOffset, aOffset);
         } else if (IsSegment(b)) {
-          return Geometry.Collide.SegmentLine(b, a, aOffset, bOffset);
+          return Geometry.Collide.SegmentLine(b, a, bOffset, aOffset);
         } else if (IsRay(b)) {
-          return Geometry.Collide.RayLine(b, a, aOffset, bOffset);
+          return Geometry.Collide.RayLine(b, a, bOffset, aOffset);
         } else if (IsLine(b)) {
           return Geometry.Collide.LineLine(a, b, aOffset, bOffset);
         } else if (IsPoint(b)) {
@@ -3088,13 +3088,13 @@ export class Geometry {
         } else if (IsPolygon(b)) {
           return Geometry.Collide.PolygonPoint(b, a, bOffset, aOffset);
         } else if (IsPath(b)) {
-          return Geometry.Collide.PathPoint(b, a, aOffset, bOffset);
+          return Geometry.Collide.PathPoint(b, a, bOffset, aOffset);
         } else if (IsSegment(b)) {
-          return Geometry.Collide.SegmentPoint(b, a, aOffset, bOffset);
+          return Geometry.Collide.SegmentPoint(b, a, bOffset, aOffset);
         } else if (IsRay(b)) {
-          return Geometry.Collide.RayPoint(b, a, aOffset, bOffset);
+          return Geometry.Collide.RayPoint(b, a, bOffset, aOffset);
         } else if (IsLine(b)) {
-          return Geometry.Collide.LinePoint(b, a, aOffset, bOffset);
+          return Geometry.Collide.LinePoint(b, a, bOffset, aOffset);
         } else if (IsPoint(b)) {
           return Geometry.Collide.PointPoint(a, b, aOffset, bOffset);
         }

@@ -31,6 +31,14 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     return this._bounds;
   }
 
+  public hasAllMasks(mask: number): boolean {
+    return (this.mask & mask) === mask;
+  }
+
+  public hasAnyMask(mask: number): boolean {
+    return (this.mask & mask) > 0;
+  }
+
   public updateShapeLocal(updateShapeLocal: (shapeLocal: T) => void) {
     updateShapeLocal(this._shapeLocal);
     Geometry.SetRectangleToBounds(this._shapeLocal, this._boundsLocal);
@@ -141,8 +149,8 @@ export class Collider<T extends BoundableShape> extends Component implements Rea
     this._offset.x = this.entity?.position.x ?? 0 + xOffset;
     this._offset.y = this.entity?.position.y ?? 0 + yOffset;
     return Geometry.Collide.AnyAny(
-      this.shapeLocal as DeepReadonly<BoundableShape>,
-      collider.shapeLocal as DeepReadonly<BoundableShape>,
+      this.shapeLocal,
+      collider.shapeLocal,
       this._offset,
       collider.entity?.position ?? Geometry.Point.Zero
     )
