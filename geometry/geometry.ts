@@ -1,5 +1,5 @@
 import { RNG } from '../core/rng';
-import { angle90, binomialCoefficient, clamp, DeepReadonly, moduloSafe, rng, tau } from '../core/utils';
+import { angle180, angle90, binomialCoefficient, clamp, DeepReadonly, moduloSafe, rng, tau } from '../core/utils';
 import { Halign, Valign } from '../visuals/align';
 import {
   ICircle,
@@ -295,7 +295,7 @@ export class Geometry {
     return moduloSafe(Math.PI - angle, tau);
   }
   public static AngleUpwardness(angle: number): number {
-    return Math.abs(Geometry.AngleDifference(angle, angle90)) / angle90 / 2;
+    return Math.abs(Geometry.AngleDifference(angle, angle90)) / angle180;
   }
   public static RotateX(x: number, y: number, angle: number, xCenter?: number, yCenter?: number): number {
     xCenter = xCenter ?? 0;
