@@ -141,11 +141,51 @@ export function enumToList<Enum, EnumValue extends Enum[keyof Enum] & (number | 
     : values;
 }
 
-export function invertMapping<T extends string | number | symbol, U extends string | number | symbol>(
-  mapping: Record<T, U>
-): Record<U, T> {
-  const invertedMapping: Record<U, T> = {} as Record<U, T>;
-  for (let key in mapping) invertedMapping[mapping[key]] = key;
+// pass in a mapping for the first argument and an enum for the second argument to get a type-check that the
+// first argument contains all the enum values as keys but return the first argument with its type left as-is
+// rather than obfuscating it as a Record type
+// e.g.
+//
+// enum A { a='Aa', b='Ab', c='Ac', d='Ad' }
+// const x = verifiedMapping({ [A.a]: 1, [A.c]: 2 } as const, A, A.b, A.d);
+//
+// x will have type { readonly Aa: 1, readonly Ac: 2 } instead of Record<A, number> but with the guarantee that
+// all keys of A are present at compile-time (excluding any additional optional elements of A passed into the function)
+export function verifiedMapping<
+  U extends Record<PropertyKey, PropertyKey>,
+  T extends Record<PropertyKey, PropertyKey>,
+  E extends T[keyof T][]
+>(
+  record: Exclude<`${Exclude<T[keyof T], symbol>}`, `${Exclude<E[number], symbol>}`> extends infer Expected
+    ? `${Exclude<keyof U, symbol>}` extends infer Actual
+      ? Exclude<Actual, Expected> extends never
+        ? Exclude<Expected, Actual> extends never
+          ? U
+          : { [K in Exclude<T[keyof T], E[number]>]: any }
+        : { [K in Exclude<T[keyof T], E[number]>]: any }
+      : { [K in Exclude<T[keyof T], E[number]>]: any }
+    : { [K in Exclude<T[keyof T], E[number]>]: any },
+  enumToMatchKeysWith: T,
+  ...exclusions: E
+): U {
+  return record as U;
+}
+
+export type InvertedRecord<T extends Record<PropertyKey, PropertyKey>> = {
+  [P in keyof T as T[P]]: P;
+};
+
+// inverts a mapping while maintaining the specific relationships between values (rather than a generic inversion of Record arguments)
+// e.g.
+//
+// enum A { a='Aa', b='Ab' }
+// const x = verifiedMapping({ [A.a]: 1, [A.b]: 2 } as const, A);
+// const y = invertMapping(x);
+//
+// y will have type { readonly 1: "Aa", readonly 2: "Ab" } instead of Record<number, A>
+export function invertMapping<T extends Record<PropertyKey, PropertyKey>>(mapping: T): InvertedRecord<T> {
+  const invertedMapping = {} as InvertedRecord<T>;
+  for (let key in mapping) invertedMapping[mapping[key]] = key as any;
   return invertedMapping;
 }
 
