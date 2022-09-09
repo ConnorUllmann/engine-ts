@@ -29,6 +29,39 @@ export const PointByCompassDirection: { [key in CompassDirection]: IPoint } = {
   [CompassDirection.SE]: Geometry.Point.Add(Geometry.Point.Down, Geometry.Point.Right),
 };
 
+export const InverseByCompassDirection: { [key in CompassDirection]: CompassDirection } = {
+  [CompassDirection.E]: CompassDirection.W,
+  [CompassDirection.NE]: CompassDirection.SW,
+  [CompassDirection.N]: CompassDirection.S,
+  [CompassDirection.NW]: CompassDirection.SE,
+  [CompassDirection.W]: CompassDirection.E,
+  [CompassDirection.SW]: CompassDirection.NE,
+  [CompassDirection.S]: CompassDirection.N,
+  [CompassDirection.SE]: CompassDirection.NW,
+};
+
+export const Clockwise90DegByCompassDirection: { [key in CompassDirection]: CompassDirection } = {
+  [CompassDirection.E]: CompassDirection.S,
+  [CompassDirection.NE]: CompassDirection.SE,
+  [CompassDirection.N]: CompassDirection.E,
+  [CompassDirection.NW]: CompassDirection.NE,
+  [CompassDirection.W]: CompassDirection.N,
+  [CompassDirection.SW]: CompassDirection.NW,
+  [CompassDirection.S]: CompassDirection.W,
+  [CompassDirection.SE]: CompassDirection.SW,
+};
+
+export const CounterClockwise90DegByCompassDirection: { [key in CompassDirection]: CompassDirection } = {
+  [CompassDirection.E]: CompassDirection.N,
+  [CompassDirection.NE]: CompassDirection.NW,
+  [CompassDirection.N]: CompassDirection.W,
+  [CompassDirection.NW]: CompassDirection.SW,
+  [CompassDirection.W]: CompassDirection.S,
+  [CompassDirection.SW]: CompassDirection.SE,
+  [CompassDirection.S]: CompassDirection.E,
+  [CompassDirection.SE]: CompassDirection.NE,
+};
+
 export enum CompassDirectionGroup {
   CARDINAL,
   INTERCARDINAL,
