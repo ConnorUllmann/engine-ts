@@ -29,7 +29,7 @@ export class Perlin {
   refreshRandomNoise(alpha: number = 1): this {
     const x = 0;
     const y = 0;
-    const context = this.noiseCanvas.getContext('2d')!;
+    const context = this.noiseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
     const imageData = context.getImageData(x, y, this.noiseCanvas.width, this.noiseCanvas.height);
     const pixels = imageData.data;
     for (let i = 0; i < pixels.length; i += 4) {
@@ -52,7 +52,7 @@ export class Perlin {
 
   // https://gist.github.com/donpark/1796361
   refreshPerlinNoise(scale: number): this {
-    const contextDestination = this.perlinCanvas.getContext('2d')!;
+    const contextDestination = this.perlinCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
     const canvasSource = this.noiseCanvas;
     for (let size = 4; size <= scale; size *= 2) {
       const w = (size * canvasSource.width) / scale;

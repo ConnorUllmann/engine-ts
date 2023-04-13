@@ -1292,7 +1292,7 @@ export class Draw {
   // Example:
   // Draw.applyBlendMode(context, BlendMode.Overlay, () => Draw.circle(cameraContext, 50, 50, 10, Color.red));
   public static ApplyBlendMode(context: CameraContext['context'], blendMode: BlendMode, drawCall: () => void) {
-    const blendModeOriginal = context.globalCompositeOperation.toString();
+    const blendModeOriginal = context.globalCompositeOperation;
     context.globalCompositeOperation = blendMode;
     drawCall();
     context.globalCompositeOperation = blendModeOriginal;

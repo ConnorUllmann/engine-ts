@@ -19,7 +19,7 @@ export class PixelGrid implements IGrid<Color> {
   }
 
   constructor(public readonly canvas: OffscreenCanvas) {
-    this.context = canvas.getContext('2d')!;
+    this.context = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
     this.refreshImageData();
   }
 
