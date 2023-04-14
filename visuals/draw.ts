@@ -1336,6 +1336,6 @@ export class Draw {
   }
 
   private static StyleToString(style: FillStyle | StrokeStyle): string {
-    return style instanceof Color ? Color.ToString(style) : (style as string).toString();
+    return style == null ? '' : typeof style === 'string' ? style : Color.ToString(style);
   }
 }

@@ -68,7 +68,7 @@ export class Color {
     return new Color(color.red, color.green, color.blue, alpha != null ? alpha : color.alpha);
   }
 
-  public static ToString(color: DeepReadonly<Color>): string {
+  public static ToString(color: DeepReadonly<{ red: number; green: number; blue: number; alpha: number }>): string {
     return `rgba(${color.red},${color.green},${color.blue},${color.alpha})`;
   }
 

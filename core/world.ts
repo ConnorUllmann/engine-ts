@@ -168,7 +168,7 @@ export class World {
     const canUpdateEntities = this.canUpdateEntities == null || this.canUpdateEntities();
     if (canUpdateEntities) {
       this.updateEntities();
-      this.clearCanvas(this.backgroundColor instanceof Function ? this.backgroundColor() : this.backgroundColor);
+      this.clearCanvas(typeof this.backgroundColor === 'function' ? this.backgroundColor() : this.backgroundColor);
       this.drawEntities();
     }
 

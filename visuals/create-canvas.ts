@@ -15,7 +15,7 @@ export function createCanvasScreenshotElement(canvas: OffscreenCanvas | HTMLCanv
     newImg.src = url;
     newImg.style.padding = '2px';
   };
-  if (canvas instanceof OffscreenCanvas) (canvas as any).convertToBlob().then(blobFn);
-  else canvas.toBlob(blobFn);
+  if ('convertToBlob' in canvas) (canvas as any).convertToBlob().then(blobFn);
+  else if ('toBlob' in canvas) canvas.toBlob(blobFn);
   return newImg;
 }
