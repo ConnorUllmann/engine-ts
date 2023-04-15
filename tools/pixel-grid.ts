@@ -1,10 +1,10 @@
-import { Color } from '../visuals/color';
-import { IPoint, IRectangle } from '../geometry/interfaces';
-import { Geometry } from '../geometry/geometry';
-import { IGrid, Grid } from '../geometry/grid';
-import { Point } from '../geometry/point';
 import { DeepReadonly } from '../core/utils';
+import { Geometry } from '../geometry/geometry';
+import { Grid, IGrid } from '../geometry/grid';
+import { IPoint, IRectangle } from '../geometry/interfaces';
+import { Point } from '../geometry/point';
 import { CameraContext } from '../visuals/camera-context';
+import { Color } from '../visuals/color';
 
 export class PixelGrid implements IGrid<Color> {
   public context: OffscreenCanvasRenderingContext2D;
@@ -19,7 +19,7 @@ export class PixelGrid implements IGrid<Color> {
   }
 
   constructor(public readonly canvas: OffscreenCanvas) {
-    this.context = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+    this.context = canvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
     this.refreshImageData();
   }
 
