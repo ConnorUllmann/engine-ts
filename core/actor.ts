@@ -1,6 +1,7 @@
 import { IPoint, IRectangle } from '../geometry/interfaces';
 import { Point } from '../geometry/point';
 import { BoundableShape } from '../geometry/shape-type';
+import { percentWithDelta } from '../tools/percent-with-delta';
 import { Collider } from './collider';
 import { Entity } from './entity';
 import { World } from './world';
@@ -77,7 +78,7 @@ export class Actor extends Entity {
   }
 
   protected updateVelocity() {
-    this.velocity.add(this.frameAcceleration).scale(1 - this.friction);
+    this.velocity.add(this.frameAcceleration).scale(percentWithDelta(1 - this.friction, this.world.deltaNormal));
   }
 
   protected updatePreviousPosition() {

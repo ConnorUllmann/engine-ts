@@ -1,7 +1,7 @@
-import { Point } from '../geometry/point';
-import { IPoint } from '../geometry/interfaces';
-import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons } from './buttons';
 import { Geometry } from '../geometry/geometry';
+import { IPoint } from '../geometry/interfaces';
+import { Point } from '../geometry/point';
+import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons } from './buttons';
 
 export class Gamepads {
   private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
@@ -121,12 +121,8 @@ export class Gamepads {
       if (!(gamepadId in this.releasedByIndex)) this.releasedByIndex[gamepadId] = {};
 
       for (let buttonIndex = 0; buttonIndex < gamepad.buttons.length; buttonIndex++) {
-        const buttons = this.tryGetValueOrDefaultFromDict(Gamepads.ButtonMappings, buttonIndex.toString(), []);
-        const wasDown = this.tryGetValueOrDefaultFromDict(
-          this.tryGetValueOrDefaultFromDict(this.downByIndex, gamepadId, {}),
-          buttons[0],
-          false
-        );
+        const buttons = Gamepads.ButtonMappings[buttonIndex] ?? [];
+        const wasDown = this.downByIndex[gamepadId]?.[buttons[0]] ?? false;
         const isDown =
           buttonIndex == 6 || buttonIndex == 7
             ? gamepad.buttons[buttonIndex].value > Gamepads.TriggerBuffer
@@ -144,11 +140,7 @@ export class Gamepads {
       }
 
       for (let button of AnalogDirectionButtons) {
-        const wasDown = this.tryGetValueOrDefaultFromDict(
-          this.tryGetValueOrDefaultFromDict(this.downByIndex, gamepadId, {}),
-          button,
-          false
-        );
+        const wasDown = this.downByIndex[gamepadId]?.[button] ?? false;
         const isDown = this.isAnalogDirectionDownByButton[button](gamepadId);
         const isPressed = isDown && !wasDown;
         const isReleased = !isDown && wasDown;
@@ -174,13 +166,6 @@ export class Gamepads {
     [Button.RIGHT_ANALOG_LEFT]: gamepadId => this.rightAnalogStickByIndex[gamepadId].x < 0,
   };
 
-  private tryGetValueOrDefaultFromDict<T>(dict: { [id: string]: T }, key: string, defaultValue: T): T {
-    if (dict == null || !(key in dict)) return defaultValue;
-    const value = dict[key];
-    if (value == null) return defaultValue;
-    return value;
-  }
-
   private applyDeadzone(value: Point, deadzone: number | null = null) {
     const deadzoneFinal = deadzone != null ? deadzone : Gamepads.DeadzoneDefault;
     if (Geometry.Point.DistanceSq(value, Geometry.Point.Zero) < deadzoneFinal * deadzoneFinal) value.x = value.y = 0;
@@ -192,27 +177,23 @@ export class Gamepads {
     button: Button,
     gamepadId: number = 0
   ): boolean {
-    return this.tryGetValueOrDefaultFromDict(
-      this.tryGetValueOrDefaultFromDict(valueByGamepadId, gamepadId.toString(), {} as { [button: string]: boolean }),
-      button.toString(),
-      false
-    );
+    return valueByGamepadId?.[gamepadId]?.[button] ?? false;
   }
 
   public leftAnalogStick(gamepadId: number = 0): IPoint {
-    return this.tryGetValueOrDefaultFromDict(this.leftAnalogStickByIndex, gamepadId.toString(), new Point());
+    return this.leftAnalogStickByIndex?.[gamepadId] ?? new Point();
   }
 
   public rightAnalogStick(gamepadId: number = 0): IPoint {
-    return this.tryGetValueOrDefaultFromDict(this.rightAnalogStickByIndex, gamepadId.toString(), new Point());
+    return this.rightAnalogStickByIndex?.[gamepadId] ?? new Point();
   }
 
   public leftTrigger(gamepadId: number = 0): number {
-    return this.tryGetValueOrDefaultFromDict(this.leftTriggerByIndex, gamepadId.toString(), 0);
+    return this.leftTriggerByIndex?.[gamepadId] ?? 0;
   }
 
   public rightTrigger(gamepadId: number = 0): number {
-    return this.tryGetValueOrDefaultFromDict(this.rightTriggerByIndex, gamepadId.toString(), 0);
+    return this.rightTriggerByIndex?.[gamepadId] ?? 0;
   }
 
   public down(button: Button, gamepadId: number = 0): boolean {
