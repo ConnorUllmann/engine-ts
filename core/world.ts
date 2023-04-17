@@ -8,7 +8,7 @@ import { Gamepads } from './gamepads';
 import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
 import { Sounds } from './sounds';
-import { DeepReadonly } from './utils';
+import { clamp, DeepReadonly } from './utils';
 
 export enum InputType {
   Gamepad,
@@ -60,12 +60,17 @@ export class World {
     return this.fixedFrameRate ? this.millisecondsPerFrame : this._delta;
   }
   public get deltaNormal(): number {
-    return this.delta / this.millisecondsPerFrame;
+    return clamp(this.delta / this.millisecondsPerFrame, 0.1, 10);
   }
   public lastFrameFps: number = 0;
   public _millisecondsLastUpdate: number = 0;
   public get millisecondsLastUpdate(): number {
     return this._millisecondsLastUpdate;
+  }
+
+  // call after spending a long time on a frame (i.e. loading) to ensure delta isn't too high when coming back
+  public resyncDelta() {
+    this._delta = this.millisecondsPerFrame;
   }
 
   public backgroundColor: DeepReadonly<Color> | (() => DeepReadonly<Color>) | null = Color.lightGrey;
