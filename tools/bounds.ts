@@ -1,4 +1,4 @@
-export function bounds(searchValue: number, ascendingValues: number[]): { last: number; next: number } | null {
+export function bounds<T>(searchValue: T, ascendingValues: T[]): { last: T; next: T } | null {
   let leftIndex = 0;
   let rightIndex = ascendingValues.length - 1;
   while (rightIndex > leftIndex) {
@@ -25,6 +25,43 @@ export function bounds(searchValue: number, ascendingValues: number[]): { last: 
     }
   }
   return null;
+}
+
+export function boundsWithGetter<T, U>(
+  searchValue: U,
+  ascendingValues: T[],
+  getter: (t: T) => U
+): { leftIndex: number | null; rightIndex: number | null } {
+  let leftIndex = 0;
+  let rightIndex = ascendingValues.length - 1;
+  while (rightIndex > leftIndex) {
+    const middleIndex = Math.floor((rightIndex + leftIndex) / 2);
+    const middleT = ascendingValues[middleIndex];
+    const middle = getter(middleT);
+    if (searchValue === middle) {
+      return { leftIndex: middleIndex, rightIndex: middleIndex };
+    }
+    if (rightIndex - leftIndex === 1) {
+      const leftT = ascendingValues[leftIndex];
+      const rightT = ascendingValues[rightIndex];
+      const left = getter(leftT);
+      const right = getter(rightT);
+      if (searchValue === left) return { leftIndex, rightIndex: leftIndex };
+      if (searchValue === right) return { leftIndex: rightIndex, rightIndex };
+      if (searchValue < left) return { leftIndex: null, rightIndex: 0 };
+      if (searchValue > right) return { leftIndex: ascendingValues.length - 1, rightIndex: null };
+      return { leftIndex, rightIndex };
+    }
+    if (searchValue < middle) {
+      rightIndex = middleIndex;
+      continue;
+    }
+    if (searchValue > middle) {
+      leftIndex = middleIndex;
+      continue;
+    }
+  }
+  return { leftIndex: null, rightIndex: null };
 }
 
 // const assert = (searchValue: number, ascendingValues: number[], expected: { last: number, next: number } | null) => {
