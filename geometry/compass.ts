@@ -1,19 +1,31 @@
-import { enumToList, moduloSafe, tau } from '../core/utils';
+import {
+  angle135,
+  angle180,
+  angle225,
+  angle270,
+  angle315,
+  angle45,
+  angle90,
+  enumToList,
+  moduloSafe,
+  tau,
+} from '../core/utils';
 import { Geometry } from './geometry';
 import { IPoint } from './interfaces';
 
+// ordered in increasing angle order starting from zero
 export enum CompassDirection {
   E,
-  NE,
-  N,
-  NW,
-  W,
-  SW,
-  S,
   SE,
+  S,
+  SW,
+  W,
+  NW,
+  N,
+  NE,
 }
 export const CompassDirections = enumToList(CompassDirection);
-const IndexByCompassDirection = CompassDirections.reduce((acc, compassDirection, index) => {
+export const IndexByCompassDirection = CompassDirections.reduce((acc, compassDirection, index) => {
   acc[compassDirection] = index;
   return acc;
 }, {} as Record<CompassDirection, number>);
@@ -28,6 +40,17 @@ export const PointByCompassDirection = {
   [CompassDirection.S]: Geometry.Point.Down,
   [CompassDirection.SE]: Geometry.Point.Add(Geometry.Point.Down, Geometry.Point.Right),
 } as const satisfies Record<CompassDirection, IPoint>;
+
+export const AngleByCompassDirection = {
+  [CompassDirection.E]: 0,
+  [CompassDirection.SE]: angle45,
+  [CompassDirection.S]: angle90,
+  [CompassDirection.SW]: angle135,
+  [CompassDirection.W]: angle180,
+  [CompassDirection.NW]: angle225,
+  [CompassDirection.N]: angle270,
+  [CompassDirection.NE]: angle315,
+} as const satisfies Record<CompassDirection, number>;
 
 export const InverseByCompassDirection = {
   [CompassDirection.E]: CompassDirection.W,
@@ -62,11 +85,22 @@ export const CounterClockwise90DegByCompassDirection = {
   [CompassDirection.SE]: CompassDirection.NE,
 } as const satisfies Record<CompassDirection, CompassDirection>;
 
+export function CompassDirectionAngleTo(directionTo: CompassDirection, directionFrom: CompassDirection): number {
+  const angleTo = AngleByCompassDirection[directionTo];
+  const angleFrom = AngleByCompassDirection[directionFrom];
+  return Geometry.AngleDifference(angleTo, angleFrom);
+}
+
 export enum CompassDirectionGroup {
   CARDINAL,
   INTERCARDINAL,
   ALL,
 }
+export const CompassDirectionGroups = enumToList(CompassDirectionGroup);
+export const IndexByCompassDirectionGroup = CompassDirectionGroups.reduce((acc, compassDirectionGroup, index) => {
+  acc[compassDirectionGroup] = index;
+  return acc;
+}, {} as Record<CompassDirectionGroup, number>);
 
 export const CompassDirectionsByGroup = {
   [CompassDirectionGroup.CARDINAL]: [CompassDirection.E, CompassDirection.N, CompassDirection.W, CompassDirection.S],
@@ -127,25 +161,47 @@ export const CompassDirectionByPointByGroup = {
       ? CompassDirection.SW
       : CompassDirection.NW;
   },
-  [CompassDirectionGroup.ALL]: (x: number, y: number) => {
-    const angle = Geometry.Angle(x, -y); // since (0, -1) is up which should be 90deg
+  [CompassDirectionGroup.ALL]: (x: number, y: number) =>
+    CompassDirectionByAngleByGroup[CompassDirectionGroup.ALL](Geometry.Angle(x, y)),
+} as const satisfies Record<CompassDirectionGroup, (x: number, y: number) => CompassDirection>;
+
+export const CompassDirectionByAngleByGroup = {
+  [CompassDirectionGroup.CARDINAL]: (angle: number) => {
+    angle = moduloSafe(angle, tau);
+    return angle < angle45 || angle >= angle315
+      ? CompassDirection.E
+      : angle < angle135
+      ? CompassDirection.S
+      : angle < angle225
+      ? CompassDirection.W
+      : CompassDirection.N;
+  },
+  [CompassDirectionGroup.INTERCARDINAL]: (angle: number) => {
+    angle = moduloSafe(angle, tau);
+    return angle < angle90 && angle >= 0
+      ? CompassDirection.SE
+      : angle < angle180
+      ? CompassDirection.SW
+      : angle < angle270
+      ? CompassDirection.NW
+      : CompassDirection.NE;
+  },
+  [CompassDirectionGroup.ALL]: (angle: number) => {
     // add 0.5 here because 0deg is in the middle of the "east" angle range
     const index = Math.floor(moduloSafe((angle / tau) * CompassDirections.length + 0.5, CompassDirections.length));
     return CompassDirections[index];
   },
-} as const satisfies Record<CompassDirectionGroup, (x: number, y: number) => CompassDirection>;
+} as const satisfies Record<CompassDirectionGroup, (angle: number) => CompassDirection>;
 
 export const GetClosestValidCompassDirection = (
   point: IPoint,
   ...validDirections: CompassDirection[]
 ): CompassDirection | null => {
+  const angle = Geometry.Angle(point.x, point.y);
   const minDirection =
     validDirections.minOf(direction =>
       Math.abs(
-        Geometry.AngleDifference(
-          ((IndexByCompassDirection[direction] - 0.5) / CompassDirections.length) * tau,
-          Geometry.Angle(point.x, -point.y) // since (0, -1) is up which should be 90deg
-        )
+        Geometry.AngleDifference(((IndexByCompassDirection[direction] - 0.5) / CompassDirections.length) * tau, angle)
       )
     ) ?? null;
   return minDirection;
