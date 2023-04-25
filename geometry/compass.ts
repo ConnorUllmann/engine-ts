@@ -24,11 +24,6 @@ export enum CompassDirection {
   N,
   NE,
 }
-export const CompassDirections = enumToList(CompassDirection);
-export const IndexByCompassDirection = CompassDirections.reduce((acc, compassDirection, index) => {
-  acc[compassDirection] = index;
-  return acc;
-}, {} as Record<CompassDirection, number>);
 
 export const PointByCompassDirection = {
   [CompassDirection.E]: Geometry.Point.Right,
@@ -124,18 +119,29 @@ export const CompassDirectionsByGroup = {
   readonly [key in CompassDirectionGroup]: readonly CompassDirection[];
 };
 
+export const CardinalCompassDirections = CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL];
+export const IntercardinalCompassDirections = CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL];
+export const CompassDirections = CompassDirectionsByGroup[CompassDirectionGroup.ALL];
+export const IndexByCompassDirection = CompassDirections.reduce((acc, compassDirection, index) => {
+  acc[compassDirection] = index;
+  return acc;
+}, {} as Record<CompassDirection, number>);
+
 export type CardinalCompassDirection = typeof CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL][number];
 export type IntercardinalCompassDirection =
   typeof CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL][number];
-export type AnyCompassDirection = typeof CompassDirectionsByGroup[CompassDirectionGroup.ALL][number];
 
 const CardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL]);
 const IntercardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL]);
 
-export const isCompassDirectionCardinal = (compassDirection: CompassDirection): boolean => {
+export const isCompassDirectionCardinal = (
+  compassDirection: CompassDirection
+): compassDirection is CardinalCompassDirection => {
   return CardinalCompassDirectionSet.has(compassDirection as any);
 };
-export const isCompassDirectionIntercardinal = (compassDirection: CompassDirection): boolean => {
+export const isCompassDirectionIntercardinal = (
+  compassDirection: CompassDirection
+): compassDirection is IntercardinalCompassDirection => {
   return IntercardinalCompassDirectionSet.has(compassDirection as any);
 };
 

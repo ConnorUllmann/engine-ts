@@ -1,8 +1,8 @@
-import { IPoint } from './interfaces';
-import { CompassDirection, PointByCompassDirection, CompassDirectionGroup, CompassDirectionsByGroup } from './compass';
-import { Stack } from '../tools/stack';
-import { IdSet } from '../tools/id-set';
 import { repeat } from '../core/utils';
+import { IdSet } from '../tools/id-set';
+import { Stack } from '../tools/stack';
+import { CompassDirection, CompassDirectionGroup, CompassDirectionsByGroup, PointByCompassDirection } from './compass';
+import { IPoint } from './interfaces';
 
 export interface IGrid<T> {
   w: number;
@@ -47,7 +47,7 @@ export class Grid<T> extends GridView<T> implements IGrid<T> {
   public static GetCompassDirectionNeighbors<T>(
     grid: IGrid<T>,
     position: IPoint,
-    compassDirections: CompassDirection[]
+    compassDirections: readonly CompassDirection[]
   ): { position: IPoint; tile: T | null }[] {
     const compassDirectionPoints = compassDirections.map(direction => PointByCompassDirection[direction]);
     return Grid.GetNeighbors(grid, position, compassDirectionPoints);
