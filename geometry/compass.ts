@@ -205,10 +205,7 @@ export const GetClosestValidCompassDirection = (
 ): CompassDirection | null => {
   const angle = Geometry.Angle(point.x, point.y);
   const minDirection =
-    validDirections.minOf(direction =>
-      Math.abs(
-        Geometry.AngleDifference(((IndexByCompassDirection[direction] - 0.5) / CompassDirections.length) * tau, angle)
-      )
-    ) ?? null;
+    validDirections.minOf(direction => Math.abs(Geometry.AngleDifference(AngleByCompassDirection[direction], angle))) ??
+    null;
   return minDirection;
 };
