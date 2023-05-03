@@ -86,7 +86,6 @@ export class World {
 
   public lastInputTypeUsed = InputType.Keyboard;
 
-  // create in ngOnInit and not in the component's constructor
   constructor(
     canvasIdOrElement: string | HTMLCanvasElement,
     canvasResolutionWidth: number = 1280,
