@@ -42,8 +42,9 @@ interface IShapeStatic<T> extends IPointListStatic<T> {
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
+  Zero: DeepReadonly<IRectangle>;
   Midpoint: (o: DeepReadonly<IRectangle>) => IPoint;
-  BoundsRectangles: (rectangles: DeepReadonly<DeepReadonly<IRectangle>[]>) => IRectangle;
+  BoundsRectangles: (rectangles: DeepReadonly<(DeepReadonly<IRectangle> | null | undefined)[]>) => IRectangle;
   Scale: (
     rectangle: DeepReadonly<IRectangle>,
     scalar: number | DeepReadonly<IPoint>,
@@ -367,6 +368,7 @@ export class Geometry {
   }
 
   public static Rectangle: IRectangleStatic = {
+    Zero: { x: 0, y: 0, w: 0, h: 0 },
     Segments: (rectangle: DeepReadonly<IRectangle>, offset: DeepReadonly<IPoint> = Geometry.Point.Zero): ISegment[] =>
       Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle, offset)),
     Vertices: (rectangle: DeepReadonly<IRectangle>, offset: DeepReadonly<IPoint> = Geometry.Point.Zero): IPoint[] => [
@@ -403,14 +405,27 @@ export class Geometry {
       rectangleToChange.w = rectangle.w;
       rectangleToChange.h = rectangle.h;
     },
-    BoundsRectangles: (rectangles: DeepReadonly<IRectangle>[]) => {
+    BoundsRectangles: (rectangles: (DeepReadonly<IRectangle> | null | undefined)[]) => {
       if (rectangles == null || rectangles.length <= 0) return { x: 0, y: 0, w: 0, h: 0 };
-      let xMin = rectangles[0].x;
-      let yMin = rectangles[0].y;
-      let xMax = rectangles[0].x + rectangles[0].w;
-      let yMax = rectangles[0].y + rectangles[0].h;
-      for (let i = 1; i < rectangles.length; i++) {
+      let indexStart = -1;
+      for(let i = 0; i < rectangles.length; i++) {
+        if(rectangles[i]) {
+          indexStart = i;
+          break;
+        }
+      }
+      if(indexStart < 0)
+        return { x: 0, y: 0, w: 0, h: 0 };
+      
+      const rectangleStart = rectangles[indexStart]!;
+      let xMin = rectangleStart.x;
+      let yMin = rectangleStart.y;
+      let xMax = rectangleStart.x + rectangleStart.w;
+      let yMax = rectangleStart.y + rectangleStart.h;
+      for (let i = indexStart+1; i < rectangles.length; i++) {
         const rectangle = rectangles[i];
+        if(!rectangle) continue;
+        
         xMin = Math.min(rectangle.x, xMin);
         yMin = Math.min(rectangle.y, yMin);
         xMax = Math.max(rectangle.x + rectangle.w, xMax);

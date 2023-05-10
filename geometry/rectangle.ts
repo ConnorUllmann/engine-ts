@@ -1,5 +1,5 @@
 import { RNG } from '../core/rng';
-import { rng } from '../core/utils';
+import { DeepReadonly, rng } from '../core/utils';
 import { Geometry } from './geometry';
 import {
   ICircle,
@@ -173,5 +173,40 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
 
   public randomPointInside(_rng: RNG = rng): Point {
     return new Point(_rng.random() * this.w + this.x, _rng.random() * this.h + this.y);
+  }
+}
+
+export class NullableRectangle {
+  private _value = { x: 0, y: 0, w: 0, h: 0 };
+  private _hasValue = false;
+
+  public get value(): IRectangle | null {
+    return this._hasValue ? this._value : null;
+  }
+  public set value(_value: DeepReadonly<IRectangle> | null) {
+    if (_value == null) {
+      this._hasValue = false;
+      return;
+    }
+
+    this._value.x = _value.x;
+    this._value.y = _value.y;
+    this._value.w = _value.w;
+    this._value.h = _value.h;
+    this._hasValue = true;
+  }
+
+  public get valueRaw(): IRectangle { return this._value; }
+
+  public set(x: number, y: number, w: number, h: number) {
+    this._hasValue = true;
+    this._value.x = x;
+    this._value.y = y;
+    this._value.w = w;
+    this._value.h = h;
+  }
+
+  constructor(_value: IRectangle | null = null) {
+    this.value = _value;
   }
 }
