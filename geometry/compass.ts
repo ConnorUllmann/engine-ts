@@ -98,22 +98,22 @@ export const IndexByCompassDirectionGroup = CompassDirectionGroups.reduce((acc, 
 }, {} as Record<CompassDirectionGroup, number>);
 
 export const CompassDirectionsByGroup = {
-  [CompassDirectionGroup.CARDINAL]: [CompassDirection.E, CompassDirection.N, CompassDirection.W, CompassDirection.S],
+  [CompassDirectionGroup.CARDINAL]: [CompassDirection.E, CompassDirection.S, CompassDirection.W, CompassDirection.N],
   [CompassDirectionGroup.INTERCARDINAL]: [
-    CompassDirection.NE,
-    CompassDirection.NW,
-    CompassDirection.SW,
     CompassDirection.SE,
+    CompassDirection.SW,
+    CompassDirection.NW,
+    CompassDirection.NE,
   ],
   [CompassDirectionGroup.ALL]: [
     CompassDirection.E,
-    CompassDirection.NE,
-    CompassDirection.N,
-    CompassDirection.NW,
-    CompassDirection.W,
-    CompassDirection.SW,
-    CompassDirection.S,
     CompassDirection.SE,
+    CompassDirection.S,
+    CompassDirection.SW,
+    CompassDirection.W,
+    CompassDirection.NW,
+    CompassDirection.N,
+    CompassDirection.NE,
   ],
 } as const satisfies {
   readonly [key in CompassDirectionGroup]: readonly CompassDirection[];
@@ -127,9 +127,9 @@ export const IndexByCompassDirection = CompassDirections.reduce((acc, compassDir
   return acc;
 }, {} as Record<CompassDirection, number>);
 
-export type CardinalCompassDirection = typeof CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL][number];
+export type CardinalCompassDirection = (typeof CompassDirectionsByGroup)[CompassDirectionGroup.CARDINAL][number];
 export type IntercardinalCompassDirection =
-  typeof CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL][number];
+  (typeof CompassDirectionsByGroup)[CompassDirectionGroup.INTERCARDINAL][number];
 
 const CardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.CARDINAL]);
 const IntercardinalCompassDirectionSet = new Set(CompassDirectionsByGroup[CompassDirectionGroup.INTERCARDINAL]);
@@ -143,6 +143,20 @@ export const isCompassDirectionIntercardinal = (
   compassDirection: CompassDirection
 ): compassDirection is IntercardinalCompassDirection => {
   return IntercardinalCompassDirectionSet.has(compassDirection as any);
+};
+
+const CompassDirectionsByCardinality = {
+  [CompassDirection.E]: [CompassDirection.NE, CompassDirection.E, CompassDirection.SE],
+  [CompassDirection.S]: [CompassDirection.SE, CompassDirection.S, CompassDirection.SW],
+  [CompassDirection.W]: [CompassDirection.SW, CompassDirection.W, CompassDirection.NW],
+  [CompassDirection.N]: [CompassDirection.NW, CompassDirection.N, CompassDirection.NE],
+} as const satisfies Readonly<Record<CardinalCompassDirection, Readonly<CompassDirection[]>>>;
+export const HasCardinalComponent = (
+  compassDirection: CompassDirection,
+  cardinalComponent: CardinalCompassDirection
+): boolean => {
+  const compassDirections: Readonly<CompassDirection[]> = CompassDirectionsByCardinality[cardinalComponent];
+  return compassDirections.includes(compassDirection);
 };
 
 export const CompassDirectionByPointByGroup = {

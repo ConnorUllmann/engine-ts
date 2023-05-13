@@ -1,7 +1,14 @@
+import {
+  CardinalCompassDirection,
+  CompassDirection,
+  CompassDirectionByPointByGroup,
+  CompassDirectionGroup,
+  HasCardinalComponent,
+} from '../geometry/compass';
 import { Geometry } from '../geometry/geometry';
 import { IPoint } from '../geometry/interfaces';
 import { Point } from '../geometry/point';
-import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons } from './buttons';
+import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons, NonAnalogDirectionButtons } from './buttons';
 
 export class Gamepads {
   private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
@@ -153,6 +160,16 @@ export class Gamepads {
     }
   }
 
+  private analogHasCardinalComponent = (
+    analogStick: IPoint,
+    cardinalComponent: CardinalCompassDirection,
+    compassDirectionGroup: CompassDirectionGroup
+  ) => {
+    const len = Geometry.Point.LengthSq(analogStick);
+    if (Geometry.IsWithinToleranceOf(len, 0)) return false;
+    const compassDirection = CompassDirectionByPointByGroup[compassDirectionGroup](analogStick.x, analogStick.y);
+    return HasCardinalComponent(compassDirection, cardinalComponent);
+  };
   private isAnalogDirectionDownByButton: {
     [key in AnalogDirectionButton]: (gamepadId: string | number) => boolean;
   } = {
@@ -160,10 +177,111 @@ export class Gamepads {
     [Button.LEFT_ANALOG_RIGHT]: gamepadId => this.leftAnalogStickByIndex[gamepadId].x > 0,
     [Button.LEFT_ANALOG_DOWN]: gamepadId => this.leftAnalogStickByIndex[gamepadId].y > 0,
     [Button.LEFT_ANALOG_LEFT]: gamepadId => this.leftAnalogStickByIndex[gamepadId].x < 0,
+
+    [Button.LEFT_ANALOG_UP_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.N,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.LEFT_ANALOG_RIGHT_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.E,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.LEFT_ANALOG_DOWN_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.S,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.LEFT_ANALOG_LEFT_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.W,
+        CompassDirectionGroup.ALL
+      ),
+
+    [Button.LEFT_ANALOG_UP_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.N,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.LEFT_ANALOG_RIGHT_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.E,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.LEFT_ANALOG_DOWN_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.S,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.LEFT_ANALOG_LEFT_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.leftAnalogStickByIndex[gamepadId],
+        CompassDirection.W,
+        CompassDirectionGroup.CARDINAL
+      ),
+
     [Button.RIGHT_ANALOG_UP]: gamepadId => this.rightAnalogStickByIndex[gamepadId].y < 0,
     [Button.RIGHT_ANALOG_RIGHT]: gamepadId => this.rightAnalogStickByIndex[gamepadId].x > 0,
     [Button.RIGHT_ANALOG_DOWN]: gamepadId => this.rightAnalogStickByIndex[gamepadId].y > 0,
     [Button.RIGHT_ANALOG_LEFT]: gamepadId => this.rightAnalogStickByIndex[gamepadId].x < 0,
+
+    [Button.RIGHT_ANALOG_UP_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.N,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.RIGHT_ANALOG_RIGHT_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.E,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.RIGHT_ANALOG_DOWN_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.S,
+        CompassDirectionGroup.ALL
+      ),
+    [Button.RIGHT_ANALOG_LEFT_8]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.W,
+        CompassDirectionGroup.ALL
+      ),
+
+    [Button.RIGHT_ANALOG_UP_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.N,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.RIGHT_ANALOG_RIGHT_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.E,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.RIGHT_ANALOG_DOWN_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.S,
+        CompassDirectionGroup.CARDINAL
+      ),
+    [Button.RIGHT_ANALOG_LEFT_4]: gamepadId =>
+      this.analogHasCardinalComponent(
+        this.rightAnalogStickByIndex[gamepadId],
+        CompassDirection.W,
+        CompassDirectionGroup.CARDINAL
+      ),
   };
 
   private applyDeadzone(value: Point, deadzone: number | null = null) {
@@ -217,6 +335,18 @@ export class Gamepads {
       Object.values(this.pressedByIndex[gamepadId] || {}).any(o => o) ||
       Object.values(this.releasedByIndex[gamepadId] || {}).any(o => o)
     );
+  }
+
+  public allNonAnalogDown(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+    return NonAnalogDirectionButtons.filter(button => this.down(button, gamepadId));
+  }
+
+  public allNonAnalogPressed(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+    return NonAnalogDirectionButtons.filter(button => this.pressed(button, gamepadId));
+  }
+
+  public allNonAnalogReleased(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+    return NonAnalogDirectionButtons.filter(button => this.released(button, gamepadId));
   }
 
   public allDown(gamepadId: number = 0): Button[] {
