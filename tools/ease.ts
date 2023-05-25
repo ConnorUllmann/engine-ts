@@ -1,5 +1,3 @@
-import { angle180, angle90 } from '../core/utils';
-
 type Easer = (t: number) => number;
 
 // https://github.com/NoelFB/Foster/blob/master/Framework/Utils/Ease.cs
@@ -19,18 +17,38 @@ export class Ease {
       t <= tSplit ? first(t / tSplit) * ySplit : second((t - tSplit) / (1 - tSplit)) * (1 - ySplit) + ySplit;
   }
 
+  public static FollowMultiple(
+    ...args: [{ easer: Easer }, ...{ easer: Easer; tStart: number; yStart: number }[]]
+  ): Easer {
+    return (t: number) => {
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        const easer = arg.easer;
+        const tStart: number = (arg as any).tStart ?? 0;
+        const yStart: number = (arg as any).yStart ?? 0;
+        const tEnd = i === args.length - 1 ? 1 : (args[i + 1] as any).tStart ?? 0;
+        const yEnd = i === args.length - 1 ? 1 : (args[i + 1] as any).yStart ?? 0;
+        if (t >= tStart && t <= tEnd) {
+          const tNew = (t - tStart) / Math.max(0.0000001, tEnd - tStart);
+          return easer(tNew) * (yEnd - yStart) + yStart;
+        }
+      }
+      return 0;
+    };
+  }
+
   public static Linear(t: number): number {
     return t;
   }
 
   public static SineIn(t: number): number {
-    return 1 - Math.cos(angle90 * t);
+    return 1 - Math.cos((Math.PI / 2) * t);
   }
   public static SineOut(t: number): number {
-    return Math.sin(angle90 * t);
+    return Math.sin((Math.PI / 2) * t);
   }
   public static SineInOut(t: number): number {
-    return 0.5 - 0.5 * Math.cos(angle180 * t);
+    return 0.5 - 0.5 * Math.cos(Math.PI * t);
   }
 
   public static QuadIn(t: number): number {
