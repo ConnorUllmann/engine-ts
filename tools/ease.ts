@@ -9,9 +9,14 @@ export class Ease {
     return (t: number) => 1 - easer(1 - t);
   }
 
-  // TODO: generalize for any number of easers
-  public static Follow(first: Easer, second: Easer): Easer {
-    return (t: number) => (t <= 0.5 ? first(t * 2) / 2 : second(t * 2 - 1) / 2 + 0.5);
+  // "tSplit" corresponds to the value of "t" at which the transition from "first" to "second" happens
+  // "ySplit" corresponds to the amount of the output that is weighted toward "first" vs "second"
+  //    e.g. if ySplit=0.75, then the return value of this easer when "first" finishes (is passed a "1") will be 0.75
+  public static Follow(first: Easer, second: Easer, tSplit = 0.5, ySplit = 0.5): Easer {
+    if (tSplit <= 0) return first;
+    if (tSplit >= 1) return second;
+    return (t: number) =>
+      t <= tSplit ? first(t / tSplit) * ySplit : second((t - tSplit) / (1 - tSplit)) * (1 - ySplit) + ySplit;
   }
 
   public static Linear(t: number): number {
