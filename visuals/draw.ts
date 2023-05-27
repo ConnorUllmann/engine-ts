@@ -51,7 +51,7 @@ export class Draw {
     // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
     Image: (
       { context, camera }: CameraContext,
-      image: HTMLImageElement | null,
+      image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas | null,
       x: number,
       y: number,
       xScale: number = 1,
@@ -63,8 +63,8 @@ export class Draw {
     ) => {
       if (!image) return;
 
-      const w = Math.abs(xScale * (image.width as number));
-      const h = Math.abs(yScale * (image.height as number));
+      const w = Math.abs(xScale * image.width);
+      const h = Math.abs(yScale * image.height);
 
       const globalAlphaPrevious = context.globalAlpha;
       context.globalAlpha = alpha;
@@ -86,7 +86,7 @@ export class Draw {
     // xCenter/yCenter refers to the point in world space around which to rotate the image were it to be drawn at x/y
     ImagePart: (
       { context, camera }: CameraContext,
-      image: HTMLImageElement | null,
+      image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas | null,
       x: number,
       y: number,
       sx: number,
