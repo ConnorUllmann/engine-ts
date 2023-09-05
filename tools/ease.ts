@@ -18,22 +18,25 @@ export class Ease {
   }
 
   public static FollowMultiple(
-    ...args: [{ easer: Easer }, ...{ easer: Easer; tStart: number; yStart: number }[]]
+    ...args: [{ easer: Easer; yStart: number }, ...{ easer: Easer; tStart: number; yStart: number }[], { yEnd: number }]
   ): Easer {
     return (t: number) => {
-      for (let i = 0; i < args.length; i++) {
+      for (let i = 0; i < args.length - 1; i++) {
         const arg = args[i];
-        const easer = arg.easer;
+
         const tStart: number = (arg as any).tStart ?? 0;
-        const yStart: number = (arg as any).yStart ?? 0;
-        const tEnd = i === args.length - 1 ? 1 : (args[i + 1] as any).tStart ?? 0;
-        const yEnd = i === args.length - 1 ? 1 : (args[i + 1] as any).yStart ?? 0;
-        if (t >= tStart && t <= tEnd) {
-          const tNew = (t - tStart) / Math.max(0.0000001, tEnd - tStart);
-          return easer(tNew) * (yEnd - yStart) + yStart;
-        }
+        if (t < tStart) continue;
+
+        const tEnd = i === args.length - 2 ? 1 : (args[i + 1] as any).tStart ?? 0;
+        if (t > tEnd) continue;
+
+        const easer = (arg as any).easer;
+        const yStart: number = (arg as any).yStart;
+        const yEnd = i === args.length - 2 ? (args[i + 1] as any).yEnd : (args[i + 1] as any).yStart ?? 0;
+        const tNew = (t - tStart) / Math.max(0.0000001, tEnd - tStart);
+        return easer(tNew) * (yEnd - yStart) + yStart;
       }
-      return 0;
+      return (args[args.length - 1] as any).yEnd;
     };
   }
 
