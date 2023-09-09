@@ -70,7 +70,9 @@ export function assertNever(x: never, shouldThrow = false): void {
  *   ['a', 'b'] as const,
  *   x => x,
  *   x => 0 as const
- * ); // Record<"a" | "b", 0>
+ * );
+ * // { a: 0, b: 0 }
+ * // Record<"a" | "b", 0>
  * ```
  */
 export function mapFromList<A, T extends PropertyKey, U>(
