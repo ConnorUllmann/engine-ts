@@ -48,6 +48,42 @@ export async function sleep(milliseconds: number) {
   await new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+export function assertNever(x: never, shouldThrow = false): void {
+  const message = `Argument "${(x as any)?.toString() ?? x}" should not have existed to be passed here.`;
+  if (shouldThrow) {
+    throw new Error(message);
+  } else {
+    console.error(message);
+  }
+  return;
+}
+
+/**
+ * Transforms a list into a mapping of its items to arbitrary keys/values.
+ * @param list List to turn into a map
+ * @param getKey Function taking an element of the list and returning the key for its entry in the map
+ * @param getValue Function taking an element of the list and returning the value for its entry in the map
+ * @returns The map after executing on each element of the list and adding their entries.
+ * @example
+ * ```typescript
+ * const value = mapFromList(
+ *   ['a', 'b'] as const,
+ *   x => x,
+ *   x => 0 as const
+ * ); // Record<"a" | "b", 0>
+ * ```
+ */
+export function mapFromList<A, T extends PropertyKey, U>(
+  list: ReadonlyArray<A>,
+  getKey: (a: A) => T,
+  getValue: (a: A) => U
+): Record<T, U> {
+  return list.reduce((acc, item) => {
+    acc[getKey(item)] = getValue(item);
+    return acc;
+  }, {} as Record<T, U>);
+}
+
 // https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript/3561711#3561711
 export function escapeRegex(text: string): string {
   return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
