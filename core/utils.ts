@@ -303,6 +303,8 @@ declare global {
     bestOf(boolCheck: (o: T) => boolean): T | null;
     minOf(valueGetter: (o: T) => number): T | null;
     maxOf(valueGetter: (o: T) => number): T | null;
+    minValueOf(valueGetter: (o: T) => number): number | null;
+    maxValueOf(valueGetter: (o: T) => number): number | null;
     sumOf(valueGetter: (o: T) => number): number | null;
     mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
     mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
@@ -335,6 +337,8 @@ declare global {
     bestOf(boolCheck: (o: T) => boolean): T | null;
     minOf(valueGetter: (o: T) => number): T | null;
     maxOf(valueGetter: (o: T) => number): T | null;
+    minValueOf(valueGetter: (o: T) => number): number | null;
+    maxValueOf(valueGetter: (o: T) => number): number | null;
     sumOf(valueGetter: (o: T) => number): number | null;
     mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
     mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
@@ -534,6 +538,30 @@ Array.prototype.minOf = function <T>(valueGetter: (o: T) => number): T | null {
 // Note: the first match is returned if there is a tie
 Array.prototype.maxOf = function <T>(valueGetter: (o: T) => number): T | null {
   return this.length > 0 ? this.bestOf((a: T, b: T) => valueGetter(a) > valueGetter(b)) : null;
+};
+
+// Returns the lowest result of valueGetter when given each element in the array
+Array.prototype.minValueOf = function <T>(valueGetter: (o: T) => number): number | null {
+  if (this.length <= 0) return null;
+
+  let bestValue = valueGetter(this[0]);
+  for (let i = 1; i < this.length; i++) {
+    const value = valueGetter(this[i]);
+    if (value < bestValue) bestValue = value;
+  }
+  return bestValue;
+};
+
+// Returns the highest result of valueGetter when given each element in the array
+Array.prototype.maxValueOf = function <T>(valueGetter: (o: T) => number): number | null {
+  if (this.length <= 0) return null;
+
+  let bestValue = valueGetter(this[0]);
+  for (let i = 1; i < this.length; i++) {
+    const value = valueGetter(this[i]);
+    if (value > bestValue) bestValue = value;
+  }
+  return bestValue;
 };
 
 Array.prototype.sumOf = function <T>(valueGetter: (o: T) => number): number | null {
