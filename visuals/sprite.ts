@@ -175,20 +175,48 @@ export class Sprite {
     alpha?: number,
     cameraContext: CameraContext = this.world
   ) {
-    this.images.drawPart(
-      cameraContext,
-      this.imageName,
+    this.drawFrameExplicit(
       position.x,
       position.y,
-      xIndex * this.wFrame,
-      yIndex * this.hFrame,
-      this.wFrame,
-      this.hFrame,
+      xIndex,
+      yIndex,
       scale.x,
       scale.y,
       angle,
       center?.x,
       center?.y,
+      alpha,
+      cameraContext
+    );
+  }
+
+  drawFrameExplicit(
+    x: number,
+    y: number,
+    xIndex: number,
+    yIndex: number,
+    xScale?: number,
+    yScale?: number,
+    angle?: number,
+    xCenter?: number,
+    yCenter?: number,
+    alpha?: number,
+    cameraContext: CameraContext = this.world
+  ) {
+    this.images.drawPart(
+      cameraContext,
+      this.imageName,
+      x,
+      y,
+      xIndex * this.wFrame,
+      yIndex * this.hFrame,
+      this.wFrame,
+      this.hFrame,
+      xScale,
+      yScale,
+      angle,
+      xCenter,
+      yCenter,
       alpha
     );
   }
