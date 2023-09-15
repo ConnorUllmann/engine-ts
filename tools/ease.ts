@@ -1,4 +1,4 @@
-type Easer = (t: number) => number;
+export type Easer = (t: number) => number;
 
 // https://github.com/NoelFB/Foster/blob/master/Framework/Utils/Ease.cs
 // https://easings.net/en

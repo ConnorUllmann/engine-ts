@@ -150,6 +150,7 @@ interface IRayStatic extends IPointPairStatic<IRay> {
     ClosestPointYTo: (ax: number, ay: number, bx: number, by: number, xTest: number, yTest: number) => number;
   };
   DefaultMaxDistance: number;
+  Angle: (pair: DeepReadonly<IRay>) => number;
   AsSegment: (ray: DeepReadonly<IRay>, length: number) => ISegment;
   PointAtDistance: (ray: DeepReadonly<IRay>, length: number) => IPoint;
   Cast: (
@@ -408,24 +409,23 @@ export class Geometry {
     BoundsRectangles: (rectangles: (DeepReadonly<IRectangle> | null | undefined)[]) => {
       if (rectangles == null || rectangles.length <= 0) return { x: 0, y: 0, w: 0, h: 0 };
       let indexStart = -1;
-      for(let i = 0; i < rectangles.length; i++) {
-        if(rectangles[i]) {
+      for (let i = 0; i < rectangles.length; i++) {
+        if (rectangles[i]) {
           indexStart = i;
           break;
         }
       }
-      if(indexStart < 0)
-        return { x: 0, y: 0, w: 0, h: 0 };
-      
+      if (indexStart < 0) return { x: 0, y: 0, w: 0, h: 0 };
+
       const rectangleStart = rectangles[indexStart]!;
       let xMin = rectangleStart.x;
       let yMin = rectangleStart.y;
       let xMax = rectangleStart.x + rectangleStart.w;
       let yMax = rectangleStart.y + rectangleStart.h;
-      for (let i = indexStart+1; i < rectangles.length; i++) {
+      for (let i = indexStart + 1; i < rectangles.length; i++) {
         const rectangle = rectangles[i];
-        if(!rectangle) continue;
-        
+        if (!rectangle) continue;
+
         xMin = Math.min(rectangle.x, xMin);
         yMin = Math.min(rectangle.y, yMin);
         xMax = Math.max(rectangle.x + rectangle.w, xMax);
@@ -906,6 +906,7 @@ export class Geometry {
         Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a)), ray.a),
       ]),
     DefaultMaxDistance: 1000000,
+    Angle: (ray: DeepReadonly<IRay>): number => Geometry.AngleTo(ray.b.x, ray.b.y, ray.a.x, ray.a.y),
     AsSegment: (ray: DeepReadonly<IRay>, length: number = Geometry.Ray.DefaultMaxDistance): ISegment => ({
       a: ray.a,
       b: Geometry.Point.Add(Geometry.Point.Normalized(Geometry.Point.Subtract(ray.b, ray.a), length), ray.a),
