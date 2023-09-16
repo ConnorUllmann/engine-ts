@@ -63,20 +63,16 @@ export class Draw {
     ) => {
       if (!image) return;
 
-      const w = Math.abs(xScale * image.width);
-      const h = Math.abs(yScale * image.height);
-
       const globalAlphaPrevious = context.globalAlpha;
       context.globalAlpha = alpha;
 
-      xCenter = xCenter == null ? x + w / 2 : xCenter;
-      yCenter = yCenter == null ? y + h / 2 : yCenter;
+      xCenter = xCenter == null ? x + image.width / 2 : xCenter;
+      yCenter = yCenter == null ? y + image.height / 2 : yCenter;
 
       context.translate(xCenter - camera.x, yCenter - camera.y);
       if (angle !== 0) context.rotate(angle);
-      context.scale(Math.sign(xScale), Math.sign(yScale));
-      context.translate(x + w / 2 - xCenter, y + h / 2 - yCenter);
-      context.drawImage(image, -w / 2, -h / 2, w, h);
+      context.scale(xScale, yScale);
+      context.drawImage(image, x - xCenter, y - yCenter, image.width, image.height);
       context.resetTransform();
 
       context.globalAlpha = globalAlphaPrevious;
@@ -102,20 +98,16 @@ export class Draw {
     ) => {
       if (!image) return;
 
-      const w = Math.abs(xScale * sw);
-      const h = Math.abs(yScale * sh);
-
       const globalAlphaPrevious = context.globalAlpha;
       context.globalAlpha = alpha;
 
-      xCenter = xCenter == null ? x + w / 2 : xCenter;
-      yCenter = yCenter == null ? y + h / 2 : yCenter;
+      xCenter = xCenter == null ? x + sw / 2 : xCenter;
+      yCenter = yCenter == null ? y + sh / 2 : yCenter;
 
       context.translate(xCenter - camera.x, yCenter - camera.y);
       if (angle !== 0) context.rotate(angle);
-      context.scale(Math.sign(xScale), Math.sign(yScale));
-      context.translate(x + w / 2 - xCenter, y + h / 2 - yCenter);
-      context.drawImage(image, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+      context.scale(xScale, yScale);
+      context.drawImage(image, sx, sy, sw, sh, x - xCenter, y - yCenter, sw, sh);
       context.resetTransform();
 
       context.globalAlpha = globalAlphaPrevious;

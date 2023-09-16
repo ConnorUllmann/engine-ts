@@ -40,7 +40,7 @@ export class SpriteAnimation {
     return this.weightRange.index(this.timer.value);
   }
   set currentFrameIndex(frameIndex: number | null) {
-    this.timer.value = this.weightRange.normal(frameIndex ?? 0);
+    this.timer.value = this.weightRange.normalLowerBound(frameIndex ?? 0);
   }
   get frameCount(): number {
     return this.weightRange.range.length;
