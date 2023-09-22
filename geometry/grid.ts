@@ -164,7 +164,7 @@ export class Grid<T> extends GridView<T> implements IGrid<T> {
     for (position.y = 0; position.y < grid.h; position.y++)
       for (position.x = 0; position.x < grid.w; position.x++) {
         const tile = grid.get(position);
-        if (tile) results.push(valueGetter(tile, position));
+        if (tile != null) results.push(valueGetter(tile, position));
       }
     return results;
   }
