@@ -81,7 +81,7 @@ export class Grid<T> extends GridView<T> implements IGrid<T> {
     position: IPoint,
     getValue: (x: number, y: number) => any
   ): IdSet<{ x: number; y: number; tile: T }> {
-    const result = new IdSet<{ x: number; y: number; tile: T }>((o: IPoint) => o.y * grid.h + o.x);
+    const result = new IdSet<{ x: number; y: number; tile: T }>((o: IPoint) => o.y * grid.w + o.x);
     for (let o of this.GetRegionGeneric(grid.w, grid.h, position, getValue)) {
       result.add({
         x: o.x,
