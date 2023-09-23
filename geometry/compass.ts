@@ -15,14 +15,14 @@ import { IPoint } from './interfaces';
 
 // ordered in increasing angle order starting from zero
 export enum CompassDirection {
-  E,
-  SE,
-  S,
-  SW,
-  W,
-  NW,
-  N,
-  NE,
+  E = 1 << 0,
+  SE = 1 << 1,
+  S = 1 << 2,
+  SW = 1 << 3,
+  W = 1 << 4,
+  NW = 1 << 5,
+  N = 1 << 6,
+  NE = 1 << 7,
 }
 
 export const PointByCompassDirection = {

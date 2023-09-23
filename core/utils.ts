@@ -130,7 +130,7 @@ export function moduloSafe(value: number, modulo: number) {
 }
 
 // https://stackoverflow.com/a/55365334
-export function getGuidPart(_rng?: RNG): string {
+export function getGuidPart(_rng?: Pick<RNG, 'random'>): string {
   return (((1 + (_rng ?? rng).random()) * 0x10000) | 0).toString(16).substring(1);
 }
 export function getGuid(): string {
@@ -289,10 +289,10 @@ declare global {
     removeFirstWhere(valueGetter: (o: T, i: number) => boolean): T | null;
     removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
     reversed(): T[];
-    sample(_rng?: RNG): T | null;
-    samples(count: number, _rng?: RNG): T[];
-    shuffle(_rng?: RNG): T[];
-    shuffled(_rng?: RNG): T[];
+    sample(_rng?: Pick<RNG, 'random'>): T | null;
+    samples(count: number, _rng?: Pick<RNG, 'random'>): T[];
+    shuffle(_rng?: Pick<RNG, 'random'>): T[];
+    shuffled(_rng?: Pick<RNG, 'random'>): T[];
     flattened(): T;
     unflattened(width: number): T[][];
     batchify(batchSize: number): T[][];
@@ -324,9 +324,9 @@ declare global {
 
   interface ReadonlyArray<T> {
     reversed(): T[];
-    sample(_rng?: RNG): T | null;
-    samples(count: number, _rng?: RNG): T[];
-    shuffled(_rng?: RNG): T[];
+    sample(_rng?: Pick<RNG, 'random'>): T | null;
+    samples(count: number, _rng?: Pick<RNG, 'random'>): T[];
+    shuffled(_rng?: Pick<RNG, 'random'>): T[];
     flattened(): T;
     unflattened(width: number): T[][];
     batchify(batchSize: number): T[][];
@@ -413,13 +413,13 @@ Array.prototype.reversed = function <T>(): T[] {
 };
 
 //Returns a random element of the array
-Array.prototype.sample = function <T>(_rng: RNG = rng): T | null {
+Array.prototype.sample = function <T>(_rng: Pick<RNG, 'random'> = rng): T | null {
   return this.length > 0 ? this[Math.floor(_rng.random() * this.length)] : null;
 };
 
 //Returns random (different) elements of the array.
 //Fastest when you're going to end up selecting most of the array.
-Array.prototype.samples = function <T>(count: number, _rng: RNG = rng): T[] {
+Array.prototype.samples = function <T>(count: number, _rng: Pick<RNG, 'random'> = rng): T[] {
   if (count <= 0 || this.length <= 0) return [];
   if (count >= this.length) return this.shuffled(_rng);
   const tempList = this.clone();
@@ -429,7 +429,7 @@ Array.prototype.samples = function <T>(count: number, _rng: RNG = rng): T[] {
 
 // Fisher-Yates shuffle
 // https://bost.ocks.org/mike/shuffle/
-Array.prototype.shuffle = function <T>(_rng: RNG = rng): T[] {
+Array.prototype.shuffle = function <T>(_rng: Pick<RNG, 'random'> = rng): T[] {
   let j = this.length;
   let i = 0;
   while (j > 0) {
@@ -441,7 +441,7 @@ Array.prototype.shuffle = function <T>(_rng: RNG = rng): T[] {
 };
 
 //Returns a new array that is a shuffled version of the given array
-Array.prototype.shuffled = function <T>(_rng: RNG = rng): T[] {
+Array.prototype.shuffled = function <T>(_rng: Pick<RNG, 'random'> = rng): T[] {
   const list = this.clone();
   list.shuffle(_rng);
   return list;
