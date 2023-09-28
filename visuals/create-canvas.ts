@@ -13,7 +13,6 @@ export function createCanvasScreenshotElement(canvas: OffscreenCanvas | HTMLCanv
       URL.revokeObjectURL(url);
     };
     newImg.src = url;
-    newImg.style.padding = '2px';
   };
   if ('convertToBlob' in canvas) (canvas as any).convertToBlob().then(blobFn);
   else if ('toBlob' in canvas) canvas.toBlob(blobFn);

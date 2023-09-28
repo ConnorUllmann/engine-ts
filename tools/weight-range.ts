@@ -202,7 +202,7 @@ export class WeightRange<T> {
   /**
    * @returns A random entry in the weighted range where each element's probability is proportional to its weight.
    */
-  public sample(_rng: RNG = rng): T | null {
+  public sample(_rng: Pick<RNG, 'random'> = rng): T | null {
     return this.value(_rng.random());
   }
 }
