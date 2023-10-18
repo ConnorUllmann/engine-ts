@@ -13,7 +13,18 @@ export interface ISpriteFrame {
   timeWeight?: number; // defaults to 1 if not set
 }
 
-export class SpriteAnimation {
+export interface ISpriteAnimation {
+  get seconds(): number;
+  speed: number;
+  completion: number;
+  get finished(): boolean;
+  currentFrameIndex: number | null;
+  get frameCount(): number;
+  update(deltaMs: number): void;
+  reset(): void;
+}
+
+export class SpriteAnimation implements ISpriteAnimation {
   private weightRange: WeightRange<IPoint>;
   private readonly timer: Timer;
 
@@ -63,11 +74,11 @@ export class SpriteAnimation {
   }
 }
 
-export class Sprite {
-  private readonly animationByName: {
-    [animationName: string]: SpriteAnimation;
+export class SpriteTimer<T extends ISpriteAnimation = ISpriteAnimation> {
+  protected readonly animationByName: {
+    [animationName: string]: T;
   } = {};
-  private _currentAnimationName: string;
+  protected _currentAnimationName: string;
   public get currentAnimationName(): string {
     return this._currentAnimationName;
   }
@@ -106,20 +117,12 @@ export class Sprite {
     return null;
   }
 
-  constructor(
-    public readonly world: World,
-    public readonly images: Images,
-    public readonly imageName: string,
-    public readonly wFrame: number,
-    public readonly hFrame: number
-  ) {}
-
   get isCurrentAnimationFinished(): boolean {
     if (!(this._currentAnimationName in this.animationByName)) return false;
     return this.animationByName[this._currentAnimationName].finished;
   }
 
-  addAnimation(animationName: string, animation: SpriteAnimation): this {
+  addAnimation(animationName: string, animation: T): this {
     this.animationByName[animationName] = animation;
     return this;
   }
@@ -133,7 +136,7 @@ export class Sprite {
     return this;
   }
 
-  getAnimation(animationName: string): SpriteAnimation | null {
+  getAnimation(animationName: string): T | null {
     return this.animationByName[animationName] ?? null;
   }
 
@@ -142,9 +145,25 @@ export class Sprite {
     return this;
   }
 
-  update() {
+  update(deltaMs: number) {
     if (this._currentAnimationName in this.animationByName)
-      this.animationByName[this._currentAnimationName].update(this.world.delta);
+      this.animationByName[this._currentAnimationName].update(deltaMs);
+  }
+}
+
+export class Sprite extends SpriteTimer<SpriteAnimation> {
+  constructor(
+    public readonly world: World,
+    public readonly images: Images,
+    public readonly imageName: string,
+    public readonly wFrame: number,
+    public readonly hFrame: number
+  ) {
+    super();
+  }
+
+  override update() {
+    super.update(this.world.delta);
   }
 
   draw(
