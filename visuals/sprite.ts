@@ -18,7 +18,7 @@ export interface ISpriteAnimation {
   speed: number;
   completion: number;
   get finished(): boolean;
-  currentFrameIndex: number | null;
+  currentAnimationFrameIndex: number | null;
   get frameCount(): number;
   update(deltaMs: number): void;
   reset(): void;
@@ -44,13 +44,22 @@ export class SpriteAnimation implements ISpriteAnimation {
   get finished(): boolean {
     return this.timer.finished;
   }
+
+  /**
+   * The frame indices within the image used for the current time in the current animation.
+   * i.e. At the start of the animation, this value is the frame indices in the image of the first frame of the animation.
+   */
   get currentIndices(): IPoint | null {
     return this.weightRange.value(this.timer.value);
   }
-  get currentFrameIndex(): number | null {
+  /**
+   * The frame index relative to the current time in the current animation.
+   * i.e. At the start of the animation, this value is zero.
+   */
+  get currentAnimationFrameIndex(): number | null {
     return this.weightRange.index(this.timer.value);
   }
-  set currentFrameIndex(frameIndex: number | null) {
+  set currentAnimationFrameIndex(frameIndex: number | null) {
     this.timer.value = this.weightRange.normalLowerBound(frameIndex ?? 0);
   }
   get frameCount(): number {
@@ -103,12 +112,12 @@ export class SpriteTimer<T extends ISpriteAnimation = ISpriteAnimation> {
   }
   public get currentAnimationFrameIndex(): number | null {
     if (this._currentAnimationName in this.animationByName)
-      return this.animationByName[this._currentAnimationName].currentFrameIndex;
+      return this.animationByName[this._currentAnimationName].currentAnimationFrameIndex;
     return null;
   }
   public set currentAnimationFrameIndex(frameIndex: number | null) {
     if (this._currentAnimationName in this.animationByName)
-      this.animationByName[this._currentAnimationName].currentFrameIndex =
+      this.animationByName[this._currentAnimationName].currentAnimationFrameIndex =
         (frameIndex ?? 0) % this.animationByName[this._currentAnimationName].frameCount;
   }
   public get currentAnimationFrameCount(): number | null {
