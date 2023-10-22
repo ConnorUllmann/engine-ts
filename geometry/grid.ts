@@ -19,17 +19,41 @@ export class GridView<T> implements IGrid<T> {
     this.w = this.tiles.first()?.length ?? 0;
   }
 
-  public set(position: IPoint, tile: T): void {
-    if (Grid.IsInside(this, position)) this.tiles[position.y][position.x] = tile;
+  public set(x: number, y: number, tile: T): void;
+  public set(position: IPoint, tile: T): void;
+  public set(...args: [position: IPoint, tile: T] | [x: number, y: number, tile: T]): void {
+    if (args.length === 2) {
+      const [position, tile] = args;
+      if (Grid.IsInside<T>(this, position)) this.tiles[position.y][position.x] = tile;
+    } else {
+      const [x, y, tile] = args;
+      if (Grid.IsInside<T>(this, x, y)) this.tiles[y][x] = tile;
+    }
   }
 
-  public get(position: IPoint): T | null {
-    return Grid.IsInside(this, position) ? this.tiles[position.y][position.x] : null;
+  public get(x: number, y: number): T | null;
+  public get(position: IPoint): T | null;
+  public get(...args: [x: number, y: number] | [position: IPoint]): T | null {
+    if (args.length === 1) {
+      const [position] = args;
+      return Grid.IsInside<T>(this, position.x, position.y) ? this.tiles[position.y][position.x] : null;
+    } else {
+      const [x, y] = args;
+      return Grid.IsInside<T>(this, x, y) ? this.tiles[y][x] : null;
+    }
   }
 }
 
 export class Grid<T> extends GridView<T> implements IGrid<T> {
-  public static IsInside<T>(grid: IGrid<T>, { x, y }: IPoint): boolean {
+  public static IsInside<T>(grid: IGrid<T>, x: number, y: number): boolean;
+  public static IsInside<T>(grid: IGrid<T>, point: IPoint): boolean;
+  public static IsInside<T>(grid: IGrid<T>, ...args: [x: number, y: number] | [pt: IPoint]): boolean {
+    let x: number, y: number;
+    if (args.length === 1) {
+      [{ x, y }] = args;
+    } else {
+      [x, y] = args;
+    }
     return y >= 0 && y < grid.h && x >= 0 && x < grid.w;
   }
 
