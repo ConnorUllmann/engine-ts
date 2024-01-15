@@ -1,3 +1,5 @@
+import { clamp } from './utils';
+
 interface Sound {
   soundName: string;
   familyName?: string;
@@ -15,6 +17,9 @@ interface SoundFamily {
 export class Sounds {
   private readonly soundByName: { [soundName: string]: Sound } = {};
   private readonly familyByFamilyName: { [familyName: string]: SoundFamily } = {};
+  private readonly soundNamesByVolumeGroup: { [volumeGroup: string]: string[] } = {};
+  private readonly volumeGroupsBySoundName: { [soundName: string]: string[] } = {};
+  private readonly volumeNormalByVolumeGroup: { [volumeGroup: string]: number } = {};
   public muted: boolean = false;
 
   public toggleMuted() {
@@ -25,16 +30,51 @@ export class Sounds {
     }
   }
 
-  constructor() {}
+  public setVolumeForGroup(volumeGroup: string, volumeNormal: number) {
+    volumeNormal = clamp(volumeNormal, 0, 1);
 
-  public addMultiple(count: number, src: string, familyName: string) {
-    for (let i = 0; i < count; i++) {
-      const soundName = `${familyName}${i}`;
-      this.add(soundName, src, familyName);
+    const volumeNormalPrevious = this.volumeNormalByVolumeGroup[volumeGroup];
+    if (volumeNormalPrevious === volumeNormal) return;
+
+    this.volumeNormalByVolumeGroup[volumeGroup] = volumeNormal;
+
+    const soundNames = this.soundNamesByVolumeGroup[volumeGroup];
+    if (!soundNames) return;
+
+    for (const soundName of soundNames) {
+      const sound = this.soundByName[soundName];
+      if (!sound) continue;
+
+      sound.element.volume = this.getVolumeForSoundName(soundName);
     }
   }
 
-  public add(soundName: string, src: string, familyName?: string) {
+  public getVolumeForGroup(volumeGroup: string): number {
+    return this.volumeNormalByVolumeGroup[volumeGroup] ?? 1;
+  }
+
+  public get isVolumeInResetState() {
+    return !Object.values(this.volumeNormalByVolumeGroup).some(volumeNormal => volumeNormal < 1);
+  }
+
+  public resetVolume() {
+    if (this.isVolumeInResetState) return;
+
+    for (const [volumeGroup, volumeNormal] of Object.entries(this.volumeNormalByVolumeGroup)) {
+      if (volumeNormal < 1) this.setVolumeForGroup(volumeGroup, 1);
+    }
+  }
+
+  constructor() {}
+
+  public addMultiple(count: number, src: string, familyName: string, volumeGroups?: string[]) {
+    for (let i = 0; i < count; i++) {
+      const soundName = `${familyName}${i}`;
+      this.add(soundName, src, familyName, volumeGroups);
+    }
+  }
+
+  public add(soundName: string, src: string, familyName?: string, volumeGroups?: string[]) {
     const element = document.createElement('audio');
     element.src = src;
     element.setAttribute('preload', 'auto');
@@ -58,6 +98,15 @@ export class Sounds {
       const family = this.familyByFamilyName[familyName];
       if (!family.soundNames.includes(soundName)) family.soundNames.push(soundName);
     }
+
+    if (volumeGroups) {
+      for (const volumeGroup of volumeGroups) {
+        (this.soundNamesByVolumeGroup[volumeGroup] ??= []).push(soundName);
+        (this.volumeGroupsBySoundName[soundName] ??= []).push(volumeGroup);
+      }
+
+      element.volume = this.getVolumeForSoundName(soundName);
+    }
   }
 
   public play(soundName: string, stopIfPlaying: boolean = true) {
@@ -80,5 +129,16 @@ export class Sounds {
     const soundName = family.soundNames[family.sequentialIndex];
     this.play(soundName, stopIfPlaying);
     family.sequentialIndex = (family.sequentialIndex + 1) % family.soundNames.length;
+  }
+
+  private getVolumeForSoundName(soundName: string) {
+    const volumeGroups = this.volumeGroupsBySoundName[soundName];
+    let volume = 1;
+    for (const volumeGroup of volumeGroups) {
+      const volumeNormal = this.volumeNormalByVolumeGroup[volumeGroup];
+      if (volumeNormal == null) continue;
+      volume *= volumeNormal;
+    }
+    return volume;
   }
 }
