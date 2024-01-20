@@ -1,8 +1,8 @@
-import { World } from './world';
-import { Point } from '../geometry/point';
-import { IPoint } from '../geometry/interfaces';
 import { Geometry } from '../geometry/geometry';
+import { IPoint } from '../geometry/interfaces';
+import { Point } from '../geometry/point';
 import { IComponent } from './component';
+import { World } from './world';
 
 export class Entity {
   public readonly id: number;
@@ -73,6 +73,11 @@ export class Entity {
   // entities have finished updating but haven't yet drawn to the screen
   public destroy(): void {
     this.world.destroyEntity(this);
+  }
+
+  // call to remove the entity without destroying it (i.e. in the case of loading/unloading)
+  public queueRemove(): void {
+    this.world.queueRemoveEntity(this);
   }
 
   /* Handlers */

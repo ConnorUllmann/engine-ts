@@ -272,8 +272,13 @@ export class World {
 
   public destroyEntity(entity: Entity) {
     if (entity.world != this || entity.destroyed) return;
-    this.entityToRemoveById[entity.id] = entity;
+    this.queueRemoveEntity(entity);
     entity.destroyed = true;
+  }
+
+  public queueRemoveEntity(entity: Entity) {
+    if (entity.world != this || entity.removed) return;
+    this.entityToRemoveById[entity.id] = entity;
   }
 
   public clearCanvas(color: DeepReadonly<Color> | null = null) {
