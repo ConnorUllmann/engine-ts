@@ -1,6 +1,5 @@
 export class Stack<T> {
-  public readonly elements: T[] = [];
-  constructor() {}
+  constructor(public readonly elements: T[] = []) {}
 
   public get length(): number {
     return this.elements.length;
@@ -13,6 +12,9 @@ export class Stack<T> {
   }
   public push(item: T): void {
     this.elements.push(item);
+  }
+  public clear(): void {
+    this.elements.clear();
   }
   public get top(): T | null {
     return this.elements.last();
