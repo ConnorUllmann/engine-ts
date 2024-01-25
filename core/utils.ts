@@ -77,11 +77,11 @@ export function assertNever(x: never, shouldThrow = false): void {
  */
 export function mapFromList<A, T extends PropertyKey, U>(
   list: ReadonlyArray<A>,
-  getKey: (a: A) => T,
-  getValue: (a: A) => U
+  getKey: (a: A, index: number) => T,
+  getValue: (a: A, index: number) => U
 ): Record<T, U> {
-  return list.reduce((acc, item) => {
-    acc[getKey(item)] = getValue(item);
+  return list.reduce((acc, item, index) => {
+    acc[getKey(item, index)] = getValue(item, index);
     return acc;
   }, {} as Record<T, U>);
 }
