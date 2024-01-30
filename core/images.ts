@@ -3,7 +3,7 @@ import { Draw } from '../visuals/draw';
 
 export class Images {
   private readonly srcByName: { [name: string]: string } = {};
-  private readonly imageBySrc: { [src: string]: HTMLImageElement } = {};
+  private readonly dataBySrc: { [src: string]: { image: HTMLImageElement; isLoadedPromise: Promise<void> } } = {};
   private readonly srcsWaitingToLoad = new Set();
 
   constructor() {}
@@ -32,29 +32,33 @@ export class Images {
 
   public remove(name: string) {
     if (!(name in this.srcByName)) return;
-    delete this.imageBySrc[this.srcByName[name]];
+    delete this.dataBySrc[this.srcByName[name]];
     delete this.srcByName[name];
   }
 
   public add(name: string, src: string) {
     if (!(name in this.srcByName)) this.srcByName[name] = src;
-    if (!(src in this.imageBySrc)) {
+    if (!(src in this.dataBySrc)) {
       const image = new Image();
-
       this.srcsWaitingToLoad.add(src);
-      image.onload = () => {
-        this.srcsWaitingToLoad.delete(src);
-      };
+      const isLoadedPromise = new Promise<void>(resolve => {
+        image.onload = () => {
+          this.srcsWaitingToLoad.delete(src);
+          resolve();
+        };
+      });
 
       image.src = src;
-      this.imageBySrc[src] = image;
+      this.dataBySrc[src] = { image, isLoadedPromise };
     }
+
+    return this.dataBySrc[src].isLoadedPromise;
   }
 
   private getImageBySrc(src: string): HTMLImageElement {
-    if (!(src in this.imageBySrc))
+    if (!(src in this.dataBySrc))
       throw `Image with src '${src}' not found. Add image using world.images.add(imageName, '${src}')`;
-    return this.imageBySrc[src];
+    return this.dataBySrc[src].image;
   }
 
   public drawPart(
