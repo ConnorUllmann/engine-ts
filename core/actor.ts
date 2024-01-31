@@ -6,7 +6,7 @@ import { Collider } from './collider';
 import { Entity } from './entity';
 import { World } from './world';
 
-export class Actor extends Entity {
+export abstract class Actor extends Entity {
   public readonly collider: Collider<any>;
   public get bounds(): Readonly<IRectangle> {
     return this.collider.bounds;

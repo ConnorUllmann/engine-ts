@@ -2,10 +2,11 @@ import { Geometry } from '../geometry/geometry';
 import { IRectangle } from '../geometry/interfaces';
 import { BoundableShape } from '../geometry/shape-type';
 import { Component } from './component';
+import { Named } from './named';
 import { DeepReadonly } from './utils';
 
 // TODO: add "shape" property which translates shapeLocal to the position of the entity
-export class Collider<T extends BoundableShape> extends Component implements Readonly<IRectangle> {
+export class Collider<T extends BoundableShape> extends Named('Collider', Component) implements Readonly<IRectangle> {
   private readonly _boundsLocal: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
   private readonly _bounds: IRectangle;
 

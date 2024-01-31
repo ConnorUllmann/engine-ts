@@ -2,16 +2,12 @@ import { Geometry } from '../geometry/geometry';
 import { IPoint } from '../geometry/interfaces';
 import { Point } from '../geometry/point';
 import { IComponent } from './component';
+import { NamedClass } from './named';
 import { World } from './world';
 
-export class Entity {
+export abstract class Entity {
   public readonly id: number;
-  public get class(): string {
-    return this.constructor.name;
-  }
-  public static get Class(): string {
-    return this.name;
-  }
+  public abstract get name(): string;
 
   public destroyed: boolean = false;
   public removed: boolean = false;
@@ -19,7 +15,7 @@ export class Entity {
   public visible: boolean = true;
   public depth: number = 0;
 
-  public readonly componentsByClass: { [_class: string]: Set<IComponent> } = {};
+  public readonly componentsByName: { [name: string]: Set<IComponent> } = {};
 
   public readonly position: Point = new Point();
 
@@ -31,7 +27,7 @@ export class Entity {
 
   public toString(): string {
     return JSON.stringify({
-      class: this.class,
+      name: this.name,
       id: this.id,
       position: this.position.toString(),
     });
@@ -41,8 +37,8 @@ export class Entity {
     component.entity = this;
     component.removed = false;
 
-    if (!this.componentsByClass[component.class]) this.componentsByClass[component.class] = new Set();
-    this.componentsByClass[component.class].add(component);
+    if (!this.componentsByName[component.name]) this.componentsByName[component.name] = new Set();
+    this.componentsByName[component.name].add(component);
   }
 
   public removeComponent(component: IComponent) {
@@ -51,22 +47,20 @@ export class Entity {
     component.removed = true;
     component.entity = null;
 
-    const classComponents = this.componentsByClass[component.class];
+    const classComponents = this.componentsByName[component.name];
     classComponents.delete(component);
-    if (classComponents.size <= 0) delete this.componentsByClass[component.class];
+    if (classComponents.size <= 0) delete this.componentsByName[component.name];
   }
 
   public removeAllComponents() {
-    for (let _class in this.componentsByClass) {
-      const components = this.componentsByClass[_class];
+    for (let _class in this.componentsByName) {
+      const components = this.componentsByName[_class];
       for (let component of components) this.removeComponent(component);
     }
   }
 
-  public componentsOfClass<T extends new (...args: any[]) => U, U extends IComponent>(
-    _class: T
-  ): Set<InstanceType<T>> | undefined {
-    return this.componentsByClass[_class.name] as Set<InstanceType<T>>;
+  public componentsOfClass<T extends NamedClass<U>, U extends IComponent>(_class: T): Set<InstanceType<T>> | undefined {
+    return this.componentsByName[_class.Name] as Set<InstanceType<T>>;
   }
 
   // sets this entity up to be removed from the World the next time

@@ -1,7 +1,7 @@
 import { Entity } from './entity';
 
 export interface IComponent {
-  class: string;
+  readonly name: string;
   entity: Entity | null;
   active: boolean;
   removed: boolean;
@@ -10,9 +10,7 @@ export interface IComponent {
 }
 
 export abstract class Component implements IComponent {
-  public get class(): string {
-    return this.constructor.name;
-  }
+  public abstract readonly name: string;
   public active: boolean = true;
   public removed: boolean = false;
   public entity: Entity | null = null;
