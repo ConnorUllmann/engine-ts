@@ -91,25 +91,25 @@ export function escapeRegex(text: string): string {
   return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export const tau: number = Math.PI * 2;
-export const angle360: number = tau;
-export const angle315: number = (tau * 7) / 8;
-export const angle300: number = (tau * 5) / 6;
-export const angle270: number = (tau * 3) / 4;
-export const angle240: number = (tau * 2) / 3;
-export const angle225: number = (tau * 5) / 8;
-export const angle180: number = tau / 2;
-export const angle135: number = (tau * 3) / 8;
-export const angle120: number = tau / 3;
-export const angle90: number = tau / 4;
-export const angle60: number = tau / 6;
-export const angle45: number = tau / 8;
-export const angle30: number = tau / 12;
-export const angle15: number = tau / 24;
+export const tau = 6.283185307179586;
+export const angle360 = tau;
+export const angle315 = 5.497787143782138;
+export const angle300 = 5.235987755982989;
+export const angle270 = 4.71238898038469;
+export const angle240 = 4.1887902047863905;
+export const angle225 = 3.9269908169872414;
+export const angle180 = 3.141592653589793;
+export const angle135 = 2.356194490192345;
+export const angle120 = 2.0943951023931953;
+export const angle90 = 1.5707963267948966;
+export const angle60 = 1.0471975511965976;
+export const angle45 = 0.7853981633974483;
+export const angle30 = 0.5235987755982988;
+export const angle15 = 0.2617993877991494;
 export const angleGolden = 2.39996322972865332;
-export const sqrt2 = Math.sqrt(2);
-export const sqrt3 = Math.sqrt(3);
-export const sqrt5 = Math.sqrt(5);
+export const sqrt2 = 1.4142135623730951;
+export const sqrt3 = 1.7320508075688772;
+export const sqrt5 = 2.23606797749979;
 
 export function binomialCoefficient(n: number, k: number) {
   let result = 1;
@@ -142,7 +142,7 @@ console.log(`Global random seed: ${rng.seed}`);
 export const random = () => rng.random();
 export const randomSign = (includeZero?: boolean) => rng.randomSign(includeZero);
 export const randomRange = (min: number, max: number) => rng.randomRange(min, max);
-export const randomChoice = <T>(...options: [T, ...T[]]): T => rng.randomChoice(...options);
+export const randomChoice = <const T extends readonly any[]>(...options: T): T[number] => rng.randomChoice(...options);
 
 export const repeat = function <T>(count: number, get: (i: number, count: number) => T): T[] {
   const array: T[] = [];

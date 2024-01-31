@@ -24,7 +24,7 @@ export class RNG {
     return this.random() * (max - min) + min;
   }
 
-  randomChoice<T>(...options: [T, ...T[]]): T {
+  randomChoice<const T extends readonly any[]>(...options: T): T[number] {
     return options.sample(this) as T;
   }
 }
