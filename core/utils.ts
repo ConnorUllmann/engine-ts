@@ -48,7 +48,7 @@ export async function sleep(milliseconds: number) {
   await new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
-export function assertNever<T extends never>(x?: T, shouldThrow = false): void {
+export function assertNever(x: never, shouldThrow = false): void {
   const message = `Argument "${(x as any)?.toString() ?? x}" should not have existed to be passed here.`;
   if (shouldThrow) {
     throw new Error(message);
@@ -57,6 +57,8 @@ export function assertNever<T extends never>(x?: T, shouldThrow = false): void {
   }
   return;
 }
+
+export function assertTypeNever<T extends never>(_?: T): void {}
 
 /**
  * Transforms a list into a mapping of its items to arbitrary keys/values.
