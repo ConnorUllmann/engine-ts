@@ -131,6 +131,11 @@ export class SpriteTimer<T extends ISpriteAnimation = ISpriteAnimation> {
     return this.animationByName[this._currentAnimationName].finished;
   }
 
+  get isCurrentAnimationOnLastFrame() {
+    const animation = this.animationByName[this._currentAnimationName];
+    return animation && animation.currentAnimationFrameIndex === animation.frameCount - 1;
+  }
+
   addAnimation(animationName: string, animation: T): this {
     this.animationByName[animationName] = animation;
     return this;
