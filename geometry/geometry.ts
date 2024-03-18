@@ -1164,6 +1164,9 @@ export class Geometry {
       const xrDiff = x1r - x0r;
       const yrDiff = y1r - y0r;
 
+      // Special case of not needing to launch at all
+      if (Math.abs(xrDiff) < Geometry.Tolerance && Math.abs(yrDiff) < Geometry.Tolerance) return { x: 0, y: 0 };
+
       const x0 = x0r;
       const y0 = y0r;
       const x1 = x1r;
@@ -1171,6 +1174,20 @@ export class Geometry {
 
       const cos = Math.cos(-angle);
       const sin = Math.sin(-angle);
+
+      // For the special case of launching directly up or down
+      if (Math.sign(xrDiff) === 0) {
+        const isAngleInSameDirectionAsYDiff = Math.abs(-sin - Math.sign(yrDiff)) < Geometry.Tolerance;
+        if (!isAngleInSameDirectionAsYDiff) {
+          // If the launch angle is in the same direction as gravity, but our target is in the other direction, then the shot is impossible.
+          // If the launch angle is in the same direction as gravity, and our target is in that same direction, then the shot is inevitable and no velocity is needed.
+          const isAngleInSameDirectionAsGravity = Math.abs(Math.sign(a) - Math.sign(yrDiff)) < Geometry.Tolerance;
+          return isAngleInSameDirectionAsGravity ? null : { x: 0, y: 0 };
+        }
+
+        const sqrt = -2 * a * yrDiff;
+        return sqrt < 0 ? null : { x: 0, y: Math.sign(yrDiff) * Math.sqrt(sqrt) };
+      }
 
       if (Math.sign(cos) != Math.sign(xrDiff)) return null;
 
