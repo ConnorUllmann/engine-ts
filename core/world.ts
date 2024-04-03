@@ -92,7 +92,11 @@ export class World {
     canvasResolutionWidth: number = 1280,
     canvasResolutionHeight: number = 960,
     alpha: boolean = true,
-    public readonly fps: number = 60
+    public readonly fps: number = 60,
+    // Default to putting mouse up/down events on the document body (so that letting go of the mouse outside the canvas is still caught)
+    // but allow setting mouse events on the canvas instead if other HTML elements are going to overlap and you want to stop propagation
+    // to the canvas.
+    areMouseEventsOnDocumentBody = true
   ) {
     console.log(`World started using canvas with id '${canvasIdOrElement}'`);
     this.canvas =
@@ -110,7 +114,7 @@ export class World {
 
     this.sounds = new Sounds();
     this.camera = new Camera(this.canvas);
-    this._mouse = new Mouse(this.canvas, this.camera);
+    this._mouse = new Mouse(this.canvas, this.camera, areMouseEventsOnDocumentBody);
     this.keyboard = new Keyboard();
     this.gamepads = new Gamepads();
 

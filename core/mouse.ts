@@ -1,5 +1,5 @@
-import { Point } from '../geometry/point';
 import { IPoint } from '../geometry/interfaces';
+import { Point } from '../geometry/point';
 import { Camera } from './camera';
 import { DeepReadonly, enumToList } from './utils';
 
@@ -195,8 +195,19 @@ export class Mouse extends Point implements IMouse {
     this.scroll.y = wheelEvent.deltaY;
   };
 
-  constructor(private readonly canvas: HTMLCanvasElement, private readonly camera: Camera) {
+  private eventTarget: HTMLElement;
+
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly camera: Camera,
+    // Default to putting mouse up/down events on the document body (so that letting go of the mouse outside the canvas is still caught)
+    // but allow setting mouse events on the canvas instead if other HTML elements are going to overlap and you want to stop propagation
+    // to the canvas.
+    areMouseEventsOnDocumentBody = true
+  ) {
     super();
+
+    this.eventTarget = areMouseEventsOnDocumentBody ? document.body : this.canvas;
   }
 
   private started = false;
@@ -207,12 +218,12 @@ export class Mouse extends Point implements IMouse {
     this.started = false;
 
     if (this.touchscreen) {
-      document.body.removeEventListener('touchstart', this.touchStartHandler);
-      document.body.removeEventListener('touchend', this.touchEndHandler);
+      this.eventTarget.removeEventListener('touchstart', this.touchStartHandler);
+      this.eventTarget.removeEventListener('touchend', this.touchEndHandler);
     }
 
-    document.body.removeEventListener('mouseup', this.mouseUpHandler);
-    document.body.removeEventListener('mousedown', this.mouseDownHandler);
+    this.eventTarget.removeEventListener('mouseup', this.mouseUpHandler);
+    this.eventTarget.removeEventListener('mousedown', this.mouseDownHandler);
 
     this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, false);
     this.canvas.removeEventListener('mouseout', this.mouseOutHandler);
@@ -226,12 +237,12 @@ export class Mouse extends Point implements IMouse {
     this.started = true;
 
     if (this.touchscreen) {
-      document.body.addEventListener('touchstart', this.touchStartHandler);
-      document.body.addEventListener('touchend', this.touchEndHandler);
+      this.eventTarget.addEventListener('touchstart', this.touchStartHandler);
+      this.eventTarget.addEventListener('touchend', this.touchEndHandler);
     }
 
-    document.body.addEventListener('mouseup', this.mouseUpHandler);
-    document.body.addEventListener('mousedown', this.mouseDownHandler);
+    this.eventTarget.addEventListener('mouseup', this.mouseUpHandler);
+    this.eventTarget.addEventListener('mousedown', this.mouseDownHandler);
 
     this.canvas.addEventListener('mousemove', this.mouseMoveHandler, false);
     this.canvas.addEventListener('mouseout', this.mouseOutHandler);
