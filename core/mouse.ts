@@ -5,6 +5,7 @@ import { DeepReadonly, enumToList } from './utils';
 
 export enum MouseButton {
   Left = 0,
+  Middle = 1,
   Right = 2,
 }
 export const MouseButtons = enumToList(MouseButton);
@@ -17,11 +18,14 @@ export const MouseScrolls = enumToList(MouseScroll);
 
 export interface IMouse {
   readonly leftReleased: boolean;
+  readonly leftDown: boolean;
   readonly leftPressed: boolean;
   readonly rightReleased: boolean;
-  readonly rightPressed: boolean;
-  readonly leftDown: boolean;
   readonly rightDown: boolean;
+  readonly rightPressed: boolean;
+  readonly middleReleased: boolean;
+  readonly middleDown: boolean;
+  readonly middlePressed: boolean;
   readonly moved: boolean;
   readonly focus: boolean;
   readonly scroll: DeepReadonly<IPoint>;
@@ -34,11 +38,14 @@ export interface IMouse {
 
 export class MouseSnapshot implements IMouse {
   leftReleased: boolean = false;
+  leftDown: boolean = false;
   leftPressed: boolean = false;
   rightReleased: boolean = false;
-  rightPressed: boolean = false;
-  leftDown: boolean = false;
   rightDown: boolean = false;
+  rightPressed: boolean = false;
+  middleReleased: boolean = false;
+  middleDown: boolean = false;
+  middlePressed: boolean = false;
   moved: boolean = false;
   focus: boolean = false;
   scroll: Point = new Point();
@@ -50,11 +57,14 @@ export class MouseSnapshot implements IMouse {
 
   public update(snapshot: IMouse): this {
     this.leftReleased = snapshot.leftReleased;
+    this.leftDown = snapshot.leftDown;
     this.leftPressed = snapshot.leftPressed;
     this.rightReleased = snapshot.rightReleased;
-    this.rightPressed = snapshot.rightPressed;
-    this.leftDown = snapshot.leftDown;
     this.rightDown = snapshot.rightDown;
+    this.rightPressed = snapshot.rightPressed;
+    this.middleReleased = snapshot.middleReleased;
+    this.middleDown = snapshot.middleDown;
+    this.middlePressed = snapshot.middlePressed;
     this.moved = snapshot.moved;
     this.focus = snapshot.focus;
     this.scrollPrevious.setTo(this.scroll);
@@ -72,7 +82,10 @@ export class Mouse extends Point implements IMouse {
   public leftPressed: boolean = false;
   public rightReleased: boolean = false;
   public rightPressed: boolean = false;
+  public middleReleased: boolean = false;
+  public middlePressed: boolean = false;
   public leftDown: boolean = false;
+  public middleDown: boolean = false;
   public rightDown: boolean = false;
   public moved: boolean = false;
   public focus: boolean = false;
@@ -159,6 +172,9 @@ export class Mouse extends Point implements IMouse {
       case MouseButton.Left:
         this.leftMouseUpEvent();
         break;
+      case MouseButton.Middle:
+        this.middleMouseUpEvent();
+        break;
       case MouseButton.Right:
         this.rightMouseUpEvent();
         break;
@@ -170,6 +186,9 @@ export class Mouse extends Point implements IMouse {
     switch (mouseEvent.button) {
       case MouseButton.Left:
         this.leftMouseDownEvent();
+        break;
+      case MouseButton.Middle:
+        this.middleMouseDownEvent();
         break;
       case MouseButton.Right:
         this.rightMouseDownEvent();
@@ -255,6 +274,9 @@ export class Mouse extends Point implements IMouse {
     this.leftReleased = false;
     this.leftDown = false;
     this.leftPressed = false;
+    this.middleReleased = false;
+    this.middleDown = false;
+    this.middlePressed = false;
     this.rightReleased = false;
     this.rightDown = false;
     this.rightPressed = false;
@@ -271,6 +293,8 @@ export class Mouse extends Point implements IMouse {
 
     this.leftReleased = false;
     this.leftPressed = false;
+    this.middleReleased = false;
+    this.middlePressed = false;
     this.rightReleased = false;
     this.rightPressed = false;
     this.scrollPrevious.x = this.scroll.x;
@@ -284,6 +308,7 @@ export class Mouse extends Point implements IMouse {
   public allPressed(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftPressed) result.push(MouseButton.Left);
+    if (this.middlePressed) result.push(MouseButton.Middle);
     if (this.rightPressed) result.push(MouseButton.Right);
     if (this.scroll.y > 0 && this.scrollPrevious.y <= 0) result.push(MouseScroll.Down);
     if (this.scroll.y < 0 && this.scrollPrevious.y >= 0) result.push(MouseScroll.Up);
@@ -293,6 +318,7 @@ export class Mouse extends Point implements IMouse {
   public allDown(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftDown) result.push(MouseButton.Left);
+    if (this.middleDown) result.push(MouseButton.Middle);
     if (this.rightDown) result.push(MouseButton.Right);
     if (this.scroll.y > 0) result.push(MouseScroll.Down);
     if (this.scroll.y < 0) result.push(MouseScroll.Up);
@@ -302,6 +328,7 @@ export class Mouse extends Point implements IMouse {
   public allReleased(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftReleased) result.push(MouseButton.Left);
+    if (this.middleReleased) result.push(MouseButton.Middle);
     if (this.rightReleased) result.push(MouseButton.Right);
     if (this.scroll.y <= 0 && this.scrollPrevious.y > 0) result.push(MouseScroll.Down);
     if (this.scroll.y >= 0 && this.scrollPrevious.y < 0) result.push(MouseScroll.Up);
@@ -318,6 +345,18 @@ export class Mouse extends Point implements IMouse {
     this.hasInputThisFrame = true;
     this.leftReleased = true;
     this.leftDown = false;
+  }
+
+  private middleMouseDownEvent(): void {
+    this.hasInputThisFrame = true;
+    this.middlePressed = true;
+    this.middleDown = true;
+  }
+
+  private middleMouseUpEvent(): void {
+    this.hasInputThisFrame = true;
+    this.middleReleased = true;
+    this.middleDown = false;
   }
 
   private rightMouseDownEvent(): void {
