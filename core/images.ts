@@ -3,13 +3,21 @@ import { Draw } from '../visuals/draw';
 
 export class Images {
   private readonly srcByName: { [name: string]: string } = {};
-  private readonly dataBySrc: { [src: string]: { image: HTMLImageElement; isLoadedPromise: Promise<void> } } = {};
+  protected readonly dataBySrc: { [src: string]: { image: HTMLImageElement; isLoadedPromise: Promise<void> } } = {};
   private readonly srcsWaitingToLoad = new Set();
 
   constructor() {}
 
   public allLoaded(): boolean {
     return this.srcsWaitingToLoad.size <= 0;
+  }
+
+  public getAllLoadedPromiseForSrcs(srcs: string[]) {
+    return Promise.all(srcs.map(src => this.dataBySrc[src]?.isLoadedPromise));
+  }
+
+  public getAllLoadedPromiseForNames(names: string[]) {
+    return this.getAllLoadedPromiseForSrcs(names.map(name => this.srcByName[name]));
   }
 
   public getWidth(name: string): number | null {
