@@ -63,7 +63,9 @@ export function assertTypeNever<T extends never>(_?: T): void {}
 /**
  * Throws an error and type is inferred to whatever is needed. Useful for situations like wanting to throw in a ternary operator.
  * @param args Arguments for the error that is thrown.
- * @example ```typescript
+ * @example
+ * ```typescript
+ * const x = y >= 0 ? 'test' : punt(); // allows throwing while part of a single statement
  * ```
  */
 export function punt<T = never>(...args: ConstructorParameters<typeof Error>): T {
