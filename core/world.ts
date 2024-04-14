@@ -283,7 +283,14 @@ export class World {
 
   public queueRemoveEntity(entity: Entity) {
     if (entity.world != this || entity.removed) return;
-    this.entityToRemoveById[entity.id] = entity;
+
+    if (entity.id in this.entityToAddById) {
+      // if the entity has not yet been added to the world, delete the entity from
+      // the list of entities to add instead of going through the normal delete process
+      delete this.entityToAddById[entity.id];
+    } else {
+      this.entityToRemoveById[entity.id] = entity;
+    }
   }
 
   public clearCanvas(color: DeepReadonly<Color> | null = null) {
