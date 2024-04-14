@@ -61,6 +61,16 @@ export function assertNever(x: never, shouldThrow = false): void {
 export function assertTypeNever<T extends never>(_?: T): void {}
 
 /**
+ * Throws an error and type is inferred to whatever is needed. Useful for situations like wanting to throw in a ternary operator.
+ * @param args Arguments for the error that is thrown.
+ * @example ```typescript
+ * ```
+ */
+export function punt<T = never>(...args: ConstructorParameters<typeof Error>): T {
+  throw new Error(...args);
+}
+
+/**
  * Transforms a list into a mapping of its items to arbitrary keys/values.
  * @param list List to turn into a map
  * @param getKey Function taking an element of the list and returning the key for its entry in the map
