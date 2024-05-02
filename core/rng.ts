@@ -1,9 +1,16 @@
 export class RNG {
-  public readonly seed: number;
+  private _seed: number;
+  public get seed(): number {
+    return this._seed;
+  }
   private seedCurrent: number;
 
   constructor(seed?: number) {
-    this.seedCurrent = this.seed = seed ?? Math.random();
+    this.initialize(seed);
+  }
+
+  initialize(seed?: number) {
+    this.seedCurrent = this._seed = seed ?? Math.random();
   }
 
   reset() {
