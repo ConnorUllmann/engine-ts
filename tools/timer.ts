@@ -1,5 +1,13 @@
 import { clamp, moduloSafe } from '../core/utils';
 
+export interface TimerState {
+  value: number;
+  seconds: number;
+  triggered: boolean;
+  started: boolean;
+  paused: boolean;
+}
+
 export class Timer {
   public value: number = 0;
   public triggered: boolean = false; // whether or not the timer's value has crossed over 1 this frame
@@ -22,6 +30,25 @@ export class Timer {
   }
 
   constructor(public seconds: number = 1) {}
+
+  public fromState(state: TimerState) {
+    this.value = state.value;
+    this.seconds = state.seconds;
+    this.triggered = state.triggered;
+    this.started = state.started;
+    this.paused = state.paused;
+    return this;
+  }
+
+  public getState(): TimerState {
+    return {
+      value: this.value,
+      seconds: this.seconds,
+      triggered: this.triggered,
+      started: this.started,
+      paused: this.paused,
+    };
+  }
 
   public finish(): this {
     this.value = 1;
