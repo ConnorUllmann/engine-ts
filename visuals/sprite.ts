@@ -136,6 +136,10 @@ export class SpriteTimer<T extends ISpriteAnimation = ISpriteAnimation> {
     return animation && animation.currentAnimationFrameIndex === animation.frameCount - 1;
   }
 
+  get currentAnimation(): T | null {
+    return this._currentAnimationName == null ? null : this.animationByName[this._currentAnimationName] ?? null;
+  }
+
   addAnimation(animationName: string, animation: T): this {
     this.animationByName[animationName] = animation;
     return this;
