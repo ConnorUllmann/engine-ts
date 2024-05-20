@@ -42,6 +42,10 @@ interface IShapeStatic<T> extends IPointListStatic<T> {
 }
 
 interface IRectangleStatic extends IShapeStatic<IRectangle> {
+  Explicit: {
+    ClosestPointInsideX: (rx: number, rw: number, x: number) => number;
+    ClosestPointInsideY: (ry: number, rh: number, y: number) => number;
+  };
   Zero: DeepReadonly<IRectangle>;
   Midpoint: (o: DeepReadonly<IRectangle>) => IPoint;
   BoundsRectangles: (rectangles: DeepReadonly<(DeepReadonly<IRectangle> | null | undefined)[]>) => IRectangle;
@@ -53,6 +57,7 @@ interface IRectangleStatic extends IShapeStatic<IRectangle> {
   // Expands this rectangle by the given amount on each side (if hAmount isn't specified, wAmount will be used)
   Expand: (rectangle: DeepReadonly<IRectangle>, wAmount: number, hAmount?: number) => IRectangle;
   RandomPointInside: (rectangle: DeepReadonly<IRectangle>, rng?: RNG) => IPoint;
+  RandomPointOnEdge: (rectangle: DeepReadonly<IRectangle>, _rng?: RNG) => IPoint;
   ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint;
   ClosestPointInside: (rectangle: DeepReadonly<IRectangle>, position: IPoint) => IPoint;
   Square: (center: DeepReadonly<IPoint>, sideLength: number) => IRectangle;
@@ -369,6 +374,16 @@ export class Geometry {
   }
 
   public static Rectangle: IRectangleStatic = {
+    Explicit: {
+      /**
+       * Returns the x-coordinate of the closest point to "position" that is on or inside of "rectangle"
+       */
+      ClosestPointInsideX: (rx: number, rw: number, x: number): number => clamp(x, rx, rx + rw),
+      /**
+       * Returns the x-coordinate of the closest point to "position" that is on or inside of "rectangle"
+       */
+      ClosestPointInsideY: (ry: number, rh: number, y: number): number => clamp(y, ry, ry + rh),
+    },
     Zero: { x: 0, y: 0, w: 0, h: 0 },
     Segments: (rectangle: DeepReadonly<IRectangle>, offset: DeepReadonly<IPoint> = Geometry.Point.Zero): ISegment[] =>
       Geometry.Points.Segments(Geometry.Rectangle.Vertices(rectangle, offset)),
@@ -476,6 +491,20 @@ export class Geometry {
       x: rectangle.x + (_rng ?? rng)?.random() * rectangle.w,
       y: rectangle.y + (_rng ?? rng)?.random() * rectangle.h,
     }),
+    RandomPointOnEdge: (rectangle: DeepReadonly<IRectangle>, _rng?: RNG): IPoint => {
+      const edge = Math.floor((_rng ?? rng)?.random() * 4) as 0 | 1 | 2 | 3;
+      const normalAlongEdge = (_rng ?? rng)?.random();
+      switch (edge) {
+        case 0:
+          return { x: rectangle.x + rectangle.w * normalAlongEdge, y: rectangle.y };
+        case 1:
+          return { x: rectangle.x + rectangle.w, y: rectangle.y + rectangle.h * normalAlongEdge };
+        case 2:
+          return { x: rectangle.x + rectangle.w * normalAlongEdge, y: rectangle.y + rectangle.h };
+        case 3:
+          return { x: rectangle.x, y: rectangle.y + rectangle.h * normalAlongEdge };
+      }
+    },
     // Returns the closest point to "position" that is on or outside of "rectangle"
     ClosestPointOutside: (rectangle: DeepReadonly<IRectangle>, position: IPoint): IPoint => {
       if (!Geometry.Collide.RectanglePoint(rectangle, position)) return { x: position.x, y: position.y };
