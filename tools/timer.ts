@@ -6,6 +6,7 @@ export interface TimerState {
   triggered: boolean;
   started: boolean;
   paused: boolean;
+  loop: boolean;
 }
 
 export class Timer {
@@ -15,11 +16,11 @@ export class Timer {
   public paused: boolean = false;
 
   protected clean(valueRaw: number): number {
-    return clamp(valueRaw, 0, 1);
+    return this.loop ? moduloSafe(valueRaw, 1) : clamp(valueRaw, 0, 1);
   }
 
   public get finished(): boolean {
-    return this.value >= 1;
+    return this.loop ? false : this.value >= 1;
   }
   public toRange(min: number, max: number) {
     return (max - min) * this.value + min;
@@ -29,7 +30,7 @@ export class Timer {
     return this.seconds * 1000;
   }
 
-  constructor(public seconds: number = 1) {}
+  constructor(public seconds: number = 1, public loop = false) {}
 
   public fromState(state: TimerState) {
     this.value = state.value;
@@ -37,6 +38,7 @@ export class Timer {
     this.triggered = state.triggered;
     this.started = state.started;
     this.paused = state.paused;
+    this.loop = state.loop;
     return this;
   }
 
@@ -47,6 +49,7 @@ export class Timer {
       triggered: this.triggered,
       started: this.started,
       paused: this.paused,
+      loop: this.loop,
     };
   }
 
@@ -77,11 +80,11 @@ export class Timer {
   }
 }
 
+/**
+ * @deprecated Use `Timer` instead but pass `true` for the `loop` parameter
+ */
 export class LoopTimer extends Timer {
-  protected clean(valueRaw: number): number {
-    return moduloSafe(valueRaw, 1);
-  }
-  public get finished(): boolean {
-    return false;
+  constructor(public seconds: number = 1) {
+    super(seconds, true);
   }
 }
