@@ -220,6 +220,8 @@ declare global {
     any(boolCheck: (o: T, i: number) => boolean): boolean;
     all(boolCheck: (o: T, i: number) => boolean): boolean;
     first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
+    intersects(other: Set<T>): boolean;
+    equals(other: Set<T>): boolean;
   }
 }
 
@@ -236,6 +238,17 @@ Set.prototype.difference = function <T>(other: Set<T>): Set<T> {
 Set.prototype.intersection = function <T>(other: Set<T>): Set<T> {
   for (let o of this) if (!other.has(o)) this.delete(o);
   return this;
+};
+
+Set.prototype.intersects = function <T>(other: Set<T>): boolean {
+  for (let o of this) if (other.has(o)) return true;
+  return false;
+};
+
+Set.prototype.equals = function <T>(other: Set<T>): boolean {
+  if (this.size !== other.size) return false;
+  for (let o of this) if (!other.has(o)) return false;
+  return true;
 };
 
 Set.prototype.any = function <T>(boolCheck: (t: T, i: number) => boolean): boolean {

@@ -86,6 +86,12 @@ export class IdSet<U, V = U> /*ES6: extends Set<U>*/ implements Iterable<U>, Set
   first(boolCheck: ((u: U, i: number) => boolean) | null = null): U | null {
     return Set.prototype.first.call(this, boolCheck);
   }
+  intersects(other: Set<U>): boolean {
+    return Set.prototype.intersects.call(this, other);
+  }
+  equals(other: Set<U>): boolean {
+    return Set.prototype.equals.call(this, other);
+  }
 }
 
 class IdSetIterator<T extends string | number, U> implements IterableIterator<U> {

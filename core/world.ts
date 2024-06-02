@@ -64,9 +64,29 @@ export class World {
     return clamp(this.delta / this.millisecondsPerFrame, 0.1, 10);
   }
   public lastFrameFps: number = 0;
-  public _millisecondsLastUpdate: number = 0;
-  public get millisecondsLastUpdate(): number {
-    return this._millisecondsLastUpdate;
+
+  public _millisecondsLastFrameTotal: number = 0;
+  /**
+   * Number of milliseconds that elapsed during the last frame for the entirety of the `World`'s loop
+   */
+  public get millisecondsLastFrameTotal(): number {
+    return this._millisecondsLastFrameTotal;
+  }
+
+  public _millisecondsLastFrameDrawEntities: number = 0;
+  /**
+   * Number of milliseconds that elapsed during the last frame while executing the `draw` methods of all entities
+   */
+  public get millisecondsLastFrameDrawEntities(): number {
+    return this._millisecondsLastFrameDrawEntities;
+  }
+
+  public _millisecondsLastFrameUpdateEntities: number = 0;
+  /**
+   * Number of milliseconds that elapsed during the last frame while executing the `update` methods of all entities
+   */
+  public get millisecondsLastFrameUpdateEntities(): number {
+    return this._millisecondsLastFrameUpdateEntities;
   }
 
   // call after spending a long time on a frame (i.e. loading) to ensure delta isn't too high when coming back
@@ -166,7 +186,7 @@ export class World {
   private async updateFrame(): Promise<void> {
     if (this.paused) return;
 
-    const startMs = Date.now();
+    const msStartTotal = performance.now();
 
     this.updateDelta();
 
@@ -174,12 +194,17 @@ export class World {
     // unlike keyboard & mouse which are streamed in via events (and then reset by their update methods)
     this.gamepads.update();
 
+    const msStartUpdateEntities = performance.now();
     const canUpdateEntities = this.canUpdateEntities == null || this.canUpdateEntities();
     if (canUpdateEntities) {
       this.updateEntities();
+    }
+    const msFinishUpdateEntitiesAndStartDrawEntities = performance.now();
+    if (canUpdateEntities) {
       this.clearCanvas(typeof this.backgroundColor === 'function' ? this.backgroundColor() : this.backgroundColor);
       this.drawEntities();
     }
+    const msFinishDrawEntities = performance.now();
 
     if (this.keyboard.hasInputThisFrame || this.mouse.hasInputThisFrame) this.lastInputTypeUsed = InputType.Keyboard;
     else if (this.gamepads.hasInputThisFrame) this.lastInputTypeUsed = InputType.Gamepad;
@@ -189,8 +214,13 @@ export class World {
 
     this._isFirstFrame = false;
 
-    this._millisecondsLastUpdate = Date.now() - startMs;
     this.framesSinceStart++;
+
+    const msFinishTotal = performance.now();
+
+    this._millisecondsLastFrameTotal = msFinishTotal - msStartTotal;
+    this._millisecondsLastFrameUpdateEntities = msFinishUpdateEntitiesAndStartDrawEntities - msStartUpdateEntities;
+    this._millisecondsLastFrameDrawEntities = msFinishDrawEntities - msFinishUpdateEntitiesAndStartDrawEntities;
   }
 
   private updateEntity = (o: Entity) => {
