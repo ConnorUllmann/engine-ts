@@ -74,7 +74,13 @@ export abstract class Actor extends Entity {
   }
 
   update() {
+    super.update();
     this.updatePhysics();
+  }
+
+  postUpdate() {
+    super.postUpdate();
+    this.updatePreviousPosition();
   }
 
   protected updateVelocity() {
@@ -92,7 +98,6 @@ export abstract class Actor extends Entity {
 
   protected updatePhysics() {
     this.updateVelocity();
-    this.updatePreviousPosition();
     this.updatePosition();
   }
 
