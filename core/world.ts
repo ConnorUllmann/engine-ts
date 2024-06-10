@@ -341,7 +341,7 @@ export class World {
   }
 
   // not a clone of the list, but the actual World list itself!
-  public entitiesOfClass<T extends NamedEntity>(_class: T): InstanceType<T>[] {
+  public entitiesOfClass<T extends NamedEntity>(_class: T): ReadonlyArray<InstanceType<T>> {
     return _class.Name in this.entitiesByName ? (this.entitiesByName[_class.Name] as InstanceType<T>[]) : [];
   }
 
@@ -352,22 +352,29 @@ export class World {
   public closestEntityOfClasses<T extends NamedEntity>(
     _classes: T[],
     position: IPoint,
-    boolCheck: (t: InstanceType<T>) => boolean
+    boolCheck?: (t: InstanceType<T>) => boolean
   ): InstanceType<T> | null {
-    const entities: InstanceType<T>[] = [];
-    for (let _class of _classes) {
-      for (let entity of this.entitiesOfClass(_class)) {
-        if (boolCheck(entity)) entities.push(entity);
+    let result: InstanceType<T> | null = null;
+    let minDistanceSq = Infinity;
+    for (const _class of _classes) {
+      for (const entity of this.entitiesOfClass(_class)) {
+        if (boolCheck && !boolCheck(entity)) continue;
+
+        const distanceSq = Geometry.Point.DistanceSq(position, entity.position);
+        if (distanceSq >= minDistanceSq) continue;
+
+        minDistanceSq = distanceSq;
+        result = entity;
       }
     }
-    return entities.minOf(entity => Geometry.Point.DistanceSq(entity.position, position)) ?? null;
+    return result;
   }
 
   public firstEntityOfClasses<T extends NamedEntity>(
     _classes: T[],
     boolCheck?: (t: InstanceType<T>) => boolean
   ): InstanceType<T> | null {
-    for (let _class of _classes) {
+    for (const _class of _classes) {
       const result = this.entitiesOfClass(_class).first(boolCheck);
       if (result != null) return result;
     }
