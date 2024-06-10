@@ -54,8 +54,11 @@ export class Rectangle extends Point implements IRectangle, IPolygon {
   public set yCenter(y: number) {
     this.y = y - this.h / 2;
   }
-  public get center(): Point {
-    return Point.Create(Geometry.Rectangle.Midpoint(this));
+  private _center = { x: 0, y: 0 };
+  public get center(): Readonly<IPoint> {
+    this._center.x = this.x + this.w / 2;
+    this._center.y = this.y + this.h / 2;
+    return this._center;
   }
   public set center(center: Point) {
     this.x = center.x - this.w / 2;
@@ -196,7 +199,9 @@ export class NullableRectangle {
     this._hasValue = true;
   }
 
-  public get valueRaw(): IRectangle { return this._value; }
+  public get valueRaw(): IRectangle {
+    return this._value;
+  }
 
   public set(x: number, y: number, w: number, h: number) {
     this._hasValue = true;
