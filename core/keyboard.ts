@@ -1,6 +1,44 @@
-import { Key, Keys, KeysForKeyCode, KeysSet } from './keys';
+import { Key, KeysForKeyCode, KeysSet } from './keys';
 
-export class Keyboard {
+export interface IKeyboard {
+  down: { [id: string]: boolean };
+  pressed: { [id: string]: boolean };
+  released: { [id: string]: boolean };
+  repeating: { [id: string]: boolean };
+
+  downKeyCode: { [id: number]: boolean };
+  pressedKeyCode: { [id: number]: boolean };
+  releasedKeyCode: { [id: number]: boolean };
+  repeatingKeyCode: { [id: number]: boolean };
+}
+
+export class KeyboardSnapshot implements IKeyboard {
+  down: { [id: string]: boolean } = {};
+  pressed: { [id: string]: boolean } = {};
+  released: { [id: string]: boolean } = {};
+  repeating: { [id: string]: boolean } = {};
+
+  downKeyCode: { [id: number]: boolean } = {};
+  pressedKeyCode: { [id: number]: boolean } = {};
+  releasedKeyCode: { [id: number]: boolean } = {};
+  repeatingKeyCode: { [id: number]: boolean } = {};
+
+  public update(snapshot: IKeyboard): this {
+    this.down = { ...snapshot.down };
+    this.pressed = { ...snapshot.pressed };
+    this.released = { ...snapshot.released };
+    this.repeating = { ...snapshot.repeating };
+
+    this.downKeyCode = { ...snapshot.downKeyCode };
+    this.pressedKeyCode = { ...snapshot.pressedKeyCode };
+    this.releasedKeyCode = { ...snapshot.releasedKeyCode };
+    this.repeatingKeyCode = { ...snapshot.repeatingKeyCode };
+
+    return this;
+  }
+}
+
+export class Keyboard implements IKeyboard {
   public readonly down: { [id: string]: boolean } = {};
   public readonly pressed: { [id: string]: boolean } = {};
   public readonly released: { [id: string]: boolean } = {};

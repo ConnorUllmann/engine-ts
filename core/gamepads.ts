@@ -10,20 +10,76 @@ import { IPoint } from '../geometry/interfaces';
 import { Point } from '../geometry/point';
 import { AnalogDirectionButton, AnalogDirectionButtons, Button, Buttons, NonAnalogDirectionButtons } from './buttons';
 
-export class Gamepads {
-  private leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
-  private rightAnalogStickByIndex: { [gamepadId: number]: Point } = {};
-  private leftTriggerByIndex: { [gamepadId: number]: number } = {};
-  private rightTriggerByIndex: { [gamepadId: number]: number } = {};
+export interface IGamepads {
+  leftAnalogStickByIndex: { [gamepadId: number]: Point };
+  rightAnalogStickByIndex: { [gamepadId: number]: Point };
+  leftTriggerByIndex: { [gamepadId: number]: number };
+  rightTriggerByIndex: { [gamepadId: number]: number };
 
-  private downByIndex: { [gamepadId: number]: { [button: string]: boolean } } = {};
-  private pressedByIndex: {
+  downByIndex: { [gamepadId: number]: { [button: string]: boolean } };
+  pressedByIndex: {
+    [gamepadId: number]: { [button: string]: boolean };
+  };
+  releasedByIndex: {
+    [gamepadId: number]: { [button: string]: boolean };
+  };
+
+  down(button: Button, gamepadId?: number): boolean;
+  pressed(button: Button, gamepadId?: number): boolean;
+  released(button: Button, gamepadId?: number): boolean;
+}
+
+abstract class GamepadsBase implements IGamepads {
+  leftAnalogStickByIndex: { [gamepadId: number]: Point } = {};
+  rightAnalogStickByIndex: { [gamepadId: number]: Point } = {};
+  leftTriggerByIndex: { [gamepadId: number]: number } = {};
+  rightTriggerByIndex: { [gamepadId: number]: number } = {};
+
+  downByIndex: { [gamepadId: number]: { [button: string]: boolean } } = {};
+  pressedByIndex: {
     [gamepadId: number]: { [button: string]: boolean };
   } = {};
-  private releasedByIndex: {
+  releasedByIndex: {
     [gamepadId: number]: { [button: string]: boolean };
   } = {};
 
+  private getButtonValue(
+    valueByGamepadId: { [gamepadId: number]: { [button: string]: boolean } },
+    button: Button,
+    gamepadId: number = 0
+  ): boolean {
+    return valueByGamepadId?.[gamepadId]?.[button] ?? false;
+  }
+
+  public down(button: Button, gamepadId: number = 0): boolean {
+    return this.getButtonValue(this.downByIndex, button, gamepadId);
+  }
+
+  public pressed(button: Button, gamepadId: number = 0): boolean {
+    return this.getButtonValue(this.pressedByIndex, button, gamepadId);
+  }
+
+  public released(button: Button, gamepadId: number = 0): boolean {
+    return this.getButtonValue(this.releasedByIndex, button, gamepadId);
+  }
+}
+
+export class GamepadsSnapshot extends GamepadsBase {
+  public update(snapshot: IGamepads): this {
+    this.leftAnalogStickByIndex = { ...snapshot.leftAnalogStickByIndex };
+    this.rightAnalogStickByIndex = { ...snapshot.rightAnalogStickByIndex };
+    this.leftTriggerByIndex = { ...snapshot.leftTriggerByIndex };
+    this.rightTriggerByIndex = { ...snapshot.rightTriggerByIndex };
+
+    this.downByIndex = { ...snapshot.downByIndex };
+    this.pressedByIndex = { ...snapshot.pressedByIndex };
+    this.releasedByIndex = { ...snapshot.releasedByIndex };
+
+    return this;
+  }
+}
+
+export class Gamepads extends GamepadsBase {
   public active = true;
 
   private readonly gamepadIndices = [0, 1, 2, 3];
@@ -65,7 +121,9 @@ export class Gamepads {
 
   public hasInputThisFrame = false;
 
-  constructor() {}
+  constructor() {
+    super();
+  }
 
   public destroy() {}
   public start() {}
@@ -290,14 +348,6 @@ export class Gamepads {
     return value;
   }
 
-  private getButtonValue(
-    valueByGamepadId: { [gamepadId: number]: { [button: string]: boolean } },
-    button: Button,
-    gamepadId: number = 0
-  ): boolean {
-    return valueByGamepadId?.[gamepadId]?.[button] ?? false;
-  }
-
   public leftAnalogStick(gamepadId: number = 0): IPoint {
     return this.leftAnalogStickByIndex?.[gamepadId] ?? new Point();
   }
@@ -312,18 +362,6 @@ export class Gamepads {
 
   public rightTrigger(gamepadId: number = 0): number {
     return this.rightTriggerByIndex?.[gamepadId] ?? 0;
-  }
-
-  public down(button: Button, gamepadId: number = 0): boolean {
-    return this.getButtonValue(this.downByIndex, button, gamepadId);
-  }
-
-  public pressed(button: Button, gamepadId: number = 0): boolean {
-    return this.getButtonValue(this.pressedByIndex, button, gamepadId);
-  }
-
-  public released(button: Button, gamepadId: number = 0): boolean {
-    return this.getButtonValue(this.releasedByIndex, button, gamepadId);
   }
 
   public hasInput(gamepadId: number = 0): boolean {
