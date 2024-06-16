@@ -75,6 +75,35 @@ export class MouseSnapshot implements IMouse {
     this.onCanvas = snapshot.onCanvas;
     return this;
   }
+
+  /**
+   * Turns off all active inputs in the snapshot
+   */
+  public reset(): this {
+    this.leftReleased = false;
+    this.leftDown = false;
+    this.leftPressed = false;
+    this.rightReleased = false;
+    this.rightDown = false;
+    this.rightPressed = false;
+    this.middleReleased = false;
+    this.middleDown = false;
+    this.middlePressed = false;
+    this.moved = false;
+    this.scroll.x = 0;
+    this.scroll.y = 0;
+    this.scrollPrevious.x = 0;
+    this.scrollPrevious.y = 0;
+
+    // Leave these however they were so they most accurately reflect the previous state
+    // this.focus
+    // this.touchscreen
+    // this.onCanvas
+    // this.screenPosition
+    // this.worldPosition
+
+    return this;
+  }
 }
 
 export class Mouse extends Point implements IMouse {

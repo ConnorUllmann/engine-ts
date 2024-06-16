@@ -36,6 +36,27 @@ export class KeyboardSnapshot implements IKeyboard {
 
     return this;
   }
+
+  /**
+   * Turns off all active inputs in the snapshot
+   */
+  public reset(): this {
+    for (const property in this.down) if (this.down.hasOwnProperty(property)) delete this.down[property];
+    for (const property in this.pressed) if (this.pressed.hasOwnProperty(property)) delete this.pressed[property];
+    for (const property in this.released) if (this.released.hasOwnProperty(property)) delete this.released[property];
+    for (const property in this.repeating) if (this.repeating.hasOwnProperty(property)) delete this.repeating[property];
+
+    for (const property in this.downKeyCode)
+      if (this.downKeyCode.hasOwnProperty(property)) delete this.downKeyCode[property];
+    for (const property in this.pressedKeyCode)
+      if (this.pressedKeyCode.hasOwnProperty(property)) delete this.pressedKeyCode[property];
+    for (const property in this.releasedKeyCode)
+      if (this.releasedKeyCode.hasOwnProperty(property)) delete this.releasedKeyCode[property];
+    for (const property in this.repeatingKeyCode)
+      if (this.repeatingKeyCode.hasOwnProperty(property)) delete this.repeatingKeyCode[property];
+
+    return this;
+  }
 }
 
 export class Keyboard implements IKeyboard {

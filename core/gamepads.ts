@@ -77,6 +77,29 @@ export class GamepadsSnapshot extends GamepadsBase {
 
     return this;
   }
+
+  /**
+   * Turns off all active inputs in the snapshot
+   */
+  public reset(): this {
+    for (const property in this.leftAnalogStickByIndex)
+      if (this.leftAnalogStickByIndex.hasOwnProperty(property)) delete this.leftAnalogStickByIndex[property];
+    for (const property in this.rightAnalogStickByIndex)
+      if (this.rightAnalogStickByIndex.hasOwnProperty(property)) delete this.rightAnalogStickByIndex[property];
+    for (const property in this.leftTriggerByIndex)
+      if (this.leftTriggerByIndex.hasOwnProperty(property)) delete this.leftTriggerByIndex[property];
+    for (const property in this.rightTriggerByIndex)
+      if (this.rightTriggerByIndex.hasOwnProperty(property)) delete this.rightTriggerByIndex[property];
+
+    for (const property in this.downByIndex)
+      if (this.downByIndex.hasOwnProperty(property)) delete this.downByIndex[property];
+    for (const property in this.pressedByIndex)
+      if (this.pressedByIndex.hasOwnProperty(property)) delete this.pressedByIndex[property];
+    for (const property in this.releasedByIndex)
+      if (this.releasedByIndex.hasOwnProperty(property)) delete this.releasedByIndex[property];
+
+    return this;
+  }
 }
 
 export class Gamepads extends GamepadsBase {
