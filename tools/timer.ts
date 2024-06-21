@@ -30,6 +30,14 @@ export class Timer {
     return this.seconds * 1000;
   }
 
+  public get millisecondsRemaining(): number {
+    return this.milliseconds * (1 - this.value);
+  }
+
+  public get secondsRemaining(): number {
+    return this.seconds * (1 - this.value);
+  }
+
   constructor(public seconds: number = 1, public loop = false) {}
 
   public fromState(state: TimerState) {
