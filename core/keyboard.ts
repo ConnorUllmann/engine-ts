@@ -121,7 +121,11 @@ export class Keyboard implements IKeyboard {
     window.addEventListener('message', this.messageHandler, false);
   }
 
-  resetInputs() {
+  /**
+   * Resets the state of the keyboard so all inputs are considered unused.
+   * @param includeIrrecoverableInputs Some inputs, like whether a key is "down," is not recoverable when reset (i.e. its state cannot be simply updated on the next frame). These inputs are not reset by default.
+   */
+  reset(includeIrrecoverableInputs = false) {
     for (const property in this.pressedKeyCode)
       if (this.pressedKeyCode.hasOwnProperty(property)) delete this.pressedKeyCode[property];
 
@@ -136,6 +140,12 @@ export class Keyboard implements IKeyboard {
 
     for (const property in this.repeatingKeyCode)
       if (this.repeatingKeyCode.hasOwnProperty(property)) delete this.repeatingKeyCode[property];
+
+    if (includeIrrecoverableInputs) {
+      for (const property in this.down) if (this.down.hasOwnProperty(property)) delete this.down[property];
+      for (const property in this.downKeyCode)
+        if (this.downKeyCode.hasOwnProperty(property)) delete this.downKeyCode[property];
+    }
 
     this.hasInputThisFrame = false;
   }
@@ -176,18 +186,18 @@ export class Keyboard implements IKeyboard {
   }
 
   update() {
-    this.resetInputs();
+    this.reset();
   }
 
-  public allDown(): Key[] {
+  allDown(): Key[] {
     return Object.keys(this.down).filter(key => KeysSet.has(key as Key)) as Key[];
   }
 
-  public allPressed(): Key[] {
+  allPressed(): Key[] {
     return Object.keys(this.pressed).filter(key => KeysSet.has(key as Key)) as Key[];
   }
 
-  public allReleased(): Key[] {
+  allReleased(): Key[] {
     return Object.keys(this.released).filter(key => KeysSet.has(key as Key)) as Key[];
   }
 

@@ -148,27 +148,27 @@ export class Gamepads extends GamepadsBase {
     super();
   }
 
-  public destroy() {}
-  public start() {}
+  destroy() {}
+  start() {}
 
-  public resetInputs() {
-    for (let key in this.leftAnalogStickByIndex)
+  reset() {
+    for (const key in this.leftAnalogStickByIndex)
       this.leftAnalogStickByIndex[key].x = this.leftAnalogStickByIndex[key].y = 0;
-    for (let key in this.rightAnalogStickByIndex)
+    for (const key in this.rightAnalogStickByIndex)
       this.rightAnalogStickByIndex[key].x = this.rightAnalogStickByIndex[key].y = 0;
-    for (let key in this.leftTriggerByIndex) this.leftTriggerByIndex[key] = 0;
-    for (let key in this.rightTriggerByIndex) this.rightTriggerByIndex[key] = 0;
-    for (let gamepadId in this.downByIndex) {
+    for (const key in this.leftTriggerByIndex) this.leftTriggerByIndex[key] = 0;
+    for (const key in this.rightTriggerByIndex) this.rightTriggerByIndex[key] = 0;
+    for (const gamepadId in this.downByIndex) {
       const value = this.downByIndex[gamepadId];
-      for (let button in value) value[button] = false;
+      for (const button in value) value[button] = false;
     }
-    for (let gamepadId in this.pressedByIndex) {
+    for (const gamepadId in this.pressedByIndex) {
       const value = this.pressedByIndex[gamepadId];
-      for (let button in value) value[button] = false;
+      for (const button in value) value[button] = false;
     }
-    for (let gamepadId in this.releasedByIndex) {
+    for (const gamepadId in this.releasedByIndex) {
       const value = this.releasedByIndex[gamepadId];
-      for (let button in value) value[button] = false;
+      for (const button in value) value[button] = false;
     }
 
     this.hasInputThisFrame = false;
@@ -176,7 +176,7 @@ export class Gamepads extends GamepadsBase {
 
   // only works in chrome
   // https://gitlab.com/gilrs-project/gilrs/-/issues/81
-  public vibrate(duration: number, weakMagnitude: number = 1, strongMagnitude: number = 1, gamepadId: number = 0) {
+  vibrate(duration: number, weakMagnitude: number = 1, strongMagnitude: number = 1, gamepadId: number = 0) {
     const gamepad = this.gamepads[gamepadId];
     if (gamepad) {
       (gamepad as any).vibrationActuator.playEffect('dual-rumble', {
@@ -187,7 +187,7 @@ export class Gamepads extends GamepadsBase {
     }
   }
 
-  public update() {
+  update() {
     if (!this.active) return;
 
     this.hasInputThisFrame = false;
@@ -218,7 +218,7 @@ export class Gamepads extends GamepadsBase {
         const isPressed = isDown && !wasDown;
         const isReleased = !isDown && wasDown;
 
-        for (let button of buttons) {
+        for (const button of buttons) {
           this.downByIndex[gamepadId][button] = isDown;
           this.pressedByIndex[gamepadId][button] = isPressed;
           this.releasedByIndex[gamepadId][button] = isReleased;
@@ -227,7 +227,7 @@ export class Gamepads extends GamepadsBase {
         if (isDown) this.hasInputThisFrame = true;
       }
 
-      for (let button of AnalogDirectionButtons) {
+      for (const button of AnalogDirectionButtons) {
         const wasDown = this.downByIndex[gamepadId]?.[button] ?? false;
         const isDown = this.isAnalogDirectionDownByButton[button](gamepadId);
         const isPressed = isDown && !wasDown;
@@ -371,23 +371,23 @@ export class Gamepads extends GamepadsBase {
     return value;
   }
 
-  public leftAnalogStick(gamepadId: number = 0): IPoint {
+  leftAnalogStick(gamepadId: number = 0): IPoint {
     return this.leftAnalogStickByIndex?.[gamepadId] ?? new Point();
   }
 
-  public rightAnalogStick(gamepadId: number = 0): IPoint {
+  rightAnalogStick(gamepadId: number = 0): IPoint {
     return this.rightAnalogStickByIndex?.[gamepadId] ?? new Point();
   }
 
-  public leftTrigger(gamepadId: number = 0): number {
+  leftTrigger(gamepadId: number = 0): number {
     return this.leftTriggerByIndex?.[gamepadId] ?? 0;
   }
 
-  public rightTrigger(gamepadId: number = 0): number {
+  rightTrigger(gamepadId: number = 0): number {
     return this.rightTriggerByIndex?.[gamepadId] ?? 0;
   }
 
-  public hasInput(gamepadId: number = 0): boolean {
+  hasInput(gamepadId: number = 0): boolean {
     return (
       this.leftTrigger(gamepadId) != 0 ||
       this.rightTrigger(gamepadId) != 0 ||
@@ -398,27 +398,27 @@ export class Gamepads extends GamepadsBase {
     );
   }
 
-  public allNonAnalogDown(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+  allNonAnalogDown(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
     return NonAnalogDirectionButtons.filter(button => this.down(button, gamepadId));
   }
 
-  public allNonAnalogPressed(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+  allNonAnalogPressed(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
     return NonAnalogDirectionButtons.filter(button => this.pressed(button, gamepadId));
   }
 
-  public allNonAnalogReleased(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
+  allNonAnalogReleased(gamepadId: number = 0): Exclude<Button, AnalogDirectionButton>[] {
     return NonAnalogDirectionButtons.filter(button => this.released(button, gamepadId));
   }
 
-  public allDown(gamepadId: number = 0): Button[] {
+  allDown(gamepadId: number = 0): Button[] {
     return Buttons.filter(button => this.down(button, gamepadId));
   }
 
-  public allPressed(gamepadId: number = 0): Button[] {
+  allPressed(gamepadId: number = 0): Button[] {
     return Buttons.filter(button => this.pressed(button, gamepadId));
   }
 
-  public allReleased(gamepadId: number = 0): Button[] {
+  allReleased(gamepadId: number = 0): Button[] {
     return Buttons.filter(button => this.released(button, gamepadId));
   }
 }

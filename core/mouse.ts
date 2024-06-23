@@ -150,7 +150,7 @@ export class Mouse extends Point implements IMouse {
     );
   }
 
-  public mouseMoveHandler = (mouseEvent: MouseEvent) => {
+  private mouseMoveHandler = (mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     const rect = this.canvas.getBoundingClientRect();
@@ -184,17 +184,17 @@ export class Mouse extends Point implements IMouse {
     this.moved = true;
     this.hasInputThisFrame = true;
   };
-  public touchStartHandler = (touchEvent: TouchEvent) => {
+  private touchStartHandler = (touchEvent: TouchEvent) => {
     if (!this.active) return;
 
     this.leftMouseDownEvent();
   };
-  public touchEndHandler = (touchEvent: TouchEvent) => {
+  private touchEndHandler = (touchEvent: TouchEvent) => {
     if (!this.active) return;
 
     this.leftMouseUpEvent();
   };
-  public mouseUpHandler = (mouseEvent: MouseEvent) => {
+  private mouseUpHandler = (mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     switch (mouseEvent.button) {
@@ -209,7 +209,7 @@ export class Mouse extends Point implements IMouse {
         break;
     }
   };
-  public mouseDownHandler = (mouseEvent: MouseEvent) => {
+  private mouseDownHandler = (mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     switch (mouseEvent.button) {
@@ -224,19 +224,19 @@ export class Mouse extends Point implements IMouse {
         break;
     }
   };
-  public mouseOutHandler = (mouseEvent: MouseEvent) => {
+  private mouseOutHandler = (mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     this.hasInputThisFrame = true;
     this.focus = false;
   };
-  public mouseOverHandler = (mouseEvent: MouseEvent) => {
+  private mouseOverHandler = (mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     this.hasInputThisFrame = true;
     this.focus = true;
   };
-  public wheelHandler = (wheelEvent: WheelEvent) => {
+  private wheelHandler = (wheelEvent: WheelEvent) => {
     if (!this.active) return;
 
     this.hasInputThisFrame = true;
@@ -299,25 +299,33 @@ export class Mouse extends Point implements IMouse {
     this.update();
   }
 
-  public resetInputs(): void {
+  /**
+   * Resets the state of the keyboard so all inputs are considered unused.
+   * @param includeIrrecoverableInputs Some inputs, like whether a key is "down," is not recoverable when reset (i.e. its state cannot be simply updated on the next frame). These inputs are not reset by default.
+   */
+  reset(includeIrrecoverableInputs = false): void {
     this.leftReleased = false;
-    this.leftDown = false;
     this.leftPressed = false;
     this.middleReleased = false;
-    this.middleDown = false;
     this.middlePressed = false;
     this.rightReleased = false;
-    this.rightDown = false;
     this.rightPressed = false;
     this.scrollPrevious.x = 0;
     this.scrollPrevious.y = 0;
     this.scroll.x = 0;
     this.scroll.y = 0;
     this.moved = false;
-    this.focus = false;
+    this.hasInputThisFrame = false;
+
+    if (includeIrrecoverableInputs) {
+      this.leftDown = false;
+      this.middleDown = false;
+      this.rightDown = false;
+      this.focus = false;
+    }
   }
 
-  public update(): void {
+  update(): void {
     if (!this.active) return;
 
     this.leftReleased = false;
@@ -334,7 +342,7 @@ export class Mouse extends Point implements IMouse {
     this.hasInputThisFrame = false;
   }
 
-  public allPressed(): (MouseButton | MouseScroll)[] {
+  allPressed(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftPressed) result.push(MouseButton.Left);
     if (this.middlePressed) result.push(MouseButton.Middle);
@@ -344,7 +352,7 @@ export class Mouse extends Point implements IMouse {
     return result;
   }
 
-  public allDown(): (MouseButton | MouseScroll)[] {
+  allDown(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftDown) result.push(MouseButton.Left);
     if (this.middleDown) result.push(MouseButton.Middle);
@@ -354,7 +362,7 @@ export class Mouse extends Point implements IMouse {
     return result;
   }
 
-  public allReleased(): (MouseButton | MouseScroll)[] {
+  allReleased(): (MouseButton | MouseScroll)[] {
     const result: (MouseButton | MouseScroll)[] = [];
     if (this.leftReleased) result.push(MouseButton.Left);
     if (this.middleReleased) result.push(MouseButton.Middle);
