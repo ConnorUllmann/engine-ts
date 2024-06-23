@@ -275,50 +275,7 @@ Set.prototype.first = function <T>(boolCheck: ((o: T, i: number) => boolean) | n
   return null;
 };
 
-// TODO apply as many of these as possible to ReadonlyArray as well
 declare global {
-  interface Array<T> {
-    swap(firstIndex: number, secondIndex: number): void;
-    insert(index: number, item: T): void;
-    remove(item: T): number | null;
-    removeAt(index: number): T | null;
-    removeAtMultiple(...indices: number[]): T[];
-    removeFirstWhere(valueGetter: (o: T, i: number) => boolean): T | null;
-    removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
-    reversed(): T[];
-    sample(_rng?: Pick<RNG, 'random'>): T | null;
-    samples(count: number, _rng?: Pick<RNG, 'random'>): T[];
-    shuffle(_rng?: Pick<RNG, 'random'>): T[];
-    shuffled(_rng?: Pick<RNG, 'random'>): T[];
-    flattened(): T;
-    unflattened(width: number): T[][];
-    batchify(batchSize: number): T[][];
-    any(boolCheck: (o: T, i: number) => boolean): boolean;
-    all(boolCheck: (o: T, i: number) => boolean): boolean;
-    first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
-    last(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
-    bestOf(boolCheck: (o: T) => boolean): T | null;
-    minOf(valueGetter: (o: T) => number): T | null;
-    maxOf(valueGetter: (o: T) => number): T | null;
-    minValueOf(valueGetter: (o: T) => number): number | null;
-    maxValueOf(valueGetter: (o: T) => number): number | null;
-    sumOf(valueGetter: (o: T) => number): number | null;
-    mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
-    mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
-    copy(other: T[]): void;
-    clone(): T[];
-    clear(): void;
-    orderBy(getter: (a: T) => number): T[];
-    distinct(valueGetter?: (o: T) => string | number): T[];
-    distincted(valueGetter?: (o: T) => string | number): T[];
-    exists(): NonNullable<T>[];
-
-    // number only
-    min(this: Array<number>): number | null;
-    max(this: Array<number>): number | null;
-    sum(this: Array<number>): number | null;
-  }
-
   interface ReadonlyArray<T> {
     reversed(): T[];
     sample(_rng?: Pick<RNG, 'random'>): T | null;
@@ -337,17 +294,33 @@ declare global {
     minValueOf(valueGetter: (o: T) => number): number | null;
     maxValueOf(valueGetter: (o: T) => number): number | null;
     sumOf(valueGetter: (o: T) => number): number | null;
-    mappedBy(keyGetter: (o: T) => string): { [key: string]: T[] };
-    mappedByUnique(keyGetter: (o: T) => string): { [key: string]: T };
+    mappedBy<K extends PropertyKey>(keyGetter: (o: T) => K): Record<K, T[]>;
+    mappedByUnique<K extends PropertyKey>(keyGetter: (o: T) => K): Record<K, T>;
+    mappedByUnique<K extends PropertyKey, V>(keyGetter: (o: T) => K, valueGetter: (o: T) => V): Record<K, V>;
     copy(other: T[]): void;
     clone(): T[];
     distincted(valueGetter?: (o: T) => string | number): T[];
     exists(): NonNullable<T>[];
+    permutations(): T[][];
 
     // number only
     min(this: Array<number>): number | null;
     max(this: Array<number>): number | null;
     sum(this: Array<number>): number | null;
+  }
+
+  interface Array<T> extends ReadonlyArray<T> {
+    swap(firstIndex: number, secondIndex: number): void;
+    insert(index: number, item: T): void;
+    remove(item: T): number | null;
+    removeAt(index: number): T | null;
+    removeAtMultiple(...indices: number[]): T[];
+    removeFirstWhere(valueGetter: (o: T, i: number) => boolean): T | null;
+    removeWhere(valueGetter: (o: T, i: number) => boolean): T[];
+    shuffle(_rng?: Pick<RNG, 'random'>): T[];
+    clear(): void;
+    orderBy(getter: (a: T) => number): T[];
+    distinct(valueGetter?: (o: T) => string | number): T[];
   }
 }
 
@@ -590,10 +563,8 @@ Array.prototype.sum = function (): number | null {
 //      grass: [{name:'bulbasaur 1', type:'grass'},{name:'bulbasaur 2', type:'grass'}],
 //      fire: [{name:'charmander', type:'fire'}]
 // }
-Array.prototype.mappedBy = function <T>(keyGetter: (o: T) => string): {
-  [key: string]: T[];
-} {
-  return this.reduce((obj: { [key: string]: T[] }, element: T) => {
+Array.prototype.mappedBy = function <T, K extends PropertyKey>(keyGetter: (o: T) => K): Record<K, T[]> {
+  return this.reduce((obj: Record<K, T[]>, element: T) => {
     const key = keyGetter(element);
     if (!(key in obj)) obj[key] = [];
     obj[key].push(element);
@@ -603,12 +574,13 @@ Array.prototype.mappedBy = function <T>(keyGetter: (o: T) => string): {
 
 // Same as Array.mappedBy except only the last element at each key is returned
 // Best for circumstances where you're expecting the key value to be unique
-Array.prototype.mappedByUnique = function <T>(keyGetter: (o: T) => string): {
-  [key: string]: T;
-} {
-  return this.reduce((obj: { [key: string]: T }, element: T) => {
+Array.prototype.mappedByUnique = function <T, K extends PropertyKey, V>(
+  keyGetter: (o: T) => K,
+  valueGetter?: (o: T) => V
+): Record<K, V> {
+  return this.reduce((obj: Record<K, V>, element: T) => {
     const key = keyGetter(element);
-    obj[key] = element;
+    obj[key] = valueGetter == null ? (element as unknown as V) : valueGetter(element);
     return obj;
   }, {});
 };
@@ -661,4 +633,18 @@ Array.prototype.distinct = function <T>(valueGetter?: (o: T) => string | number)
 Array.prototype.distincted = function <T>(valueGetter?: (o: T) => string | number): T[] {
   const values = valueGetter ? this.map((o: T) => valueGetter(o)) : this;
   return this.filter((o: T, i: number) => values.indexOf(valueGetter ? valueGetter(o) : o) === i);
+};
+
+Array.prototype.permutations = function <T>(this: T[]): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < this.length; i++) {
+    for (let j = i + 1; j < this.length; j++) {
+      const list: T[] = [...this];
+      const value = list[i];
+      list[i] = list[j];
+      list[j] = value;
+      result.push(list);
+    }
+  }
+  return result;
 };
