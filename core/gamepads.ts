@@ -122,25 +122,25 @@ export class Gamepads extends GamepadsBase {
   public static get AreAvailable(): boolean {
     return !!navigator.getGamepads;
   }
-  public static readonly ButtonMappings = {
-    0: [Button.A],
-    1: [Button.B],
-    2: [Button.X],
-    3: [Button.Y],
-    4: [Button.LB],
-    5: [Button.RB],
-    6: [Button.LT],
-    7: [Button.RT],
-    8: [Button.SELECT, Button.BACK],
-    9: [Button.START],
-    10: [Button.L3],
-    11: [Button.R3],
-    12: [Button.UP],
-    13: [Button.DOWN],
-    14: [Button.LEFT],
-    15: [Button.RIGHT],
+  public static readonly ButtonMappings = [
+    [Button.A],
+    [Button.B],
+    [Button.X],
+    [Button.Y],
+    [Button.LB],
+    [Button.RB],
+    [Button.LT],
+    [Button.RT],
+    [Button.SELECT, Button.BACK],
+    [Button.START],
+    [Button.L3],
+    [Button.R3],
+    [Button.UP],
+    [Button.DOWN],
+    [Button.LEFT],
+    [Button.RIGHT],
     // 16 - ???
-  };
+  ];
 
   public hasInputThisFrame = false;
 
@@ -229,7 +229,7 @@ export class Gamepads extends GamepadsBase {
 
       for (const button of AnalogDirectionButtons) {
         const wasDown = this.downByIndex[gamepadId]?.[button] ?? false;
-        const isDown = this.isAnalogDirectionDownByButton[button](gamepadId);
+        const isDown = this.isAnalogDirectionDownByButton[button](Number(gamepadId));
         const isPressed = isDown && !wasDown;
         const isReleased = !isDown && wasDown;
         this.downByIndex[gamepadId][button] = isDown;
@@ -252,7 +252,7 @@ export class Gamepads extends GamepadsBase {
     return HasCardinalComponent(compassDirection, cardinalComponent);
   };
   private isAnalogDirectionDownByButton: {
-    [key in AnalogDirectionButton]: (gamepadId: string | number) => boolean;
+    [key in AnalogDirectionButton]: (gamepadId: number) => boolean;
   } = {
     [Button.LEFT_ANALOG_UP]: gamepadId => this.leftAnalogStickByIndex[gamepadId].y < 0,
     [Button.LEFT_ANALOG_RIGHT]: gamepadId => this.leftAnalogStickByIndex[gamepadId].x > 0,

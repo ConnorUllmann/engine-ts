@@ -279,12 +279,12 @@ const KeyCodeByKey: { [key in Key]: number } = {
   [Key.SINGLE_QUOTE]: 222,
   [Key.DOUBLE_QUOTE]: 222,
 };
-const KeysByKeyCode: { [keyCode: number]: Key[] } = Object.keys(KeyCodeByKey).reduce((acc, key) => {
+const KeysByKeyCode = Object.keys(KeyCodeByKey).reduce((acc, key: Key) => {
   const keyCode = KeyCodeByKey[key];
   if (!(keyCode in acc)) acc[keyCode] = [];
   acc[keyCode].push(key);
   return acc;
-}, {} as { [key in Key]: number });
+}, {} as { [keyCode: number]: Key[] });
 
 export function KeyCodeForKey(key: Key): { keyCode: number; code?: string } {
   const keyCode = KeyCodeByKey[key];

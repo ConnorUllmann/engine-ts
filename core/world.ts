@@ -148,10 +148,10 @@ export class World {
   // removes all references to all entities without destroying them
   public dereferenceAllEntities() {
     this.entities.clear();
-    Object.keys(this.entityById).forEach(key => delete this.entityById[key]);
+    Object.keys(this.entityById).forEach(key => delete this.entityById[key as any]);
     Object.keys(this.entitiesByName).forEach(key => delete this.entitiesByName[key]);
-    Object.keys(this.entityToAddById).forEach(key => delete this.entityToAddById[key]);
-    Object.keys(this.entityToRemoveById).forEach(key => delete this.entityToRemoveById[key]);
+    Object.keys(this.entityToAddById).forEach(key => delete this.entityToAddById[key as any]);
+    Object.keys(this.entityToRemoveById).forEach(key => delete this.entityToRemoveById[key as any]);
     this.singletonEntity = null;
   }
 
