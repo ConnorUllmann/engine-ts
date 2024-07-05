@@ -167,7 +167,7 @@ export const repeat = function <T>(count: number, get: (i: number, count: number
 };
 
 // https://stackoverflow.com/a/49670389
-export type DeepReadonly<T> = T extends (infer R)[]
+export type DeepReadonly<T> = T extends readonly (infer R)[]
   ? DeepReadonlyArray<R>
   : T extends Function
   ? T

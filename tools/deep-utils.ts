@@ -6,14 +6,14 @@ type Undefinable<T> = T extends (infer U)[]
   ? { [K in keyof T]: Undefinable<T[K]> | undefined }
   : T | undefined;
 
-type DeepPartial<T> = T extends (infer U)[]
+type DeepPartial<T> = T extends readonly (infer U)[]
   ? Array<DeepPartial<U>>
-  : T extends {}
+  : T extends { readonly [key in any]: unknown }
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
 type PrimitiveSerializable = null | undefined | boolean | number | string;
-type Serializable = PrimitiveSerializable | Serializable[] | { [key: string]: Serializable };
+type Serializable = PrimitiveSerializable | readonly Serializable[] | { readonly [key: string]: Serializable };
 
 export function DeepClone<T extends Serializable>(obj: DeepReadonly<T>): T {
   // null
@@ -120,7 +120,7 @@ function DeepDiffHelper<T extends Record<any, Serializable>>(
     return;
   }
 
-  if (objOriginalValue === undefined) loopAddKeys(compiledObj, keys, DeepClone(objWithChangesValue));
+  if (objOriginalValue === undefined) loopAddKeys(compiledObj, keys, DeepClone<any>(objWithChangesValue));
   else if (
     typeof objOriginalValue !== 'number' &&
     typeof objOriginalValue !== 'string' &&
