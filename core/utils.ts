@@ -288,7 +288,7 @@ declare global {
     all(boolCheck: (o: T, i: number) => boolean): boolean;
     first(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
     last(boolCheck?: ((o: T, i: number) => boolean) | null): T | null;
-    bestOf(boolCheck: (o: T) => boolean): T | null;
+    bestOf(boolCheck: (a: T, b: T) => boolean): T | null;
     minOf(valueGetter: (o: T) => number): T | null;
     maxOf(valueGetter: (o: T) => number): T | null;
     minValueOf(valueGetter: (o: T) => number): number | null;
