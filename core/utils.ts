@@ -418,7 +418,7 @@ Array.prototype.shuffled = function <T>(_rng: Pick<RNG, 'random'> = rng): T[] {
 };
 
 Array.prototype.flattened = function <T>(): T {
-  return [].concat.apply([], this);
+  return [].concat.apply([], this) as T;
 };
 
 // Opposite of flattening an array; takes a one-dimensional array and cuts it into count-sized chunks, returning an array of arrays
@@ -593,7 +593,7 @@ Array.prototype.clone = function <T>(): T[] {
   return this.slice(0);
 };
 
-Array.prototype.clear = function <T>(): void {
+Array.prototype.clear = function (): void {
   this.length = 0;
 };
 

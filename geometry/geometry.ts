@@ -421,7 +421,7 @@ export class Geometry {
       rectangleToChange.w = rectangle.w;
       rectangleToChange.h = rectangle.h;
     },
-    BoundsRectangles: (rectangles: (DeepReadonly<IRectangle> | null | undefined)[]) => {
+    BoundsRectangles: (rectangles) => {
       if (rectangles == null || rectangles.length <= 0) return { x: 0, y: 0, w: 0, h: 0 };
       let indexStart = -1;
       for (let i = 0; i < rectangles.length; i++) {
@@ -3626,11 +3626,11 @@ export class Geometry {
       circleBOffset: DeepReadonly<IPoint> = Geometry.Point.Zero
     ): [IPoint, IPoint] | [IPoint] | [] =>
       Geometry.IntersectionExplicit.CircleCircle(
-        circleA.x + circleAOffset?.x ?? 0,
-        circleA.y + circleAOffset?.y ?? 0,
+        circleA.x + (circleAOffset?.x ?? 0),
+        circleA.y + (circleAOffset?.y ?? 0),
         circleA.r,
-        circleB.x + circleBOffset?.x ?? 0,
-        circleB.y + circleBOffset?.y ?? 0,
+        circleB.x + (circleBOffset?.x ?? 0),
+        circleB.y + (circleBOffset?.y ?? 0),
         circleB.r
       ),
     LineLine: (

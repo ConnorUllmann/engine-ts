@@ -126,9 +126,9 @@ export class PathMap<T> {
 }
 
 class PathTile<T> {
-  public tile: T;
-  public steps: number | null;
-  public targetDistance: number | null;
+  public tile: T = undefined as T;
+  public steps: number | null = null;
+  public targetDistance: number | null = null;
   public readonly hash: number;
   public readonly position: DeepReadonly<IPoint>;
 

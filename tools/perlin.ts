@@ -70,8 +70,8 @@ export class Perlin {
     const perlinValuesMin = perlinValues.min() ?? 0;
     const perlinValuesMax = perlinValues.max() ?? 0;
 
-    const filter = (position: IPoint, getColor: (position: IPoint) => Color) => {
-      const oldValue = getColor(position).red;
+    const filter = (position: IPoint, getColor: (position: IPoint) => Color | null) => {
+      const oldValue = getColor(position)?.red ?? 0;
       const normal =
         perlinValuesMin == perlinValuesMax ? 0 : (oldValue - perlinValuesMin) / (perlinValuesMax - perlinValuesMin);
       const newValue = clamp(Math.floor(256 * normal), 0, 255);
@@ -82,7 +82,7 @@ export class Perlin {
   }
 
   blurPerlinNoise(range: number = 1): this {
-    return this.applyFilterWithBuffer(({ x, y }: IPoint, getColor: (position: IPoint) => Color) => {
+    return this.applyFilterWithBuffer(({ x, y }: IPoint) => {
       let neighborSum = 0;
       let neighborCount = 0;
       for (let i = -range; i <= range; i++) {
@@ -99,12 +99,12 @@ export class Perlin {
     });
   }
 
-  applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
+  applyFilter(filter: (position: IPoint, getColor: (position: IPoint) => Color | null) => Color): this {
     this.perlinPixelGrid.applyFilter(filter);
     return this;
   }
 
-  applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color) => Color): this {
+  applyFilterWithBuffer(filter: (position: IPoint, getColor: (position: IPoint) => Color | null) => Color): this {
     this.perlinPixelGrid.applyFilterWithBuffer(filter);
     return this;
   }

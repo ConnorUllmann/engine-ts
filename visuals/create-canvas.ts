@@ -7,7 +7,8 @@ export function createCanvas(width: number, height: number): HTMLCanvasElement {
 
 export function createCanvasScreenshotElement(canvas: OffscreenCanvas | HTMLCanvasElement): HTMLImageElement {
   var newImg = document.createElement('img');
-  const blobFn = function (blob: Blob) {
+  const blobFn = function (blob: Blob | null) {
+    if (!blob) return null;
     var url = URL.createObjectURL(blob);
     newImg.onload = function () {
       URL.revokeObjectURL(url);

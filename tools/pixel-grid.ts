@@ -8,7 +8,7 @@ import { Color } from '../visuals/color';
 
 export class PixelGrid implements IGrid<Color> {
   public context: OffscreenCanvasRenderingContext2D;
-  private imageData: ImageData;
+  private imageData: ImageData = undefined as unknown as ImageData;
   public imageSmoothingEnabled: boolean = false;
 
   public get w(): number {
@@ -25,14 +25,6 @@ export class PixelGrid implements IGrid<Color> {
 
   private transformXYToIndex({ x, y }: IPoint): number {
     return 4 * (Math.floor(x) + Math.floor(y) * this.w);
-  }
-
-  private transformIndexToXY(index: number): IPoint {
-    index /= 4;
-    return {
-      x: index % this.w,
-      y: Math.floor(index / this.w),
-    };
   }
 
   // TODO: optional rectangle input to define what part of the image to use (null means all of it)

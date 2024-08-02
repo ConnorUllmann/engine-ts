@@ -184,12 +184,12 @@ export class Mouse extends Point implements IMouse {
     this.moved = true;
     this.hasInputThisFrame = true;
   };
-  private touchStartHandler = (touchEvent: TouchEvent) => {
+  private touchStartHandler = (_touchEvent: TouchEvent) => {
     if (!this.active) return;
 
     this.leftMouseDownEvent();
   };
-  private touchEndHandler = (touchEvent: TouchEvent) => {
+  private touchEndHandler = (_touchEvent: TouchEvent) => {
     if (!this.active) return;
 
     this.leftMouseUpEvent();
@@ -224,13 +224,13 @@ export class Mouse extends Point implements IMouse {
         break;
     }
   };
-  private mouseOutHandler = (mouseEvent: MouseEvent) => {
+  private mouseOutHandler = (_mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     this.hasInputThisFrame = true;
     this.focus = false;
   };
-  private mouseOverHandler = (mouseEvent: MouseEvent) => {
+  private mouseOverHandler = (_mouseEvent: MouseEvent) => {
     if (!this.active) return;
 
     this.hasInputThisFrame = true;

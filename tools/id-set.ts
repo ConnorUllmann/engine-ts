@@ -69,13 +69,13 @@ export class IdSet<U, V = U> /*ES6: extends Set<U>*/ implements Iterable<U>, Set
   }
 
   union(other: Set<U>): this {
-    return Set.prototype.union.call(this, other);
+    return Set.prototype.union.call(this, other) as this
   }
   difference(other: Set<U>): this {
-    return Set.prototype.difference.call(this, other);
+    return Set.prototype.difference.call(this, other) as this
   }
   intersection(other: Set<U>): this {
-    return Set.prototype.intersection.call(this, other);
+    return Set.prototype.intersection.call(this, other) as this
   }
   any(boolCheck: (u: U, i: number) => boolean): boolean {
     return Set.prototype.any.call(this, boolCheck);

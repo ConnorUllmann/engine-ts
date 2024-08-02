@@ -87,7 +87,7 @@ export class SpriteTimer<T extends ISpriteAnimation = ISpriteAnimation> {
   protected readonly animationByName: {
     [animationName: string]: T;
   } = {};
-  protected _currentAnimationName: string;
+  protected _currentAnimationName: string = '';
   public get currentAnimationName(): string {
     return this._currentAnimationName;
   }

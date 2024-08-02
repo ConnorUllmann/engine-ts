@@ -1,9 +1,9 @@
 export class RNG {
-  private _seed: number;
+  private _seed: number=0;
   public get seed(): number {
     return this._seed;
   }
-  private seedCurrent: number;
+  private seedCurrent: number=0;
 
   constructor(seed?: number) {
     this.initialize(seed);
